@@ -121,6 +121,24 @@ TEST_F(APITest, UserLogin) {
     }
 }
 
+TEST_F(APITest, UsersLogout) {
+    {
+        httplib::Client client(test_host, test_port);
+        client.set_basic_auth("Alice", "123456");
+        auto result = client.Post("/v1/users/logout");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+    }
+}
+
+TEST_F(APITest, TaskLists) {
+    //pass
+}
+
+TEST_F(APITest, TaskListsCreate) {
+    //pass
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
