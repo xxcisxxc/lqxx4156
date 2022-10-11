@@ -76,6 +76,23 @@ TEST_F(APITest, UsersRegister) {
         EXPECT_EQ(result.error(), httplib::Error::Success);
         EXPECT_NE(result->body.find("failed"), std::string::npos);
     }
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        req_body["name"] = "Alice";
+        req_body["passwd"] = "123456";
+        req_body["email"] = "alice@columbia.edu";
+        mocked_users->SetCreateResult(true);
+        auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+
+        result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        // duplicated email, should fail
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
+    }
 }
 
 TEST_F(APITest, UserLogin) {
@@ -89,6 +106,18 @@ TEST_F(APITest, UserLogin) {
         EXPECT_EQ(result.error(), httplib::Error::Success);
         EXPECT_NE(result->body.find("success"), std::string::npos);
         EXPECT_NE(result->body.find("token"), std::string::npos);
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        req_body["passwd"] = "123456";
+        req_body["email"] = "alice@columbia.edu";
+        mocked_users->SetValidateResult(false);
+        auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
+        EXPECT_EQ(result->body.find("token"), std::string::npos);
     }
 }
 

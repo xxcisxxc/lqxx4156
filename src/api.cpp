@@ -83,11 +83,23 @@ DefineHttpHandler(UsersLogin) {
 }
 
 DefineHttpHandler(UsersLogout) {
-    std::cout << "Request body: " << req.body;
+    nlohmann::json result;
+    const std::string token = req.headers.find("Authentication")->second;
+
+    // do something with token
+    
+    result["msg"] = "success";
+    res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(TaskLists) {
-    std::cout << "Request body: " << req.body;
+    nlohmann::json result;
+    const std::string token = req.headers.find("Authentication")->second;
+
+    // do something with token
+    
+    result["msg"] = "success";
+    res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(TaskListsCreate) {
