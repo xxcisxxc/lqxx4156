@@ -9,12 +9,13 @@ set(CMAKE_CXX_FLAGS -pthread)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(${PROJECT_SOURCE_DIR}/external/json)
 add_subdirectory(${PROJECT_SOURCE_DIR}/external/googletest)
+add_subdirectory(${PROJECT_SOURCE_DIR}/external/liboauthcpp/build)
 
 # api library
 add_library(api_library STATIC ${PROJECT_SOURCE_DIR}/src/api.cpp)
 target_include_directories(api_library PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(api_library PUBLIC ${PROJECT_SOURCE_DIR}/external)
-target_link_libraries(api_library PRIVATE nlohmann_json)
+target_link_libraries(api_library PRIVATE nlohmann_json oauthcpp)
 
 # api unit test
 add_executable(test_api ${PROJECT_SOURCE_DIR}/tests/test_api.cpp)

@@ -1,5 +1,6 @@
 #include <api.h>
 #include <json/include/nlohmann/json.hpp>
+#include <liboauthcpp/src/base64.h>
 
 #define DefineHttpHandler(name)\
     void API::name(const httplib::Request& req, httplib::Response& res)
@@ -87,6 +88,7 @@ DefineHttpHandler(UsersLogout) {
     const std::string token = req.headers.find("Authentication")->second;
 
     // do something with token
+    const std::string decoded_token = base64_decode(token);
     
     result["msg"] = "success";
     res.set_content(result.dump(), "text/plain");
@@ -97,6 +99,7 @@ DefineHttpHandler(TaskLists) {
     const std::string token = req.headers.find("Authentication")->second;
 
     // do something with token
+    const std::string decoded_token = base64_decode(token);
     
     result["msg"] = "success";
     res.set_content(result.dump(), "text/plain");
