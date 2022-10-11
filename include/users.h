@@ -17,4 +17,9 @@ public:
         // just for avoiding warnings
         return true;
     };
+
+    virtual bool DuplicatedEmail(const std::string& email) {
+        // just for avoiding warnings
+        return false;
+    }
 };

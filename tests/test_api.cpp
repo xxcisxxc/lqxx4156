@@ -35,6 +35,8 @@ protected:
         mocked_users = std::make_shared<MockedUsers>();
         api = std::make_shared<API>(mocked_users);
         running_server = std::make_shared<std::thread>([&](){this->api->Run(this->test_host, this->test_port);});
+        // wait for some time for the service to be set up
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     void TearDown() override {
@@ -51,11 +53,7 @@ protected:
 };
 
 TEST_F(APITest, UsersRegister) {
-    // const std::string test_path = test_host + ":" + std::to_string(test_port) + "/v1/users/register";
-
     {
-        // wait for some time for the service to be set up
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
         req_body["name"] = "Alice";
@@ -64,6 +62,33 @@ TEST_F(APITest, UsersRegister) {
         mocked_users->SetCreateResult(true);
         auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        req_body["name"] = "Alice";
+        req_body["passwd"] = "123456";
+        req_body["email"] = "alice@columbia.edu";
+        mocked_users->SetCreateResult(false);
+        auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
+    }
+}
+
+TEST_F(APITest, UserLogin) {
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        req_body["passwd"] = "123456";
+        req_body["email"] = "alice@columbia.edu";
+        mocked_users->SetValidateResult(true);
+        auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+        EXPECT_NE(result->body.find("token"), std::string::npos);
     }
 }
 

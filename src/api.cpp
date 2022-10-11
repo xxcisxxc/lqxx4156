@@ -23,30 +23,63 @@ API::~API() {
 }
 
 DefineHttpHandler(UsersRegister) {
-    try {
-        nlohmann::json result;
-        nlohmann::json json_body(req.body);
-        std::string user_name = json_body.at("name");
-        std::string user_passwd = json_body.at("passwd");
-        std::string user_email = json_body.at("email");
+    std::string user_name;
+    std::string user_passwd;
+    std::string user_email;
+    nlohmann::json result;
 
+    try {
+        const auto json_body = nlohmann::json::parse(req.body);
+        user_name = json_body.at("name");
+        user_passwd = json_body.at("passwd");
+        user_email = json_body.at("email");
+
+        // print for testing
         std::cout << "user_name=" << user_name << std::endl;
         std::cout << "user_password=" << user_passwd << std::endl;
-        // Do something
-
-        if (users->Create(user_name, user_email, user_passwd)) {
-            result["msg"] = "success";
-        } else {
-            result["msg"] = "failed";
-        }
-        res.set_content(result.dump(), "text/plain");
     } catch (std::exception& e) {
         res.set_content("Request body format error.", "text/plain");
+        return;
     }
+
+    // check if user email is duplicated
+    if (users->DuplicatedEmail(user_email)) {
+        result["msg"] = "failed";
+        res.set_content(result.dump(), "text/plain");
+        return;
+    }
+
+    // create user
+    if (users->Create(user_name, user_email, user_passwd)) {
+        result["msg"] = "success";
+    } else {
+        result["msg"] = "failed";
+    }
+    res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(UsersLogin) {
-    std::cout << "Request body: " << req.body;
+    std::string user_passwd;
+    std::string user_email;
+    nlohmann::json result;
+
+    try {
+        const auto json_body = nlohmann::json::parse(req.body);
+        user_passwd = json_body.at("passwd");
+        user_email = json_body.at("email");
+    } catch (std::exception& e) {
+        res.set_content("Request body format error.", "text/plain");
+        return;
+    }
+
+    if (users->Validate({}, user_email, user_passwd)) {
+        result["msg"] = "success";
+        result["token"] = "some token";
+    } else {
+        result["msg"] = "failed";
+    }
+
+    res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(UsersLogout) {
