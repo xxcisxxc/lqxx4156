@@ -4,11 +4,13 @@
 #include <liboauthcpp/src/base64.h>
 
 #define DefineHttpHandler(name)\
-    void API::name(const httplib::Request& req, httplib::Response& res)
+    void API::name(const httplib::Request& req, httplib::Response& res) noexcept
 
 #define AddHttpHandler(server, path, method, func)\
-    server->method(path, \
-    [this](const httplib::Request& req, httplib::Response& res){this->func(req, res);})
+    do {\
+        server->method(path, \
+        [this](const httplib::Request& req, httplib::Response& res){this->func(req, res);});\
+    } while (false)
 
 API::API(std::shared_ptr<Users> _users, std::shared_ptr<httplib::Server> _svr):
     users(_users), svr(_svr) {

@@ -5,7 +5,7 @@
 #include <users.h>
 
 #define DeclareHttpHandler(name)\
-    virtual void name(const httplib::Request&, httplib::Response&)
+    virtual void name(const httplib::Request&, httplib::Response&) noexcept
 
 class API {
 public:

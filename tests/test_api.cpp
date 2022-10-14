@@ -99,6 +99,16 @@ TEST_F(APITest, UserLogin) {
     {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
+        req_body["name"] = "Alice";
+        req_body["passwd"] = "123456";
+        req_body["email"] = "alice@columbia.edu";
+        mocked_users->SetCreateResult(true);
+        client.Post("/v1/users/register", req_body.dump(), "text/plain");
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
         req_body["passwd"] = "123456";
         req_body["email"] = "alice@columbia.edu";
         mocked_users->SetValidateResult(true);
@@ -111,7 +121,7 @@ TEST_F(APITest, UserLogin) {
     {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
-        req_body["passwd"] = "123456";
+        req_body["passwd"] = "12345";   // wrong password
         req_body["email"] = "alice@columbia.edu";
         mocked_users->SetValidateResult(false);
         auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
