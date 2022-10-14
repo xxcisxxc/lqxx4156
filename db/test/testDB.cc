@@ -365,3 +365,8 @@ TEST(TestDB, TestDeleteUserNode) {
   EXPECT_EQ(db.deleteUserNode("test1@test.com"), SUCCESS);
   EXPECT_EQ(db.getUserNode("test1@test.com", void_info), ERR_NO_NODE);
 }
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
