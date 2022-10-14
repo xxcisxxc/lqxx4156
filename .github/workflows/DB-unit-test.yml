@@ -20,4 +20,4 @@ jobs:
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
     - name: Run test
-      run: ./build/DBTest
+      run: /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
