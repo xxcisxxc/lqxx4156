@@ -1,6 +1,6 @@
 #include <api/api.h>
 #include <common/utils.h>
-#include <json/include/nlohmann/json.hpp>
+#include <nlohmann/json.hpp>
 #include <liboauthcpp/src/base64.h>
 
 #define DefineHttpHandler(name)\

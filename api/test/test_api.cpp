@@ -1,7 +1,7 @@
 #include <api/api.h>
 #include <users/users.h>
-#include <googletest/googletest/include/gtest/gtest.h>
-#include <json/include/nlohmann/json.hpp>
+#include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 
 class MockedUsers: public Users {
 public:
