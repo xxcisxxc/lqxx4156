@@ -1,5 +1,5 @@
-#include <api.h>
-#include <users.h>
+#include <api/api.h>
+#include <users/users.h>
 #include <googletest/googletest/include/gtest/gtest.h>
 #include <json/include/nlohmann/json.hpp>
 

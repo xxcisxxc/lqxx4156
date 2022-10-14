@@ -1,5 +1,5 @@
-#include <api.h>
-#include <utils.h>
+#include <api/api.h>
+#include <common/utils.h>
 #include <json/include/nlohmann/json.hpp>
 #include <liboauthcpp/src/base64.h>
 
@@ -104,7 +104,7 @@ DefineHttpHandler(UsersLogout) {
 }
 
 DefineHttpHandler(TaskLists) {
-    const std::vector<std::string> splited_path = Utils::Split(req.path, "/");
+    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
 
     // special resolve for "/v1/task_lists/{task_list_name}/tasks/{task_name}"
     if (splited_path.size() >= 2 && *(splited_path.rbegin() + 1) == "tasks") {
@@ -131,7 +131,7 @@ DefineHttpHandler(TaskListsCreate) {
 }
 
 DefineHttpHandler(Tasks) {
-    const std::vector<std::string> splited_path = Utils::Split(req.path, "/");
+    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
 
     // some ugly handling for unresolved path
 
@@ -152,7 +152,7 @@ DefineHttpHandler(Tasks) {
 }
 
 DefineHttpHandler(TasksCreate) {
-    const std::vector<std::string> splited_path = Utils::Split(req.path, "/");
+    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
 
     std::string user_id;
     std::string task_list_name = *(splited_path.rbegin() + 2);

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace Utils {
+namespace Common {
 
 void Split(const std::string& str, const std::string& delim, std::vector<std::string>* res) {
     size_t pos = 0;
@@ -20,4 +20,4 @@ std::vector<std::string> Split(const std::string& str, const std::string& delim)
     return res;
 }
 
-}   // namespace utils
+}   // namespace Common
