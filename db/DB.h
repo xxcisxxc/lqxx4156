@@ -1,5 +1,5 @@
 #include <string>
-#include <unordered_map>
+#include <map>
 
 enum returnCode {
     SUCCESS,
@@ -55,21 +55,21 @@ public:
      * @param [in] user_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode createUserNode(const std::unordered_map<std::string, std::string> &user_info);
+    returnCode createUserNode(const std::map<std::string, std::string> &user_info);
     /**
      * @brief Create a task list node.
      * 
      * @param [in] task_list_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode createTaskListNode(const std::unordered_map<std::string, std::string> &task_list_info);
+    returnCode createTaskListNode(const std::map<std::string, std::string> &task_list_info);
     /**
      * @brief Create a task node.
      * 
      * @param [in] task_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode createTaskNode(const std::unordered_map<std::string, std::string> &task_info);
+    returnCode createTaskNode(const std::map<std::string, std::string> &task_info);
     /**
      * @brief Revise a user node.
      * 
@@ -77,7 +77,7 @@ public:
      * @param [in] user_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode reviseUserNode(const std::string &user_pkey, const std::unordered_map<std::string, std::string> &user_info);
+    returnCode reviseUserNode(const std::string &user_pkey, const std::map<std::string, std::string> &user_info);
     /**
      * @brief Revise a task list node.
      * 
@@ -85,7 +85,7 @@ public:
      * @param [in] task_list_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode reviseTaskListNode(const std::string &task_list_pkey, const std::unordered_map<std::string, std::string> &task_list_info);
+    returnCode reviseTaskListNode(const std::string &task_list_pkey, const std::map<std::string, std::string> &task_list_info);
     /**
      * @brief Revise a task node.
      * 
@@ -93,7 +93,7 @@ public:
      * @param [in] task_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode reviseTaskNode(const std::string &task_pkey, const std::unordered_map<std::string, std::string> &task_info);
+    returnCode reviseTaskNode(const std::string &task_pkey, const std::map<std::string, std::string> &task_info);
     /**
      * @brief Delete a user node.
      * 
@@ -122,7 +122,7 @@ public:
      * @param [out] user_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode getUserNode(const std::string &user_pkey, const std::unordered_map<std::string, std::string> &user_info);
+    returnCode getUserNode(const std::string &user_pkey, const std::map<std::string, std::string> &user_info);
     /**
      * @brief Get a task list node.
      * 
@@ -130,7 +130,7 @@ public:
      * @param [out] task_list_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode getTaskListNode(const std::string &task_list_pkey, const std::unordered_map<std::string, std::string> &task_list_info);
+    returnCode getTaskListNode(const std::string &task_list_pkey, const std::map<std::string, std::string> &task_list_info);
     /**
      * @brief Get a task node.
      * 
@@ -138,7 +138,7 @@ public:
      * @param [out] task_info key: field name, value: field value
      * @return returnCode error message
      */
-    returnCode getTaskNode(const std::string &task_pkey, const std::unordered_map<std::string, std::string> &task_info);
+    returnCode getTaskNode(const std::string &task_pkey, const std::map<std::string, std::string> &task_info);
 };
 
 /*
