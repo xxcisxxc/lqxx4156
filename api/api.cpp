@@ -13,6 +13,25 @@
         [this](const httplib::Request& req, httplib::Response& res){this->func(req, res);});\
     } while (false)
 
+inline void BuildHttpRespBody(nlohmann::json* js) {
+    return;
+}
+
+template<typename FirstValue, typename... Rest>
+inline void BuildHttpRespBody(nlohmann::json* js, const std::string& field, FirstValue&& value, Rest&&... rest) {
+    (*js)[field] = value;
+    BuildHttpRespBody(js, rest...);
+}
+
+#define ReturnHttpResp(code, ...)\
+    do {\
+        nlohmann::json result;\
+        BuildHttpRespBody(&result, __VA_ARGS__);\
+        res.status = (code);\
+        res.set_content(result.dump(), "text/plain");\
+        return;\
+    } while (false)
+
 static inline bool DecodeEmailAndPasswordFromBasicAuth(
     const std::string& auth, std::string* email, std::string* password) noexcept {
     if (email == nullptr || password == nullptr) {
@@ -67,8 +86,18 @@ static inline std::string DecodeEmailFromToken(
     return jwt_obj.payload().get_claim_value<std::string>("email");
 } 
 
-static inline std::string DecodeTokenFromBasicAuth() noexcept {
-    return {};
+static inline std::string DecodeTokenFromBasicAuth(const std::string& auth) noexcept {
+    const auto splited_auth = Common::Split(auth, " ");
+    if (splited_auth.size() != 2 || splited_auth[0] != "Basic") {
+        return {};
+    }
+
+    const auto token_null = Common::Split(base64_decode(splited_auth[1]), ":");
+    if (token_null.size() != 2 || !token_null[1].empty()) {
+        return {};
+    }
+
+    return token_null[0];
 }
 
 API::API(std::shared_ptr<Users> _users, std::shared_ptr<httplib::Server> _svr):
@@ -91,77 +120,71 @@ DefineHttpHandler(UsersRegister) {
     std::string user_name;
     std::string user_passwd;
     std::string user_email;
-    nlohmann::json result;
 
     const auto auth_header = req.headers.find("Authentication");
     if (auth_header == req.headers.cend() ||
         !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email, &user_passwd)) {
-        result["msg"] = "failed";
-        res.set_content(result.dump(), "text/plain");
+        ReturnHttpResp(500, "msg", "failed basic auth");
     }
     
     try {
         const auto json_body = nlohmann::json::parse(req.body);
         user_name = json_body.at("name");
     } catch (std::exception& e) {
-        res.set_content("Request body format error.", "text/plain");
-        return;
+        ReturnHttpResp(500, "msg", "failed body format error");
     }
 
     // check if user email is duplicated
     if (users->DuplicatedEmail(user_email)) {
-        result["msg"] = "failed";
-        res.set_content(result.dump(), "text/plain");
-        return;
+        ReturnHttpResp(500, "msg", "failed duplicated email");
     }
 
     // create user
     if (users->Create(user_name, user_email, user_passwd)) {
-        result["msg"] = "success";
+        ReturnHttpResp(200, "msg", "success");
     } else {
-        result["msg"] = "failed";
+        ReturnHttpResp(500, "msg", "failed create user");
     }
-    res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(UsersLogin) {
     std::string user_passwd;
     std::string user_email;
-    nlohmann::json result;
 
-    try {
-        const auto json_body = nlohmann::json::parse(req.body);
-        // to be modified: get from basic auth or some auth
-        user_passwd = json_body.at("passwd");
-        user_email = json_body.at("email");
-    } catch (std::exception& e) {
-        res.set_content("Request body format error.", "text/plain");
-        return;
+    const auto auth_header = req.headers.find("Authentication");
+    if (auth_header == req.headers.cend() ||
+        !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email, &user_passwd)) {
+        ReturnHttpResp(500, "msg", "failed basic auth");
     }
 
     if (users->Validate({}, user_email, user_passwd)) {
-        result["msg"] = "success";
-        result["token"] = "some token";
+        const std::string token = EncodeTokenFromEmail(user_email, std::chrono::seconds(3600), token_secret_key);
+        if (token.empty()) {
+            ReturnHttpResp(500, "msg", "failed create token");
+        } else {
+            ReturnHttpResp(200, "msg", "success", "token", token);
+        }
     } else {
-        result["msg"] = "failed";
+        ReturnHttpResp(500, "msg", "failed user login");
     }
-
-    res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(UsersLogout) {
-    nlohmann::json result;
-    const std::string token = req.headers.find("Authentication")->second;
+    std::string user_email;
+    std::string token;
 
-    // do something with token
-    const std::string decoded_token = base64_decode(token);
-    // get user_id from decoded_token, format to be discussed
-    // const std::string user_id = some_function(decoded_token);
+    const auto auth_header = req.headers.find("Authentication");
 
-    // do something with user_id
+    if (auth_header == req.headers.cend() ||
+        (user_email = DecodeEmailFromToken(
+            token = DecodeTokenFromBasicAuth(auth_header->second), token_secret_key)
+        ).empty()) {
+        ReturnHttpResp(500, "msg", "failed basic auth");
+    }
     
-    result["msg"] = "success";
-    res.set_content(result.dump(), "text/plain");
+    // invalid date the email and token
+    
+    ReturnHttpResp(200, "msg", "success");
 }
 
 DefineHttpHandler(TaskLists) {
