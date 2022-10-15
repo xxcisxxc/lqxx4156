@@ -7,3 +7,6 @@
 [submodule "external/liboauthcpp"]
 	path = external/liboauthcpp
 	url = https://github.com/sirikata/liboauthcpp.git
+[submodule "external/cpp-jwt"]
+	path = external/cpp-jwt
+	url = https://github.com/arun11299/cpp-jwt.git

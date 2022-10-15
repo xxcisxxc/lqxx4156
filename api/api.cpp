@@ -33,6 +33,10 @@ static inline bool DecodeEmailAndPasswordFromBasicAuth(
     return true;
 }
 
+static inline bool EncodeTokenFromEmail() noexcept {
+    
+}
+
 static inline bool DecodeTokenFromBasicAuth() noexcept {
     return true;
 }
