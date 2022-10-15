@@ -38,4 +38,6 @@ private:
     // std::shared_ptr<TaskLists> tasklists;
     // std::shared_ptr<Tasks> tasks;
     std::shared_ptr<httplib::Server> svr;
+
+    const std::string token_secret_key;
 };

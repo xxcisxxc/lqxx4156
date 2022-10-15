@@ -59,6 +59,7 @@ TEST_F(APITest, UsersRegister) {
         req_body["name"] = "Alice";
         req_body["passwd"] = "123456";
         req_body["email"] = "alice@columbia.edu";
+        client.set_basic_auth("12345678", "scjdfegl");
         mocked_users->SetCreateResult(true);
         auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);

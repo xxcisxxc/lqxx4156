@@ -8,12 +8,39 @@
 
 #define AddHttpHandler(server, path, method, func)\
     do {\
-        server->method(path, \
+        (server)->method((path), \
         [this](const httplib::Request& req, httplib::Response& res){this->func(req, res);});\
     } while (false)
 
+static inline bool DecodeEmailAndPasswordFromBasicAuth(
+    const std::string& auth, std::string* email, std::string* password) noexcept {
+    if (email == nullptr || password == nullptr) {
+        return false;
+    }
+
+    const auto splited_auth = Common::Split(auth, " ");
+    if (splited_auth.size() != 2 || splited_auth[0] != "Basic") {
+        return false;
+    }
+
+    const auto email_password = Common::Split(base64_decode(splited_auth[1]), ":");
+    if (email_password.size() != 2) {
+        return false;
+    }
+
+    *email = email_password[0];
+    *password = email_password[1];
+    return true;
+}
+
+static inline bool DecodeTokenFromBasicAuth() noexcept {
+    return true;
+}
+
 API::API(std::shared_ptr<Users> _users, std::shared_ptr<httplib::Server> _svr):
-    users(_users), svr(_svr) {
+    users(_users), svr(_svr),
+    token_secret_key(Common::RandomString(128)) {
+
     if (!users) {
         users = std::make_shared<Users>();
     }
@@ -32,16 +59,16 @@ DefineHttpHandler(UsersRegister) {
     std::string user_email;
     nlohmann::json result;
 
+    const auto auth_header = req.headers.find("Authentication");
+    if (auth_header == req.headers.cend() ||
+        !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email, &user_passwd)) {
+        result["msg"] = "failed";
+        res.set_content(result.dump(), "text/plain");
+    }
+    
     try {
         const auto json_body = nlohmann::json::parse(req.body);
-        // to be modified: get from basic auth or some auth
         user_name = json_body.at("name");
-        user_passwd = json_body.at("passwd");
-        user_email = json_body.at("email");
-
-        // print for testing
-        std::cout << "user_name=" << user_name << std::endl;
-        std::cout << "user_password=" << user_passwd << std::endl;
     } catch (std::exception& e) {
         res.set_content("Request body format error.", "text/plain");
         return;
