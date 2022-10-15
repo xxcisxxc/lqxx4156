@@ -17,7 +17,14 @@ if (NOT DEFINED EXTERNAL_BIN_DIR)
     set(EXTERNAL_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../build/external)
 endif (NOT DEFINED EXTERNAL_BIN_DIR)
 
-# 3 dependencies to build api test
+# 4 dependencies to build api test
+
+# add jwt
+if (NOT TARGET cpp-jwt)
+    set(CPP_JWT_BUILD_TESTS false)
+    set(CPP_JWT_BUILD_EXAMPLES false)
+    add_subdirectory(${EXTERNAL_DIR}/cpp-jwt ${EXTERNAL_BIN_DIR}/cpp-jwt)
+endif()
 
 # add json
 if (NOT TARGET nlohmann_json)
@@ -31,6 +38,8 @@ endif()
 
 # add oauth
 if (NOT TARGET oauthcpp)
+    set(LIBOAUTHCPP_BUILD_TESTS false)
+    set(LIBOAUTHCPP_BUILD_DEMOS false)
     add_subdirectory(${EXTERNAL_DIR}/liboauthcpp/build ${EXTERNAL_BIN_DIR}/liboauthcpp/build)
 endif()
 
@@ -43,9 +52,10 @@ endif()
 add_library(api OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/api.cpp)
 target_include_directories(api PUBLIC ${EXTERNAL_DIR})
 target_include_directories(api PUBLIC ${EXTERNAL_DIR}/json/include)
+target_include_directories(api PUBLIC ${EXTERNAL_DIR}/cpp-jwt/include)
 target_include_directories(api PUBLIC ${ROOT_DIR})
 
 # api test executable
 add_executable(test_api ${CMAKE_CURRENT_SOURCE_DIR}/test/test_api.cpp)
 target_include_directories(test_api PRIVATE ${EXTERNAL_DIR}/googletest/include)
-target_link_libraries(test_api PRIVATE api gtest oauthcpp users)
+target_link_libraries(test_api PRIVATE api gtest oauthcpp users cpp-jwt)

@@ -2,6 +2,7 @@
 #include <common/utils.h>
 #include <nlohmann/json.hpp>
 #include <liboauthcpp/src/base64.h>
+#include <jwt/jwt.hpp>
 
 #define DefineHttpHandler(name)\
     void API::name(const httplib::Request& req, httplib::Response& res) noexcept
@@ -33,12 +34,41 @@ static inline bool DecodeEmailAndPasswordFromBasicAuth(
     return true;
 }
 
-static inline bool EncodeTokenFromEmail() noexcept {
+static inline std::string EncodeTokenFromEmail(
+    const std::string& email,
+    const std::chrono::seconds& expire_seconds,
+    const std::string& secret_key) noexcept {
+
+    jwt::jwt_object jwt_obj{
+        jwt::params::algorithm("HS256"),
+        jwt::params::secret(secret_key),
+        jwt::params::payload({{"email", email}})};
     
+    jwt_obj.add_claim("exp", std::chrono::system_clock::now() + expire_seconds);
+    return jwt_obj.signature();
 }
 
-static inline bool DecodeTokenFromBasicAuth() noexcept {
-    return true;
+static inline std::string DecodeEmailFromToken(
+    const std::string& token,
+    const std::string& secret_key) noexcept {
+    
+    std::error_code err;
+    const auto jwt_obj = jwt::decode(
+        jwt::string_view(token),
+        jwt::params::algorithms({"HS256"}),
+        err,
+        jwt::params::secret(secret_key),
+        jwt::params::verify(true));
+    
+    // token not valid or expired
+    if (err) {
+        return {};
+    }
+    return jwt_obj.payload().get_claim_value<std::string>("email");
+} 
+
+static inline std::string DecodeTokenFromBasicAuth() noexcept {
+    return {};
 }
 
 API::API(std::shared_ptr<Users> _users, std::shared_ptr<httplib::Server> _svr):
