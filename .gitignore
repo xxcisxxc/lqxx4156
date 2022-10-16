@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# IDE Configurations
+*.vscode
+
+# Build Environment
+build/
+.vscode
+googletest
+build
