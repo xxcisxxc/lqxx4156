@@ -1,8 +1,15 @@
 #include "DB.h"
+#include <iostream>
 
-DB::DB(std::string host) {}
+DB::DB(std::string host, std::string dbname) {
+  this->host_ = host;
+  this->database_ = dbname;
 
-DB::~DB() {}
+  mongoc_init();
+  connectDBTest();
+}
+
+DB::~DB() { mongoc_cleanup(); }
 
 returnCode
 DB::createUserNode(const std::map<std::string, std::string> &user_info) {
@@ -75,12 +82,27 @@ DB::getTaskNode(const std::string &user_pkey, const std::string &task_list_pkey,
   return SUCCESS;
 }
 
-void DB::connectDB() {
-  // Connect to the database
-}
+void DB::connectDBTest() {
+  bson_error_t error;
 
-void DB::disconnectDB() {
-  // Disconnect to the database
+  mongoc_uri_t *uri = mongoc_uri_new_with_error(host_.c_str(), &error);
+  if (!uri) {
+    throw std::runtime_error("Connection failed: " +
+                             std::string(error.message));
+  }
+  mongoc_client_t *client = mongoc_client_new_from_uri(uri);
+  if (!client) {
+    throw std::runtime_error("Connection failed: Unkown error");
+  }
+  bson_t *b = BCON_NEW("ping", BCON_INT32(1));
+  if (!mongoc_client_command_simple(client, database_.c_str(), b, NULL, NULL,
+                                    &error)) {
+    throw std::runtime_error("Connection failed: " +
+                             std::string(error.message));
+  }
+
+  bson_destroy(b);
+  mongoc_client_destroy(client);
 }
 
 std::string DB::executeQuery(std::string &query) {

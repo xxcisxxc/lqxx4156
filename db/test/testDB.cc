@@ -1,7 +1,7 @@
 #include "DB.h"
 #include <gtest/gtest.h>
 
-const std::string host = "localhost:7687";
+const std::string host = "mongodb+srv://mongodb:VX9IcHcG53n3XY5v@cluster0.vxkzzqf.mongodb.net/?retryWrites=true&w=majority";
 
 TEST(TestDB, testconnection) {
   DB *db;
@@ -9,7 +9,8 @@ TEST(TestDB, testconnection) {
   // Create a new DB object
   // Must connect to the right host
   EXPECT_THROW(db = new DB(""), std::exception);
-  EXPECT_THROW(db = new DB("localhost"), std::exception);
+  EXPECT_THROW(db = new DB("mongodb://localhost"), std::exception);
+  EXPECT_THROW(db = new DB("mongodb+srv://localhost"), std::exception);
   EXPECT_NO_THROW(db = new DB(host)); // TODO: change to a valid address
 
   // Delete the DB object

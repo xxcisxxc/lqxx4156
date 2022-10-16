@@ -2,7 +2,16 @@
 
 #include <map>
 #include <string>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+// third party library
+#include <mongoc/mongoc.h>
 
+/**
+ * @brief DB class return code
+ * 
+ */
 enum returnCode {
   SUCCESS,
   ERR_UNKNOWN,  // Unknown error
@@ -20,18 +29,22 @@ enum returnCode {
 class DB {
 private:
   /* data */
-
+  /**
+   * @brief host address
+   * 
+   */
+  std::string host_;
+  /**
+   * @brief database name
+   * 
+   */
+  std::string database_;
   /* method */
   /**
-   * @brief Connect to Neo4j DB.
+   * @brief Test the connection to Neo4j DB.
    *
    */
-  void connectDB();
-  /**
-   * @brief Disconnect from Neo4j DB.
-   *
-   */
-  void disconnectDB();
+  void connectDBTest();
   /**
    * @brief Execute a query.
    *
@@ -46,7 +59,7 @@ public:
    *
    * @param host
    */
-  DB(std::string host);
+  DB(std::string host, std::string dbname = "test");
   /**
    * @brief Destroy the DB object: disconnect from Neo4j DB.
    *
@@ -188,8 +201,3 @@ public:
                          const std::string &task_pkey,
                          const std::map<std::string, std::string> &task_info);
 };
-
-/*
-unit test:
-- each method (mock database?)
-*/
