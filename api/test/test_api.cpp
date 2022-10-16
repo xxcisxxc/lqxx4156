@@ -57,9 +57,7 @@ TEST_F(APITest, UsersRegister) {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
         req_body["name"] = "Alice";
-        req_body["passwd"] = "123456";
-        req_body["email"] = "alice@columbia.edu";
-        client.set_basic_auth("12345678", "scjdfegl");
+        client.set_basic_auth("alice@columbia.edu", "123456");
         mocked_users->SetCreateResult(true);
         auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -70,8 +68,7 @@ TEST_F(APITest, UsersRegister) {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
         req_body["name"] = "Alice";
-        req_body["passwd"] = "123456";
-        req_body["email"] = "alice@columbia.edu";
+        client.set_basic_auth("alice@columbia.edu", "123456");
         mocked_users->SetCreateResult(false);
         auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -81,17 +78,31 @@ TEST_F(APITest, UsersRegister) {
     {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
-        req_body["name"] = "Alice";
-        req_body["passwd"] = "123456";
-        req_body["email"] = "alice@columbia.edu";
+        client.set_basic_auth("bob@columbia.edu", "123456");
         mocked_users->SetCreateResult(true);
         auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
-        EXPECT_NE(result->body.find("success"), std::string::npos);
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
+    }
 
-        result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        req_body["name"] = "Bob";
+        mocked_users->SetCreateResult(true);
+        auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
-        // duplicated email, should fail
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        client.set_basic_auth("", "123456");
+        req_body["name"] = "Bob";
+        mocked_users->SetCreateResult(true);
+        auto result = client.Post("/v1/users/register", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
         EXPECT_NE(result->body.find("failed"), std::string::npos);
     }
 }
@@ -100,18 +111,7 @@ TEST_F(APITest, UserLogin) {
     {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
-        req_body["name"] = "Alice";
-        req_body["passwd"] = "123456";
-        req_body["email"] = "alice@columbia.edu";
-        mocked_users->SetCreateResult(true);
-        client.Post("/v1/users/register", req_body.dump(), "text/plain");
-    }
-
-    {
-        httplib::Client client(test_host, test_port);
-        nlohmann::json req_body;
-        req_body["passwd"] = "123456";
-        req_body["email"] = "alice@columbia.edu";
+        client.set_basic_auth("Alice", "123456");
         mocked_users->SetValidateResult(true);
         auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -122,32 +122,118 @@ TEST_F(APITest, UserLogin) {
     {
         httplib::Client client(test_host, test_port);
         nlohmann::json req_body;
-        req_body["passwd"] = "12345";   // wrong password
-        req_body["email"] = "alice@columbia.edu";
+        client.set_basic_auth("Alice", "123456");
         mocked_users->SetValidateResult(false);
         auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
         EXPECT_EQ(result.error(), httplib::Error::Success);
-        EXPECT_NE(result->body.find("failed"), std::string::npos);
+        EXPECT_EQ(result->body.find("success"), std::string::npos);
         EXPECT_EQ(result->body.find("token"), std::string::npos);
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        client.set_basic_auth("", "123456");
+        mocked_users->SetValidateResult(true);
+        auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
     }
 }
 
 TEST_F(APITest, UsersLogout) {
+    std::string token;
+
     {
         httplib::Client client(test_host, test_port);
         client.set_basic_auth("Alice", "123456");
+        mocked_users->SetValidateResult(true);
+        auto result = client.Post("/v1/users/login");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+        EXPECT_NE(result->body.find("token"), std::string::npos);
+
+        try {
+            token = nlohmann::json::parse(result->body).at("token");
+        } catch (std::exception& e) {
+            EXPECT_TRUE(false);
+        }
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        client.set_basic_auth(token, "");
         auto result = client.Post("/v1/users/logout");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        client.set_basic_auth("", "");
+        auto result = client.Post("/v1/users/logout");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("failed"), std::string::npos);
+    }
+}
+
+TEST_F(APITest, TaskLists) {
+    std::string token;
+
+    {
+        httplib::Client client(test_host, test_port);
+        nlohmann::json req_body;
+        client.set_basic_auth("Alice", "123456");
+        mocked_users->SetValidateResult(true);
+        auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+        EXPECT_NE(result->body.find("token"), std::string::npos);
+
+        try {
+            token = nlohmann::json::parse(result->body).at("token");
+        } catch (std::exception& e) {
+            EXPECT_TRUE(false);
+        }
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        client.set_basic_auth(token, "");
+        auto result = client.Get("/v1/tasklists/test_tasklists_name_1");
         EXPECT_EQ(result.error(), httplib::Error::Success);
         EXPECT_NE(result->body.find("success"), std::string::npos);
     }
 }
 
-TEST_F(APITest, TaskLists) {
-    //pass
-}
-
 TEST_F(APITest, TaskListsCreate) {
-    //pass
+    std::string token;
+
+    {
+        httplib::Client client(test_host, test_port);
+        client.set_basic_auth("Alice", "123456");
+        mocked_users->SetValidateResult(true);
+        auto result = client.Post("/v1/users/login");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+        EXPECT_NE(result->body.find("token"), std::string::npos);
+
+        try {
+            token = nlohmann::json::parse(result->body).at("token");
+        } catch (std::exception& e) {
+            EXPECT_TRUE(false);
+        }
+    }
+
+    {
+        httplib::Client client(test_host, test_port);
+        client.set_basic_auth(token, "");
+        nlohmann::json request_body;
+        request_body["tasklists_name"] = "tasklists_test_name_1";
+        auto result = client.Post("/v1/tasklists/create", request_body.dump(), "text/plain");
+        EXPECT_EQ(result.error(), httplib::Error::Success);
+        EXPECT_NE(result->body.find("success"), std::string::npos);
+    }
 }
 
 int main(int argc, char **argv) {
