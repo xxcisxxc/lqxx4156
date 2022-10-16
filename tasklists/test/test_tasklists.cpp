@@ -122,9 +122,10 @@ TEST_F(TaskListTest, Revise) {
         .WillOnce(Return(ERR_NO_NODE));
     EXPECT_EQ(tasklists->Revise(data), ERR_NO_NODE);
 
-    // data.tasklist_key = "value0";
-    // task_list_info.clear();
-    // task_list_info["not_exist_field"] = data.request_field_value;
+    data.tasklist_key = "value0";
+    task_list_info.clear();
+    data.request_field_name = "not_exist_field";
+    task_list_info["not_exist_field"] = data.request_field_value;
     EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key, task_list_info))
         .WillOnce(Return(ERR_KEY));
     EXPECT_EQ(tasklists->Revise(data), ERR_KEY);
