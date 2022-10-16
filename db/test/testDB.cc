@@ -1,7 +1,9 @@
 #include "DB.h"
 #include <gtest/gtest.h>
 
-const std::string host = "mongodb+srv://mongodb:VX9IcHcG53n3XY5v@cluster0.vxkzzqf.mongodb.net/?retryWrites=true&w=majority";
+const std::string host =
+    "mongodb+srv://mongodb:VX9IcHcG53n3XY5v@cluster0.vxkzzqf.mongodb.net/"
+    "?retryWrites=true&w=majority";
 
 TEST(TestDB, testconnection) {
   DB *db;

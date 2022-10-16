@@ -1,16 +1,16 @@
 #pragma once
 
-#include <map>
-#include <string>
-#include <queue>
-#include <mutex>
 #include <condition_variable>
+#include <map>
+#include <mutex>
+#include <queue>
+#include <string>
 // third party library
 #include <mongoc/mongoc.h>
 
 /**
  * @brief DB class return code
- * 
+ *
  */
 enum returnCode {
   SUCCESS,
@@ -31,12 +31,12 @@ private:
   /* data */
   /**
    * @brief host address
-   * 
+   *
    */
   std::string host_;
   /**
    * @brief database name
-   * 
+   *
    */
   std::string database_;
   /* method */
