@@ -63,7 +63,7 @@ public:
    * @param [in] user_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   createUserNode(const std::map<std::string, std::string> &user_info);
   /**
    * @brief Create a task list node.
@@ -72,7 +72,7 @@ public:
    * @param [in] task_list_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   createTaskListNode(const std::string &user_pkey,
                      const std::map<std::string, std::string> &task_list_info);
   /**
@@ -83,7 +83,7 @@ public:
    * @param [in] task_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   createTaskNode(const std::string &user_pkey,
                  const std::string &task_list_pkey,
                  const std::map<std::string, std::string> &task_info);
@@ -94,7 +94,7 @@ public:
    * @param [in] user_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   reviseUserNode(const std::string &user_pkey,
                  const std::map<std::string, std::string> &user_info);
   /**
@@ -105,7 +105,7 @@ public:
    * @param [in] task_list_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   reviseTaskListNode(const std::string &user_pkey,
                      const std::string &task_list_pkey,
                      const std::map<std::string, std::string> &task_list_info);
@@ -118,7 +118,7 @@ public:
    * @param [in] task_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   reviseTaskNode(const std::string &user_pkey,
                  const std::string &task_list_pkey,
                  const std::string &task_pkey,
@@ -129,7 +129,7 @@ public:
    * @param [in] user_pkey user primary key
    * @return returnCode error message
    */
-  returnCode deleteUserNode(const std::string &user_pkey);
+  virtual returnCode deleteUserNode(const std::string &user_pkey);
   /**
    * @brief Delete a task list node.
    *
@@ -137,7 +137,7 @@ public:
    * @param [in] task_list_pkey task list primary key
    * @return returnCode error message
    */
-  returnCode deleteTaskListNode(const std::string &user_pkey,
+  virtual returnCode deleteTaskListNode(const std::string &user_pkey,
                                 const std::string &task_list_pkey);
   /**
    * @brief Delete a task node.
@@ -147,7 +147,7 @@ public:
    * @param [in] task_pkey task primary key
    * @return returnCode error message
    */
-  returnCode deleteTaskNode(const std::string &user_pkey,
+  virtual returnCode deleteTaskNode(const std::string &user_pkey,
                             const std::string &task_list_pkey,
                             const std::string &task_pkey);
   /**
@@ -158,7 +158,7 @@ public:
    * to be filled
    * @return returnCode error message
    */
-  returnCode getUserNode(const std::string &user_pkey,
+  virtual returnCode getUserNode(const std::string &user_pkey,
                          const std::map<std::string, std::string> &user_info);
   /**
    * @brief Get a task list node.
@@ -169,7 +169,7 @@ public:
    * value to be filled
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   getTaskListNode(const std::string &user_pkey,
                   const std::string &task_list_pkey,
                   const std::map<std::string, std::string> &task_list_info);
@@ -183,7 +183,7 @@ public:
    * to be filled
    * @return returnCode error message
    */
-  returnCode getTaskNode(const std::string &user_pkey,
+  virtual returnCode getTaskNode(const std::string &user_pkey,
                          const std::string &task_list_pkey,
                          const std::string &task_pkey,
                          const std::map<std::string, std::string> &task_info);
