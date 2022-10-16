@@ -102,6 +102,7 @@ void DB::connectDBTest() {
   }
 
   bson_destroy(b);
+  mongoc_uri_destroy(uri);
   mongoc_client_destroy(client);
 }
 
