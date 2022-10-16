@@ -63,7 +63,7 @@ public:
    * @param [in] user_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   createUserNode(const std::map<std::string, std::string> &user_info);
   /**
    * @brief Create a task list node.
@@ -94,7 +94,7 @@ public:
    * @param [in] user_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   reviseUserNode(const std::string &user_pkey,
                  const std::map<std::string, std::string> &user_info);
   /**

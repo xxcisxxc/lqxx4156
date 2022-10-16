@@ -8,7 +8,7 @@ if (NOT TARGET api)
     add_subdirectory(api)
 endif()
 
-if (NOT TARGET db)
+if (NOT TARGET DB.o)
     add_subdirectory(db)
 endif()
 

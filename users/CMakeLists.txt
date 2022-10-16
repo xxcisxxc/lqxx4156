@@ -22,6 +22,11 @@ if (NOT TARGET gtest)
     add_subdirectory(${EXTERNAL_DIR}/googletest ${EXTERNAL_BIN_DIR}/googletest)
 endif()
 
+# db
+if (NOT TARGET DB.o)
+    add_subdirectory(${ROOT_DIR}/db ${ROOT_DIR}/build/db)
+endif()
+
 # users object
 add_library(users OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/users.cpp)
 target_include_directories(users PUBLIC ${ROOT_DIR})
@@ -29,4 +34,4 @@ target_include_directories(users PUBLIC ${ROOT_DIR})
 # users unit test
 add_executable(test_users ${CMAKE_CURRENT_SOURCE_DIR}/test/test_users.cpp)
 target_include_directories(test_users PRIVATE ${EXTERNAL_DIR}/googletest/include)
-target_link_libraries(test_users PRIVATE users gtest)
+target_link_libraries(test_users PRIVATE users gtest DB.o)

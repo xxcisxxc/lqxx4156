@@ -1,6 +1,6 @@
 #include <users/users.h>
 
-Users::Users() {}
+Users::Users(std::shared_ptr<DB> _db) {}
 
 Users::~Users() {}
 

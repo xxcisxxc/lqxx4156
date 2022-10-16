@@ -1,10 +1,12 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <db/DB.h>
 
 class Users {
 public:
-    Users();
+    Users(std::shared_ptr<DB> = nullptr);
 
     virtual ~Users();
 
