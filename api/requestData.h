@@ -2,6 +2,8 @@
 
 #include <string>
 
+// This is a structure that specifies which object is what we try to access
+// ie: the object parsed from API url
 struct RequestData {
     std::string user_key;
     std::string tasklist_key;
