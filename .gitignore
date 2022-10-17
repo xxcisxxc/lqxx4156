@@ -39,3 +39,6 @@ build/
 .vscode
 googletest
 build
+
+# MacOS
+.DS_Store
