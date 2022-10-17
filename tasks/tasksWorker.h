@@ -3,25 +3,25 @@
 #include <string>
 #include <map>
 #include <db/DB.h>
-#include "taskContent.h"
-#include "requestData.h"
+#include "api/taskContent.h"
+#include "api/requestData.h"
 
-class TaskLists;  // forward definition
+class TaskListsWorker;  // forward definition
 
 class TasksWorker {
 private:
     DB* db;
     
-    TaskLists* taskList;
+    TaskListsWorker* taskListsWorker;
 
-    std::string RenameTask(const std::string& tasklist_name, int suffix);
+    std::string Rename(const std::string& tasklist_name, int suffix);
 
     void TaskStruct2Map(const TaskContent& taskContent, std::map<std::string, std::string>& task_info);
 
     void Map2TaskStruct(const std::map<std::string, std::string>& task_info, TaskContent& taskContent);
     
 public:
-    TasksWorker(DB* _db, TaskLists* _taskList);
+    TasksWorker(DB* _db, TaskListsWorker* _taskListWorker);
 
     virtual ~TasksWorker();
 

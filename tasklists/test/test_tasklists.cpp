@@ -1,4 +1,5 @@
-#include <tasklists/tasklists.h>
+#include <tasklists/tasklistsWorker.h>
+#include <api/tasklistContent.h>
 #include <db/DB.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -35,7 +36,7 @@ class TaskListTest : public ::testing::Test {
 protected:
 
     void SetUp() override {
-        tasklists = std::make_shared<TaskLists>(mockedDB);
+        tasklistsWorker = std::make_shared<TaskListsWorker>(mockedDB);
     }
 
     void TearDown() override {
@@ -43,92 +44,187 @@ protected:
     }
 
     MockedDB mockedDB;
-    std::shared_ptr<TaskLists> tasklists;
+    std::shared_ptr<TaskListsWorker> tasklistsWorker;
     RequestData data;
+    TasklistContent in;
+    TasklistContent out;
+
 };
 
 using namespace ::testing;
 
-TEST_F(TaskListTest, Create) {
-    // normal create
-    data.user_key = "user0";
-    data.tasklist_key = "tasklist0";
-    std::map<std::string, std::string> task_list_info;
-    task_list_info[data.tasklist_key] = "";
-
-    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
-        .WillOnce(Return(SUCCESS));
-    EXPECT_EQ(tasklists->Create(data), SUCCESS);
-
-    // multiple calls to createTaskListNode if previous name is duplicated
-    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
-        .WillOnce(Return(ERR_DUP_NODE));
-    task_list_info.clear();
-    task_list_info["tasklist0(1)"] = "";
-    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
-        .WillOnce(Return(ERR_DUP_NODE));
-    task_list_info.clear();
-    task_list_info["tasklist0(2)"] = "";
-    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
-        .WillOnce(Return(SUCCESS));
-    EXPECT_EQ(tasklists->Create(data), SUCCESS);
-}
-
 TEST_F(TaskListTest, Query) {
+    // setup input
     data.user_key = "user0";
     data.tasklist_key = "tasklist0";
-    data.request_field_name = "field0";
+    out = TasklistContent();
     std::map<std::string, std::string> task_list_info;
-    task_list_info[data.request_field_name] = "";
-    std::string out;
+
     auto fill = [&]() {
-        task_list_info["field0"] = "value0";
+        out.name = "tasklist0";
+        out.content = "this is tasklist #0";
+        out.date = "10/15/2022";
         return SUCCESS;
     };
 
+    // normal get, should be successful
     EXPECT_CALL(mockedDB, getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
         .WillOnce(Invoke(fill));
-    EXPECT_EQ(tasklists->Query(data, out), SUCCESS);
-    EXPECT_EQ(task_list_info["field0"], "value0");
+    EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+    EXPECT_EQ(out.name, "tasklist0");
+    EXPECT_EQ(out.content, "this is tasklist #0");
+    EXPECT_EQ(out.date, "10/15/2022");
+
+    // request tasklist_key is empty 
+    data.user_key = "user0";
+    data.tasklist_key = "";
+    out = TasklistContent();
+    EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_KEY);
+    EXPECT_EQ(out.name, "");
+    EXPECT_EQ(out.content, "");
+    EXPECT_EQ(out.date, "");
+
+    // request user_key is empty
+    data.user_key = "";
+    data.tasklist_key = "";
+    out = TasklistContent();
+    EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_KEY);
+    EXPECT_EQ(out.name, "");
+    EXPECT_EQ(out.content, "");
+    EXPECT_EQ(out.date, "");
+
+    // TODO: test for user DNE
+}
+
+TEST_F(TaskListTest, Create) {
+    // setup input
+    data.user_key = "user0";
+    data.tasklist_key = "tasklist0";
+    std::string name = "tasklist0";
+    std::string content = "this is tasklist #0";
+    std::string date = "10/15/2022";
+    in = TasklistContent(name, content, date);
+
+    std::map<std::string, std::string> task_list_info;
+    task_list_info["name"] = name;
+    task_list_info["content"] = content;
+    task_list_info["date"] = date;
+    std::string outName;
+
+    // normal create, should be successful
+    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
+        .WillOnce(Return(SUCCESS));
+    EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
+    EXPECT_EQ(outName, "tasklist0");
+
+    // request tasklist_key is empty, should be successful since task name is provided in tasklistContent
+    data.user_key = "user0";
+    data.tasklist_key = "";
+    outName = "";
+    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
+        .WillOnce(Return(SUCCESS));
+    EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
+    EXPECT_EQ(outName, "tasklist0");
+
+    // request user_key is empty
+    data.user_key = "";
+    data.tasklist_key = "";
+    outName = "";
+    EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_KEY);
+    EXPECT_EQ(outName, "");
+
+    // multiple calls to createTaskListNode if previous name is duplicated
+    data.user_key = "user0";
+    data.tasklist_key = "tasklist0";
+    outName = "";
+    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
+        .WillOnce(Return(ERR_DUP_NODE));
+    task_list_info["name"] = "tasklist0(1)";
+    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
+        .WillOnce(Return(ERR_DUP_NODE));
+    task_list_info["name"] = "tasklist0(2)";
+    EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
+        .WillOnce(Return(SUCCESS));
+    EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
+    EXPECT_EQ(outName, "tasklist0(2)");
+
+    // TODO: test for user DNE
 }
 
 TEST_F(TaskListTest, Delete) {
+    // setup input
     data.user_key = "user0";
     data.tasklist_key = "tasklist0";
+
+    // normal delete, should be successful
     EXPECT_CALL(mockedDB, deleteTaskListNode(data.user_key, data.tasklist_key))
         .WillOnce(Return(SUCCESS));
-    EXPECT_EQ(tasklists->Delete(data), SUCCESS);
+    EXPECT_EQ(tasklistsWorker->Delete(data), SUCCESS);
     
-    data.tasklist_key = "not_exist_task";
-    EXPECT_CALL(mockedDB, deleteTaskListNode(data.user_key, data.tasklist_key))
-        .WillOnce(Return(ERR_NO_NODE));
-    EXPECT_EQ(tasklists->Delete(data), ERR_NO_NODE);
+    // request tasklist_key is empty 
+    data.user_key = "user0";
+    data.tasklist_key = "";
+    EXPECT_EQ(tasklistsWorker->Delete(data), ERR_KEY);
 
+    // request user_key is empty
+    data.user_key = "";
+    data.tasklist_key = "";
+    EXPECT_EQ(tasklistsWorker->Delete(data), ERR_KEY);
+
+    // TODO: test for user DNE
 }
 
 TEST_F(TaskListTest, Revise) {
+    // setup input
     data.user_key = "user0";
     data.tasklist_key = "tasklist0";
-    data.request_field_name = "field0";
-    data.request_field_value = "value0";
+
+    std::string newName = "tasklist1";
+    std::string newContent = "this is tasklist #1";
+    std::string newDate = "16/10/2022";
+    in = TasklistContent(newName, newContent, newDate);
+
     std::map<std::string, std::string> task_list_info;
-    task_list_info[data.request_field_name] = data.request_field_value;
+    task_list_info["name"] = newName;
+    task_list_info["content"] = newContent;
+    task_list_info["date"] = newDate;
+
+    // normal revise, should be successful
     EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key, task_list_info))
         .WillOnce(Return(SUCCESS));
-    EXPECT_EQ(tasklists->Revise(data), SUCCESS);
+    EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
     
-    data.tasklist_key = "not_exist_task";
+    // request tasklist_key empty
+    data.tasklist_key = "";
+    EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+
+    // request user_key empty
+    data.user_key = "";
+    data.tasklist_key = "";
+    EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+
+    // fields are empty
+    data.user_key = "user0";
+    data.tasklist_key = "tasklist0";
+    in = TasklistContent();
+    task_list_info.clear();
+    EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+        .WillOnce(Return(ERR_RFIELD));
+    EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
+
+    // user not exist
+    data.user_key = "not_exist_user";
+    data.tasklist_key = "tasklist0";
     EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key, task_list_info))
         .WillOnce(Return(ERR_NO_NODE));
-    EXPECT_EQ(tasklists->Revise(data), ERR_NO_NODE);
+    EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
 
-    data.tasklist_key = "value0";
-    task_list_info.clear();
-    data.request_field_name = "not_exist_field";
-    task_list_info["not_exist_field"] = data.request_field_value;
+    // tasklist not exist
+    data.user_key = "user0";
+    data.tasklist_key = "not_exist_tasklist";
     EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key, task_list_info))
-        .WillOnce(Return(ERR_KEY));
-    EXPECT_EQ(tasklists->Revise(data), ERR_KEY);
+        .WillOnce(Return(ERR_NO_NODE));
+    EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
 }
 
 int main(int argc, char **argv) {

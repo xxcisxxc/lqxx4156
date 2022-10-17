@@ -23,7 +23,7 @@ if (NOT TARGET gtest)
 endif()
 
 # add tasklists, because mock need it
-if (NOT TARGET tasklists)
+if (NOT TARGET tasklistsWorker)
     add_subdirectory(${ROOT_DIR}/tasklists ${ROOT_DIR}/build/tasklists)
 endif()
 
@@ -35,5 +35,5 @@ target_include_directories(test_tasks PRIVATE ${ROOT_DIR})
 target_include_directories(test_tasks PRIVATE ${ROOT_DIR}/tasklists)
 target_include_directories(test_tasks PRIVATE ${EXTERNAL_DIR}/googletest/googletest/include)
 target_include_directories(test_tasks PRIVATE ${EXTERNAL_DIR}/googletest/googlemock/include)
-target_link_libraries(test_tasks PRIVATE tasksWorker tasklists DB.o gtest gmock)
+target_link_libraries(test_tasks PRIVATE tasksWorker tasklistsWorker DB.o gtest gmock)
 

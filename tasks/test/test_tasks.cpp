@@ -1,5 +1,5 @@
 #include <tasks/tasksWorker.h>
-#include <tasklists/tasklists.h>
+#include <tasklists/tasklistsWorker.h>
 #include <db/DB.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,16 +37,18 @@ public:
     MockedDB() : DB("localhost") {}
 };
 
-class MockedTaskLists : public TaskLists {
+class MockedTaskLists : public TaskListsWorker {
 public:
     MOCK_METHOD(returnCode,
                 Query,
                 (const RequestData& data, 
-                std::string& out),
+                TasklistContent& out),
                 (override));
     MOCK_METHOD(returnCode,
                 Create,
-                (const RequestData& data),
+                (const RequestData& data,
+                TasklistContent& in,
+                std::string& outName),
                 (override));
     MOCK_METHOD(returnCode,
                 Delete,
@@ -54,14 +56,15 @@ public:
                 (override));
     MOCK_METHOD(returnCode,
                 Revise,
-                (const RequestData& data),
+                (const RequestData& data,
+                TasklistContent& in),
                 (override));
     MOCK_METHOD(bool,
                 Exists,
                 (const RequestData& data),
                 (override));
 
-    MockedTaskLists(DB& _db_instance) : TaskLists(_db_instance) {}
+    MockedTaskLists(DB& _db_instance) : TaskListsWorker(_db_instance) {}
 };
 
 class TasksWorkerTest : public ::testing::Test {

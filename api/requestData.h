@@ -17,8 +17,6 @@ struct RequestData {
         user_key = data.user_key;
         tasklist_key = data.tasklist_key;
         task_key = data.task_key;
-        request_field_name = data.request_field_name;
-        request_field_value = data.request_field_value;
     }
 
     bool operator == (const RequestData& other) const {
@@ -27,12 +25,17 @@ struct RequestData {
                this->task_key == other.task_key;
     }
 
-    // For tasklist request
+    // For user in request
+    bool RequestUserIsEmpty() const {
+        return user_key == "";
+    }
+
+    // For tasklist in request
     bool RequestTaskListIsEmpty() const {
         return user_key == "" || tasklist_key == "";
     }
 
-    // For task request
+    // For task in request
     bool RequestIsEmpty() const {
         return user_key == "" || tasklist_key == "" || task_key == "";
     }

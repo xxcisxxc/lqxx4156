@@ -1,12 +1,12 @@
 #include "tasksWorker.h"
-#include <tasklists/tasklists.h>
+#include <tasklists/tasklistsWorker.h>
 #include <iostream>
 
-TasksWorker:: TasksWorker(DB* _db, TaskLists* _taskList): db(_db), taskList(_taskList) {}
+TasksWorker:: TasksWorker(DB* _db, TaskListsWorker* _taskListsWorker): db(_db), taskListsWorker(_taskListsWorker) {}
 
 TasksWorker:: ~TasksWorker() {}
 
-std::string TasksWorker:: RenameTask (const std::string& name, int suffix) {
+std::string TasksWorker:: Rename (const std::string& name, int suffix) {
     if (suffix == 0) return name;  
     return name + "(" + std::to_string(suffix) + ")";
 }
@@ -34,6 +34,7 @@ returnCode TasksWorker:: Query(const RequestData& data, TaskContent& out) {
 
     std::map<std::string, std::string> task_info;
     
+    // get all available fields
     returnCode ret = db->getTaskNode(data.user_key,
                                      data.tasklist_key,
                                      data.task_key,
@@ -58,7 +59,7 @@ returnCode TasksWorker:: Create(const RequestData& data, TaskContent& in, std::s
     if(in.LoseKey()) return ERR_KEY;   
 
     // tasklist itself does not exist
-    if(!taskList->Exists(data)) {
+    if(!taskListsWorker->Exists(data)) {
         // maybe create taskList first
         return ERR_NO_NODE;
     }    
@@ -71,7 +72,7 @@ returnCode TasksWorker:: Create(const RequestData& data, TaskContent& in, std::s
     std::string originTaskName = task_info["name"];
     do {
         // For Create, data.task_key can be "", so we should use task_info["name"]
-        outTaskName = RenameTask(originTaskName, suffix++);
+        outTaskName = Rename(originTaskName, suffix++);
         task_info["name"] = outTaskName;
         ret =  db->createTaskNode(data.user_key,
                                   data.tasklist_key,
@@ -86,7 +87,7 @@ returnCode TasksWorker:: Delete(const RequestData& data) {
     if(data.RequestIsEmpty()) return ERR_KEY; 
 
     // tasklist itself does not exist
-    if(!taskList->Exists(data)) {
+    if(!taskListsWorker->Exists(data)) {
         return ERR_NO_NODE;
     }
 
@@ -105,7 +106,7 @@ returnCode TasksWorker:: Revise(const RequestData& data, TaskContent& in) {
     if(in.IsEmpty()) return ERR_KEY;  // no such input    
 
     // tasklist itself does not exist
-    if(!taskList->Exists(data)) {
+    if(!taskListsWorker->Exists(data)) {
         return ERR_NO_NODE;
     }
 
