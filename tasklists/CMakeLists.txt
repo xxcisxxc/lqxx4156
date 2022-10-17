@@ -22,13 +22,11 @@ if (NOT TARGET gtest)
     add_subdirectory(${EXTERNAL_DIR}/googletest ${EXTERNAL_BIN_DIR}/googletest)
 endif()
 
-
-
 add_library(tasklists OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/tasklists.cpp)
-target_include_directories(tasklists PRIVATE ${ROOT_DIR})
+target_include_directories(tasklists PUBLIC ${ROOT_DIR})
 
 add_executable(test_tasklists ${CMAKE_CURRENT_SOURCE_DIR}/test/test_tasklists.cpp)
 target_include_directories(test_tasklists PRIVATE ${ROOT_DIR})
 target_include_directories(test_tasklists PRIVATE ${EXTERNAL_DIR}/googletest/googletest/include)
 target_include_directories(test_tasklists PRIVATE ${EXTERNAL_DIR}/googletest/googlemock/include)
-target_link_libraries(test_tasklists PRIVATE tasklists DB.o gtest gmock)
+target_link_libraries(test_tasklists PRIVATE tasklists task DB.o gtest gmock)

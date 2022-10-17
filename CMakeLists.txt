@@ -23,6 +23,10 @@ if (NOT TARGET tasklists)
     add_subdirectory(tasklists)
 endif()
 
+if (NOT TARGET tasks)
+    add_subdirectory(tasks)
+endif()
+
 # main executable file
 add_executable(lqxx ${PROJECT_SOURCE_DIR}/main.cpp)
 target_link_libraries(lqxx PRIVATE api DB.o users gtest oauthcpp nlohmann_json)

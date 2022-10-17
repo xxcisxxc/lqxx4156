@@ -1,7 +1,6 @@
-#include <tasklists/tasklists.h>
 #include <map>
 #include <iostream>
-
+#include "tasklists.h"
 
 TaskLists :: ~TaskLists() {
     
@@ -56,4 +55,13 @@ returnCode TaskLists :: Revise(const RequestData& data) {
                                                     data.tasklist_key,
                                                     task_list_info);
     return ret;
+}
+
+bool TaskLists :: Exists(const RequestData& data) {
+    std::string out;
+    returnCode ret = Query(data, out);
+    if(ret == ERR_KEY || ret == ERR_NO_NODE) {
+        return false;
+    }
+    return true;
 }
