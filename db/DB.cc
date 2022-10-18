@@ -57,21 +57,21 @@ returnCode DB::deleteTaskNode(const std::string &user_pkey,
 
 returnCode
 DB::getUserNode(const std::string &user_pkey,
-                const std::map<std::string, std::string> &user_info) {
+                std::map<std::string, std::string> &user_info) {
   return SUCCESS;
 }
 
 returnCode
 DB::getTaskListNode(const std::string &user_pkey,
                     const std::string &task_list_pkey,
-                    const std::map<std::string, std::string> &task_list_info) {
+                    std::map<std::string, std::string> &task_list_info) {
   return SUCCESS;
 }
 
 returnCode
 DB::getTaskNode(const std::string &user_pkey, const std::string &task_list_pkey,
                 const std::string &task_pkey,
-                const std::map<std::string, std::string> &task_info) {
+                std::map<std::string, std::string> &task_info) {
   return SUCCESS;
 }
 

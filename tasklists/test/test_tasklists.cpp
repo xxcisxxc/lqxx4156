@@ -15,7 +15,7 @@ public:
                 getTaskListNode,
                 (const std::string &user_pkey,
                  const std::string &task_list_pkey,
-                 (const std::map<std::string, std::string> &) task_list_info),
+                 (std::map<std::string, std::string> &) task_list_info),
                 (override));
     MOCK_METHOD(returnCode,
                 deleteTaskListNode,
@@ -59,17 +59,13 @@ TEST_F(TaskListTest, Query) {
     data.tasklist_key = "tasklist0";
     out = TasklistContent();
     std::map<std::string, std::string> task_list_info;
-
-    auto fill = [&]() {
-        out.name = "tasklist0";
-        out.content = "this is tasklist #0";
-        out.date = "10/15/2022";
-        return SUCCESS;
-    };
+    std::map<std::string, std::string> new_task_list_info = {{"name", "tasklist0"}, 
+                                                             {"content", "this is tasklist #0"},
+                                                             {"date", "10/15/2022"}};
 
     // normal get, should be successful
     EXPECT_CALL(mockedDB, getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
-        .WillOnce(Invoke(fill));
+        .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info),Return(SUCCESS)));
     EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
     EXPECT_EQ(out.name, "tasklist0");
     EXPECT_EQ(out.content, "this is tasklist #0");

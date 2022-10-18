@@ -19,13 +19,13 @@ void TasksWorker:: TaskStruct2Map(const TaskContent& taskContent, std::map<std::
 
 void TasksWorker:: Map2TaskStruct(const std::map<std::string, std::string>& task_info, TaskContent& taskContent) {
     if(!task_info.count("name")) std::cout << "lose name" << std::endl;
-    taskContent.name = task_info.at("name");
+    else taskContent.name = task_info.at("name");
 
     if(!task_info.count("content")) std::cout << "lose content" << std::endl;
-    taskContent.content = task_info.at("content");
+    else taskContent.content = task_info.at("content");
 
     if(!task_info.count("date")) std::cout << "lose date" << std::endl;
-    taskContent.date = task_info.at("date");
+    else taskContent.date = task_info.at("date");
 }
 
 returnCode TasksWorker:: Query(const RequestData& data, TaskContent& out) {
@@ -54,7 +54,6 @@ returnCode TasksWorker:: Query(const RequestData& data, TaskContent& out) {
 returnCode TasksWorker:: Create(const RequestData& data, TaskContent& in, std::string& outTaskName) {
     // request has empty value
     if(data.RequestTaskListIsEmpty()) return ERR_KEY; 
-
     // input value does not have a key
     if(in.LoseKey()) return ERR_KEY;   
 

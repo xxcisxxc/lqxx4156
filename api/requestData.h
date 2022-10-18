@@ -8,8 +8,6 @@ struct RequestData {
     std::string user_key;
     std::string tasklist_key;
     std::string task_key;
-    std::string request_field_name;
-    std::string request_field_value;
 
     RequestData() {}
     

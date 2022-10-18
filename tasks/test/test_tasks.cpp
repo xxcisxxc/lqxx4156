@@ -12,7 +12,7 @@ public:
                 (const std::string &user_pkey, 
                  const std::string &task_list_pkey,
                  const std::string &task_pkey,
-                 (const std::map<std::string, std::string>) &task_info),
+                 (std::map<std::string, std::string>) &task_info),
                 (override));
     MOCK_METHOD(returnCode, 
                 createTaskNode, 
@@ -77,7 +77,8 @@ protected:
     }
 
     void TearDown() override {
-        // pass
+        delete(mockedDB);
+        delete(mockedTaskLists);
     }
 
     MockedDB* mockedDB;
@@ -98,25 +99,21 @@ TEST_F(TasksWorkerTest, Query) {
     data.tasklist_key = "tasklist0";
     data.task_key = "task0";
     std::map<std::string, std::string> task_info;
+    std::map<std::string, std::string> new_task_info;
+    new_task_info["name"] = "task0";
+    new_task_info["content"] = "4156 Iteration-1";
+    new_task_info["date"] = "10/24/2022";
     
-    auto fill = [&]() {
-        task_info["name"] = "task0";
-        std::cout << task_info["name"] << task_info["name"] << std::endl;
-
-        task_info["content"] = "4156 Iteration-1";
-        task_info["date"] = "10/24/2022";
-        return SUCCESS;
-    };
-
     // should be successful
     EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key, data.task_key, task_info))
-        .WillOnce(Invoke(fill));
+        .WillOnce(DoAll(SetArgReferee<3>(new_task_info), Return(SUCCESS)));
     EXPECT_EQ(tasksWorker->Query(data, out), SUCCESS);
     EXPECT_EQ(out.name, "task0");
     EXPECT_EQ(out.content, "4156 Iteration-1");
     EXPECT_EQ(out.date, "10/24/2022");
 
     // request is empty
+    out = TaskContent();
     data.user_key = "";
     EXPECT_EQ(tasksWorker->Query(data, out), ERR_KEY);
     EXPECT_EQ(out.name, "");
@@ -196,7 +193,6 @@ TEST_F(TasksWorkerTest, Create) {
 
     // input does not have a key
     in.name = "";
-    EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
     EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_KEY);
     EXPECT_EQ(outTaskName, "");
     in.name = "task0";
