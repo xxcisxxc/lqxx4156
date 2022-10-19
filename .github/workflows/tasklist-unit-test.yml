@@ -1,8 +1,5 @@
 name: Tasklist Test
-on:
-  push:
-    branches:
-      - qc/dev
+on: [push]
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
