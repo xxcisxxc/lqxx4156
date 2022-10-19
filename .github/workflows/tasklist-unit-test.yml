@@ -1,0 +1,16 @@
+name: Tasklist Test
+on:
+  push:
+    branches:
+      - qc/dev
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - run: echo "Building project"
+      - name: build
+      - run: cd build ; cmake .. ; make
+      - name: Run tasklist test
+      - run: ./test/test_tasklists
