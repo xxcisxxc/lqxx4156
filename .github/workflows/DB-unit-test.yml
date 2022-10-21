@@ -17,7 +17,7 @@ jobs:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
     - name: Install libneo4j-client
-      run: sudo apt-get install neo4j-client libneo4j-client-dev && git clone https://github.com/cleishm/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure && make clean check && sudo make install
+      run: sudo apt-get install neo4j-client libneo4j-client-dev libedit-dev && git clone https://github.com/cleishm/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure && make clean check && sudo make install
     - name: Install Java 11
       run: sudo apt-get install openjdk-11-jre
     - name: Install neo4j
