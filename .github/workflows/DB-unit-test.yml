@@ -26,10 +26,8 @@ jobs:
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
     - name: Install libneo4j-client
       run: sudo apt-get install libcypher-parser-dev libedit-dev && git clone https://github.com/cleishm/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure && make clean check && sudo make install
-    - name: Set Env Variable
-      run: export LD_LIBRARY_PATH=/usr/local/lib
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
     - name: Run test
-      run: /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
+      run: LD_LIBRARY_PATH=/usr/local/lib /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
