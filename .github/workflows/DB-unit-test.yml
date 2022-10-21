@@ -16,8 +16,14 @@ jobs:
     steps:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
+    - name: Install libneo4j-client
+      run: sudo apt-get install neo4j-client libneo4j-client-dev
+    - name: Install Java 11
+      run: sudo apt-get install openjdk-11-jre
     - name: Install neo4j
-      run: wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add - && echo 'deb https://debian.neo4j.com stable latest' | sudo tee -a /etc/apt/sources.list.d/neo4j.list && sudo apt-get update && sudo apt install neo4j && neo4j-admin set-initial-password hello4156 && sudo service neo4j start
+      run: wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add - && echo 'deb https://debian.neo4j.com stable latest' | sudo tee -a /etc/apt/sources.list.d/neo4j.list && sudo apt-get update && sudo apt install neo4j
+    - name: Run neo4j
+      run: neo4j-admin set-initial-password hello4156 && sudo service neo4j start
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
