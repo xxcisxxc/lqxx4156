@@ -23,7 +23,7 @@ jobs:
     - name: Install neo4j
       run: wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add - && echo 'deb https://debian.neo4j.com stable latest' | sudo tee -a /etc/apt/sources.list.d/neo4j.list && sudo apt-get update && sudo apt install neo4j
     - name: Run neo4j
-      run: neo4j-admin set-initial-password hello4156 && sudo service neo4j start
+      run: sudo neo4j-admin set-initial-password hello4156 && sudo service neo4j start
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
