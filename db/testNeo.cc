@@ -15,9 +15,6 @@ int main(int argc, char *argv[]) {
 
   neo4j_result_stream_t *results =
       neo4j_run(connection, "MATCH (n:User) RETURN n", neo4j_null);
-  // neo4j_result_stream_t *results = neo4j_run(connection, "MATCH (a:User
-  // {email: 'c@163.com'}), (b:TaskList {name: 'hello'}) MERGE
-  // (a)-[r:Owns]->(b)", neo4j_null);
   if (results == NULL) {
     neo4j_perror(stderr, errno, "Failed to run statement");
     return EXIT_FAILURE;
