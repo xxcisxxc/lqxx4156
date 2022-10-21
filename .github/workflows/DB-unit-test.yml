@@ -21,11 +21,6 @@ jobs:
         ports:
           - 7687:7687
           - 7474:7474
-        options: >-
-          --health-cmd "cypher-shell 'MATCH (n) RETURN COUNT(n)'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
