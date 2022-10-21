@@ -1,6 +1,6 @@
 #include "DB.h"
 
-DB::DB(std::string host, int default_connection) {
+DB::DB(std::string host) {
   this->host_ = host;
 
   // Called before neo4j client driver is used.

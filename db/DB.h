@@ -77,7 +77,7 @@ public:
    * @param host The host address of neo4j DB.
    * @param default_connection The connection pool depth
    */
-  DB(std::string host, int default_connection = 10);
+  DB(std::string host);
   /**
    * @brief Destroy the DB object: disconnect from neo4j DB.
    *
