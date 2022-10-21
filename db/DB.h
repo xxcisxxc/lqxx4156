@@ -1,8 +1,16 @@
 #pragma once
 
+#include <errno.h>
 #include <map>
 #include <string>
+#include <vector>
+// third party library
+#include <neo4j-client.h>
 
+/**
+ * @brief DB class return code
+ *
+ */
 enum returnCode {
   SUCCESS,
   ERR_UNKNOWN,  // Unknown error
@@ -14,41 +22,64 @@ enum returnCode {
 };
 
 /**
- * @brief This class connect and interact with Neo4j DB.
+ * @brief This class connect and interact with neo4j DB.
  *
  */
 class DB {
 private:
   /* data */
-
+  /**
+   * @brief host address
+   *
+   */
+  std::string host_;
+  /**
+   * @brief neo4j return code of duplicated node
+   *
+   */
+  const std::string error_code_of_dup =
+      "Neo.ClientError.Schema.ConstraintValidationFailed";
   /* method */
   /**
-   * @brief Connect to Neo4j DB.
+   * @brief Create the connection to neo4j DB.
    *
+   * @return neo4j_connection_t* The connection to neo4j DB.
    */
-  void connectDB();
+  neo4j_connection_t *connectDB();
   /**
-   * @brief Disconnect from Neo4j DB.
+   * @brief Close the connection to neo4j DB.
    *
    */
-  void disconnectDB();
+  void closeDB(neo4j_connection_t *connection);
   /**
    * @brief Execute a query.
    *
    * @param query
-   * @return std::string
+   * @return neo4j_result_stream_t *: a pointer to a list of results
    */
-  std::string executeQuery(std::string &query);
+  neo4j_result_stream_t *executeQuery(const std::string &query,
+                                      neo4j_connection_t *connection);
+  /**
+   * @brief Get Neo4j Client Error Message
+   *
+   */
+  std::string get_Neo4jC_error();
+  /**
+   * @brief Ensure to create database constraints
+   *
+   */
+  void ensureConstraints();
 
 public:
   /**
-   * @brief Construct a new DB object: connect to Neo4j DB.
+   * @brief Construct a new DB object: connect to neo4j DB.
    *
-   * @param host
+   * @param host The host address of neo4j DB.
+   * @param default_connection The connection pool depth
    */
-  DB(std::string host);
+  DB(std::string host, int default_connection = 10);
   /**
-   * @brief Destroy the DB object: disconnect from Neo4j DB.
+   * @brief Destroy the DB object: disconnect from neo4j DB.
    *
    */
   ~DB();
@@ -187,9 +218,28 @@ public:
                          const std::string &task_list_pkey,
                          const std::string &task_pkey,
                          std::map<std::string, std::string> &task_info);
+  /**
+   * @brief Get all user nodes.
+   *
+   * @param [out] user_info array of user pkeys
+   */
+  returnCode getAllUserNodes(std::vector<std::string> &user_info);
+  /**
+   * @brief Get all task list nodes.
+   *
+   * @param [in] user_pkey user primary key
+   * @param [out] task_list_info array of task list pkeys
+   */
+  returnCode getAllTaskListNodes(const std::string &user_pkey,
+                                 std::vector<std::string> &task_list_info);
+  /**
+   * @brief Get all task nodes.
+   *
+   * @param [in] user_pkey user primary key
+   * @param [in] task_list_pkey task list primary key
+   * @param [out] task_info array of task pkeys
+   */
+  returnCode getAllTaskNodes(const std::string &user_pkey,
+                             const std::string &task_list_pkey,
+                             std::vector<std::string> &task_info);
 };
-
-/*
-unit test:
-- each method (mock database?)
-*/
