@@ -20,6 +20,8 @@ jobs:
           NEO4J_AUTH: neo4j/hello4156
         ports:
           - 7687:7687
+        volumes:
+          - $HOME/neo4j/data:/data
     steps:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
