@@ -1,4 +1,5 @@
 #include "DB.h"
+#include <algorithm>
 #include <gtest/gtest.h>
 
 const std::string host = "neo4j://neo4j:hello4156@localhost:7687";
@@ -323,6 +324,54 @@ TEST(TestDB, testGetTaskNode) {
   EXPECT_EQ(task_info["field1"], "revised1");
   EXPECT_EQ(task_info["field2"], "revised2");
   EXPECT_EQ(task_info["field3"], "revised3");
+}
+
+TEST(TestDB, TestGetAllUserNodes) {
+  DB db(host);
+  std::vector<std::string> user_pkeys;
+
+  // Get all user nodes
+  EXPECT_EQ(db.getAllUserNodes(user_pkeys), SUCCESS);
+  EXPECT_EQ(user_pkeys.size(), 2);
+  EXPECT_TRUE(std::find(user_pkeys.begin(), user_pkeys.end(),
+                        "test0@test.com") != user_pkeys.end());
+  EXPECT_TRUE(std::find(user_pkeys.begin(), user_pkeys.end(),
+                        "test1@test.com") != user_pkeys.end());
+}
+
+TEST(TestDB, TestGetAllTaskListNodes) {
+  DB db(host);
+  std::string user_pkey = "test0@test.com";
+  std::vector<std::string> task_list_pkeys;
+
+  // Get all task list nodes
+  EXPECT_EQ(db.getAllTaskListNodes("wrong@test.com", task_list_pkeys),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.getAllTaskListNodes(user_pkey, task_list_pkeys), SUCCESS);
+  EXPECT_EQ(task_list_pkeys.size(), 2);
+  EXPECT_TRUE(std::find(task_list_pkeys.begin(), task_list_pkeys.end(),
+                        "test0-task-list") != task_list_pkeys.end());
+  EXPECT_TRUE(std::find(task_list_pkeys.begin(), task_list_pkeys.end(),
+                        "test1-task-list") != task_list_pkeys.end());
+}
+
+TEST(TestDB, TestGetAllTaskNodes) {
+  DB db(host);
+  std::string user_pkey = "test0@test.com";
+  std::string task_list_pkey = "test0-task-list";
+  std::vector<std::string> task_pkeys;
+
+  // Get all task nodes
+  EXPECT_EQ(db.getAllTaskNodes("wrong@test.com", task_list_pkey, task_pkeys),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.getAllTaskNodes(user_pkey, "wrong-task-list", task_pkeys),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.getAllTaskNodes(user_pkey, task_list_pkey, task_pkeys), SUCCESS);
+  EXPECT_EQ(task_pkeys.size(), 2);
+  EXPECT_TRUE(std::find(task_pkeys.begin(), task_pkeys.end(), "test0-task") !=
+              task_pkeys.end());
+  EXPECT_TRUE(std::find(task_pkeys.begin(), task_pkeys.end(), "test1-task") !=
+              task_pkeys.end());
 }
 
 TEST(TestDB, TestDeleteTaskNode) {

@@ -505,6 +505,107 @@ returnCode DB::getTaskNode(const std::string &user_pkey,
   return SUCCESS;
 }
 
+returnCode DB::getAllUserNodes(std::vector<std::string> &user_info) {
+  std::string query = "MATCH (n:User) RETURN n";
+  neo4j_result_stream_t *results = executeQuery(query);
+  if (neo4j_check_failure(results)) {
+    return ERR_UNKNOWN;
+  }
+  neo4j_result_t *result;
+  while ((result = neo4j_fetch_next(results)) != NULL) {
+    neo4j_value_t node = neo4j_result_field(result, 0);
+    neo4j_value_t value = neo4j_node_properties(node);
+    char buf[1024];
+    neo4j_value_t field_value = neo4j_map_get(value, "email");
+    neo4j_tostring(field_value, buf, sizeof(buf));
+    std::string value_str(buf);
+    value_str.pop_back();
+    value_str.erase(0, 1);
+    user_info.push_back(value_str);
+  }
+  neo4j_close_results(results);
+  return SUCCESS;
+}
+
+returnCode DB::getAllTaskListNodes(const std::string &user_pkey,
+                                   std::vector<std::string> &task_list_info) {
+  // Check User node exists
+  std::string query = "MATCH (n:User {email: '" + user_pkey + "'}) RETURN n";
+  neo4j_result_stream_t *results = executeQuery(query);
+  if (neo4j_check_failure(results)) {
+    return ERR_UNKNOWN;
+  }
+  neo4j_result_t *result = neo4j_fetch_next(results);
+  if (result == NULL) {
+    return ERR_NO_NODE;
+  }
+  query = "MATCH (n:User {email: '" + user_pkey + "'})-[:Owns]->(m) RETURN m";
+  results = executeQuery(query);
+  if (neo4j_check_failure(results)) {
+    return ERR_UNKNOWN;
+  }
+  while ((result = neo4j_fetch_next(results)) != NULL) {
+    neo4j_value_t node = neo4j_result_field(result, 0);
+    neo4j_value_t value = neo4j_node_properties(node);
+    char buf[1024];
+    neo4j_value_t field_value = neo4j_map_get(value, "name");
+    neo4j_tostring(field_value, buf, sizeof(buf));
+    std::string value_str(buf);
+    value_str.pop_back();
+    value_str.erase(0, 1);
+    value_str.erase(value_str.begin() + value_str.find("#"), value_str.end());
+    task_list_info.push_back(value_str);
+  }
+  neo4j_close_results(results);
+  return SUCCESS;
+}
+
+returnCode DB::getAllTaskNodes(const std::string &user_pkey,
+                               const std::string &task_list_pkey,
+                               std::vector<std::string> &task_info) {
+  // Check User node exists
+  std::string query = "MATCH (n:User {email: '" + user_pkey + "'}) RETURN n";
+  neo4j_result_stream_t *results = executeQuery(query);
+  if (neo4j_check_failure(results)) {
+    return ERR_UNKNOWN;
+  }
+  neo4j_result_t *result = neo4j_fetch_next(results);
+  if (result == NULL) {
+    return ERR_NO_NODE;
+  }
+  // Check TaskList node exists
+  std::string revised_list_pkey = task_list_pkey + "#" + user_pkey;
+  query = "MATCH (n:TaskList {name: '" + revised_list_pkey + "'}) RETURN n";
+  results = executeQuery(query);
+  if (neo4j_check_failure(results)) {
+    return ERR_UNKNOWN;
+  }
+  result = neo4j_fetch_next(results);
+  if (result == NULL) {
+    return ERR_NO_NODE;
+  }
+  query = "MATCH (n:TaskList {name: '" + revised_list_pkey +
+          "'})-[:Contains]->(m) RETURN m";
+  results = executeQuery(query);
+  if (neo4j_check_failure(results)) {
+    return ERR_UNKNOWN;
+  }
+  while ((result = neo4j_fetch_next(results)) != NULL) {
+    neo4j_value_t node = neo4j_result_field(result, 0);
+    neo4j_value_t value = neo4j_node_properties(node);
+    char buf[1024];
+    neo4j_value_t field_value = neo4j_map_get(value, "name");
+    neo4j_tostring(field_value, buf, sizeof(buf));
+    std::string value_str(buf);
+    value_str.pop_back();
+    value_str.erase(0, 1);
+    value_str.erase(value_str.begin() + value_str.find("#"), value_str.end());
+    task_info.push_back(value_str);
+  }
+  neo4j_close_results(results);
+  return SUCCESS;
+}
+
 neo4j_connection_t *DB::connectDB() {
   neo4j_connection_t *connection =
       neo4j_connect(host_.c_str(), NULL, NEO4J_INSECURE);

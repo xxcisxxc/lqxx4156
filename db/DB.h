@@ -6,6 +6,7 @@
 #include <mutex>
 #include <queue>
 #include <string>
+#include <vector>
 // third party library
 #include <neo4j-client.h>
 
@@ -226,4 +227,28 @@ public:
                          const std::string &task_list_pkey,
                          const std::string &task_pkey,
                          std::map<std::string, std::string> &task_info);
+  /**
+   * @brief Get all user nodes.
+   *
+   * @param [out] user_info array of user pkeys
+   */
+  returnCode getAllUserNodes(std::vector<std::string> &user_info);
+  /**
+   * @brief Get all task list nodes.
+   *
+   * @param [in] user_pkey user primary key
+   * @param [out] task_list_info array of task list pkeys
+   */
+  returnCode getAllTaskListNodes(const std::string &user_pkey,
+                                 std::vector<std::string> &task_list_info);
+  /**
+   * @brief Get all task nodes.
+   *
+   * @param [in] user_pkey user primary key
+   * @param [in] task_list_pkey task list primary key
+   * @param [out] task_info array of task pkeys
+   */
+  returnCode getAllTaskNodes(const std::string &user_pkey,
+                             const std::string &task_list_pkey,
+                             std::vector<std::string> &task_info);
 };
