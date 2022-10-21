@@ -1,57 +1,51 @@
+#include "DB.h"
+#include <assert.h>
 #include <errno.h>
-#include <neo4j-client.h>
+#include <iostream>
 #include <stdio.h>
+#include <thread>
+
+const std::string host = "neo4j://neo4j:hello4156@localhost:7687";
+
+void create_thread(int id, DB *db) {
+  std::string user_pkey = "test" + std::to_string(id) + "@test.com";
+  std::map<std::string, std::string> user_info;
+
+  // Create the user node
+  user_info["email"] = user_pkey;
+  user_info["passwd"] = "test";
+  user_info["test"] = std::to_string(id);
+  db->createUserNode(user_info);
+}
+
+void delete_thread(int id, DB *db) {
+  std::string user_pkey = "test" + std::to_string(id) + "@test.com";
+
+  // Delete the user node
+  auto ret = db->deleteUserNode(user_pkey);
+}
 
 int main(int argc, char *argv[]) {
-  neo4j_client_init();
+  DB *db = new DB(host);
+  const int thread_num = 20;
+  std::thread t[thread_num];
 
-  /* use NEO4J_INSECURE when connecting to disable TLS */
-  neo4j_connection_t *connection = neo4j_connect(
-      "neo4j://neo4j:hello4156@localhost:7687", NULL, NEO4J_INSECURE);
-  if (connection == NULL) {
-    neo4j_perror(stderr, errno, "Connection failed");
-    return EXIT_FAILURE;
+  // Create 10 threads
+  for (int i = 0; i < thread_num; i++) {
+    t[i] = std::thread(create_thread, i, db);
   }
-
-  neo4j_result_stream_t *results =
-      neo4j_run(connection, "MATCH (n:User) RETURN n", neo4j_null);
-  if (results == NULL) {
-    neo4j_perror(stderr, errno, "Failed to run statement");
-    return EXIT_FAILURE;
+  // Wait for all threads to finish
+  for (int i = 0; i < thread_num; i++) {
+    t[i].join();
   }
-
-  if (neo4j_check_failure(results)) {
-    printf("%s\n", neo4j_error_message(results));
-    printf("%s\n", neo4j_error_code(results));
-    neo4j_perror(stderr, errno, "Statement failed");
-    return EXIT_FAILURE;
+  // Delete 10 threads
+  for (int i = 0; i < thread_num; i++) {
+    t[i] = std::thread(delete_thread, i, db);
   }
-
-  neo4j_result_t *result = neo4j_fetch_next(results);
-  if (result == NULL) {
-    neo4j_perror(stderr, errno, "Failed to fetch result");
-    return EXIT_FAILURE;
+  // Wait for all threads to finish
+  for (int i = 0; i < thread_num; i++) {
+    t[i].join();
   }
-
-  neo4j_value_t value = neo4j_result_field(result, 0);
-  value = neo4j_node_properties(value);
-  value = neo4j_map_get(value, "abc");
-  char buf[1024];
-  printf("%s\n", neo4j_tostring(value, buf, sizeof(buf)));
-
-  result = neo4j_fetch_next(results);
-  if (result == NULL) {
-    neo4j_perror(stderr, errno, "Failed to fetch result");
-    return EXIT_FAILURE;
-  }
-
-  value = neo4j_result_field(result, 0);
-  value = neo4j_node_properties(value);
-  value = neo4j_map_get(value, "email");
-  printf("%s\n", neo4j_tostring(value, buf, sizeof(buf)));
-
-  neo4j_close_results(results);
-  neo4j_close(connection);
-  neo4j_client_cleanup();
-  return EXIT_SUCCESS;
+  delete db;
+  return 0;
 }

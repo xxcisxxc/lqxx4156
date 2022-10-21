@@ -1,10 +1,7 @@
 #pragma once
 
-#include <condition_variable>
 #include <errno.h>
 #include <map>
-#include <mutex>
-#include <queue>
 #include <string>
 #include <vector>
 // third party library
@@ -37,13 +34,6 @@ private:
    */
   std::string host_;
   /**
-   * @brief neo4j connection pool
-   *
-   */
-  std::queue<neo4j_connection_t *> connections_;
-  std::mutex connections_mutex_;
-  std::condition_variable connections_cv_;
-  /**
    * @brief neo4j return code of duplicated node
    *
    */
@@ -60,14 +50,15 @@ private:
    * @brief Close the connection to neo4j DB.
    *
    */
-  void closeDB();
+  void closeDB(neo4j_connection_t *connection);
   /**
    * @brief Execute a query.
    *
    * @param query
    * @return neo4j_result_stream_t *: a pointer to a list of results
    */
-  neo4j_result_stream_t *executeQuery(const std::string &query);
+  neo4j_result_stream_t *executeQuery(const std::string &query,
+                                      neo4j_connection_t *connection);
   /**
    * @brief Get Neo4j Client Error Message
    *

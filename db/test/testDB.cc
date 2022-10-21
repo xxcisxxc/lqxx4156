@@ -1,6 +1,7 @@
 #include "DB.h"
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <thread>
 
 const std::string host = "neo4j://neo4j:hello4156@localhost:7687";
 
@@ -424,6 +425,59 @@ TEST(TestDB, TestDeleteUserNode) {
             ERR_NO_NODE);
   EXPECT_EQ(db.deleteUserNode("test1@test.com"), SUCCESS);
   EXPECT_EQ(db.getUserNode("test1@test.com", void_info), ERR_NO_NODE);
+}
+
+void create_thread(int id, DB *db) {
+  std::string user_pkey = "test" + std::to_string(id) + "@test.com";
+  std::map<std::string, std::string> user_info;
+
+  // Create the user node
+  user_info["email"] = user_pkey;
+  user_info["passwd"] = "test";
+  user_info["test"] = std::to_string(id);
+  EXPECT_EQ(db->createUserNode(user_info), SUCCESS);
+}
+
+void delete_thread(int id, DB *db) {
+  std::string user_pkey = "test" + std::to_string(id) + "@test.com";
+
+  // Delete the user node
+  EXPECT_EQ(db->deleteUserNode(user_pkey), SUCCESS);
+}
+
+TEST(TestDB, TestMultiThread) {
+  DB db(host);
+  std::map<std::string, std::string> void_info;
+  const int thread_num = 1000;
+
+  // Create thread_num user nodes
+  std::vector<std::thread> threads;
+  for (int i = 0; i < thread_num; i++) {
+    threads.push_back(std::thread(create_thread, i, &db));
+  }
+  for (auto &t : threads) {
+    t.join();
+  }
+  for (int i = 0; i < thread_num; i++) {
+    EXPECT_EQ(
+        db.getUserNode("test" + std::to_string(i) + "@test.com", void_info),
+        SUCCESS);
+    EXPECT_EQ(void_info["test"], std::to_string(i));
+  }
+
+  // Delete thread_num user nodes
+  threads.clear();
+  for (int i = 0; i < thread_num; i++) {
+    threads.push_back(std::thread(delete_thread, i, &db));
+  }
+  for (auto &t : threads) {
+    t.join();
+  }
+  for (int i = 0; i < thread_num; i++) {
+    EXPECT_EQ(
+        db.getUserNode("test" + std::to_string(i) + "@test.com", void_info),
+        ERR_NO_NODE);
+  }
 }
 
 int main(int argc, char **argv) {
