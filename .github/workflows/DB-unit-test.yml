@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       neo4j:
-        image: neo4j
+        image: neo4j:4.4.9
         env:
           NEO4J_AUTH: neo4j/hello4156
         ports:
