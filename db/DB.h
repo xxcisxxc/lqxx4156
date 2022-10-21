@@ -75,7 +75,6 @@ public:
    * @brief Construct a new DB object: connect to neo4j DB.
    *
    * @param host The host address of neo4j DB.
-   * @param default_connection The connection pool depth
    */
   DB(std::string host);
   /**
