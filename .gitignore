@@ -39,6 +39,7 @@ build/
 .vscode
 googletest
 build
+libneo4j-client
 
 # MacOS
 .DS_Store
