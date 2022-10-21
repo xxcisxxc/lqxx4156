@@ -16,8 +16,8 @@ jobs:
     steps:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
-    - name: Install mongoDB
-      run: wget https://github.com/mongodb/mongo-c-driver/releases/download/1.23.0/mongo-c-driver-1.23.0.tar.gz && tar xzf mongo-c-driver-1.23.0.tar.gz && cd mongo-c-driver-1.23.0 && mkdir cmake-build && cd cmake-build && cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && cmake --build . && sudo cmake --build . --target install
+    - name: Install neo4j
+      run: sudo apt install neo4j && neo4j-admin set-initial-password hello4156 && sudo service neo4j start
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
