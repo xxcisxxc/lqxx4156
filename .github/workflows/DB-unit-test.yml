@@ -26,9 +26,9 @@ jobs:
     - name: Install libneo4j-client
       run: sudo apt-get install libcypher-parser-dev libedit-dev && git clone https://github.com/cleishm/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure && make clean check && sudo make install
     - name: Ensure we can connect to neo4j service
-      run: echo "RETURN 'hello world'" | neo4j-client -u neo4j -p hello4156 localhost --insecure
+      run: export LD_LIBRARY_PATH=/usr/local/lib && echo "RETURN 'hello world'" | neo4j-client -u neo4j -p hello4156 localhost --insecure
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
     - name: Run test
-      run: LD_LIBRARY_PATH=/usr/local/lib /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
+      run: /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
