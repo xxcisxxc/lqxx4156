@@ -18,16 +18,21 @@ jobs:
         image: neo4j:4.4.9
         env:
           NEO4J_AUTH: neo4j/hello4156
-          NEO4J_dbms_security_auth__enabled: "false"
         ports:
           - 7687:7687
+          - 7474:7474
+        options: >-
+          --health-cmd "cypher-shell 'MATCH (n) RETURN COUNT(n)'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
     - name: Install libneo4j-client
       run: sudo apt-get install libcypher-parser-dev libedit-dev && git clone https://github.com/cleishm/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure && make clean check && sudo make install
-    - name: Ensure we can connect to neo4j service
-      run: export LD_LIBRARY_PATH=/usr/local/lib && echo "RETURN 'hello world'" | neo4j-client -u neo4j -p hello4156 localhost --insecure
+    - name: Set Env Variable
+      run: export LD_LIBRARY_PATH=/usr/local/lib
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
