@@ -1,9 +1,7 @@
 #include "DB.h"
 #include <gtest/gtest.h>
 
-const std::string host =
-    "mongodb+srv://mongodb:VX9IcHcG53n3XY5v@cluster0.vxkzzqf.mongodb.net/"
-    "?retryWrites=true&w=majority";
+const std::string host = "neo4j://neo4j:hello4156@localhost:7687";
 
 TEST(TestDB, testconnection) {
   DB *db;
@@ -11,9 +9,10 @@ TEST(TestDB, testconnection) {
   // Create a new DB object
   // Must connect to the right host
   EXPECT_THROW(db = new DB(""), std::exception);
-  EXPECT_THROW(db = new DB("mongodb://localhost"), std::exception);
-  EXPECT_THROW(db = new DB("mongodb+srv://localhost"), std::exception);
-  EXPECT_NO_THROW(db = new DB(host)); // TODO: change to a valid address
+  EXPECT_THROW(db = new DB("neo4j://neo4j@localhost"), std::exception);
+  EXPECT_THROW(db = new DB("neo4j+s://neo4j:hello4156@localhost:7687"),
+               std::exception);
+  EXPECT_NO_THROW(db = new DB(host));
 
   // Delete the DB object
   EXPECT_NO_THROW(delete db);
@@ -94,6 +93,7 @@ TEST(TestDB, testCreateTaskNode) {
   task_info["field2"] = "value2";
   task_info["field3"] = "value3";
   EXPECT_EQ(db.createTaskNode(user_pkey, task_list_pkey, task_info), SUCCESS);
+  EXPECT_EQ(db.createTaskNode(user_pkey, "test1-task-list", task_info), SUCCESS);
 }
 
 TEST(TestDB, testReviseUserNode) {
@@ -187,7 +187,7 @@ TEST(TestDB, testReviseTaskNode) {
   task_info["field1"] = "revised1";
   task_info["field2"] = "revised2";
   task_info["field3"] = "revised3";
-  EXPECT_EQ(db.reviseTaskNode(user_pkey, task_pkey, "test1-task", task_info),
+  EXPECT_EQ(db.reviseTaskNode(user_pkey, tast_list_pkey, "test1-task", task_info),
             SUCCESS);
 }
 
@@ -209,6 +209,7 @@ TEST(TestDB, testGetUserNode) {
   EXPECT_EQ(user_info.size(), 1);
   EXPECT_EQ(user_info["nofield"], "");
   // Get the user node with one specific field
+  user_info.clear();
   user_info["field1"] = "";
   EXPECT_EQ(db.getUserNode("test1@test.com", user_info), SUCCESS);
   EXPECT_EQ(user_info.size(), 1);
@@ -251,6 +252,7 @@ TEST(TestDB, testGetTaskListNode) {
   EXPECT_EQ(task_list_info.size(), 1);
   EXPECT_EQ(task_list_info["nofield"], "");
   // Get the task list node with one specific field
+  task_list_info.clear();
   task_list_info["field1"] = "";
   EXPECT_EQ(db.getTaskListNode(user_pkey, "test1-task-list", task_list_info),
             SUCCESS);
@@ -297,6 +299,7 @@ TEST(TestDB, testGetTaskNode) {
   EXPECT_EQ(task_info.size(), 1);
   EXPECT_EQ(task_info["nofield"], "");
   // Get the task node with one specific field
+  task_info.clear();
   task_info["field1"] = "";
   EXPECT_EQ(db.getTaskNode(user_pkey, task_list_pkey, "test1-task", task_info),
             SUCCESS);
@@ -329,7 +332,7 @@ TEST(TestDB, TestDeleteTaskNode) {
   // Delete the task node
   // Node must be in the DB
   EXPECT_EQ(db.deleteTaskNode(user_pkey, task_list_pkey, "wrong-task"),
-            ERR_NO_NODE);
+            SUCCESS);
   EXPECT_EQ(db.deleteTaskNode(user_pkey, task_list_pkey, "test0-task"),
             SUCCESS);
   EXPECT_EQ(db.getTaskNode(user_pkey, task_list_pkey, "test0-task", void_info),
@@ -342,8 +345,8 @@ TEST(TestDB, TestDeleteTaskListNode) {
   std::map<std::string, std::string> void_info;
 
   // Delete the task list node
-  // Node must be in the DB
-  EXPECT_EQ(db.deleteTaskListNode(user_pkey, "wrong-task-list"), ERR_NO_NODE);
+  // Node can not be in the DB
+  EXPECT_EQ(db.deleteTaskListNode(user_pkey, "wrong-task-list"), SUCCESS);
   EXPECT_EQ(db.deleteTaskListNode(user_pkey, "test0-task-list"), SUCCESS);
   EXPECT_EQ(db.getTaskListNode(user_pkey, "test0-task-list", void_info),
             ERR_NO_NODE);
@@ -358,12 +361,14 @@ TEST(TestDB, TestDeleteUserNode) {
   std::map<std::string, std::string> void_info;
 
   // Delete the user node
-  // Node must be in the DB
-  EXPECT_EQ(db.deleteUserNode("wrong@test.com"), ERR_NO_NODE);
+  // Node can not be in the DB
+  EXPECT_EQ(db.deleteUserNode("wrong@test.com"), SUCCESS);
   EXPECT_EQ(db.deleteUserNode("test0@test.com"), SUCCESS);
   EXPECT_EQ(db.getUserNode("test0@test.com", void_info), ERR_NO_NODE);
   // Ensure delete the user node with all task lists
   EXPECT_EQ(db.getTaskListNode("test0@test.com", "test1-task-list", void_info),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.getTaskNode("test0@test.com", "test1-task-list", "test1-task", void_info),
             ERR_NO_NODE);
   EXPECT_EQ(db.deleteUserNode("test1@test.com"), SUCCESS);
   EXPECT_EQ(db.getUserNode("test1@test.com", void_info), ERR_NO_NODE);

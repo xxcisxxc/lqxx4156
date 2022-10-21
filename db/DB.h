@@ -5,8 +5,9 @@
 #include <mutex>
 #include <queue>
 #include <string>
+#include <errno.h>
 // third party library
-#include <mongoc/mongoc.h>
+#include <neo4j-client.h>
 
 /**
  * @brief DB class return code
@@ -23,7 +24,7 @@ enum returnCode {
 };
 
 /**
- * @brief This class connect and interact with Neo4j DB.
+ * @brief This class connect and interact with neo4j DB.
  *
  */
 class DB {
@@ -35,33 +36,56 @@ private:
    */
   std::string host_;
   /**
-   * @brief database name
+   * @brief neo4j connection pool
    *
    */
-  std::string database_;
+  std::queue<neo4j_connection_t *> connections_;
+  std::mutex connections_mutex_;
+  std::condition_variable connections_cv_;
+  /**
+   * @brief neo4j return code of duplicated node
+   *
+   */
+  const std::string error_code_of_dup = "Neo.ClientError.Schema.ConstraintValidationFailed";
   /* method */
   /**
-   * @brief Test the connection to Neo4j DB.
+   * @brief Create the connection to neo4j DB.
    *
+   * @return neo4j_connection_t* The connection to neo4j DB.
    */
-  void connectDBTest();
+  neo4j_connection_t * connectDB();
+  /**
+   * @brief Close the connection to neo4j DB.
+   * 
+   */
+  void closeDB();
   /**
    * @brief Execute a query.
    *
    * @param query
-   * @return std::string
+   * @return neo4j_result_stream_t *: a pointer to a list of results
    */
-  std::string executeQuery(std::string &query);
-
+  neo4j_result_stream_t * executeQuery(const std::string &query);
+  /**
+   * @brief Get Neo4j Client Error Message
+   * 
+   */
+  std::string get_Neo4jC_error();
+  /**
+   * @brief Ensure to create database constraints
+   * 
+   */
+  void ensureConstraints();
 public:
   /**
-   * @brief Construct a new DB object: connect to Neo4j DB.
+   * @brief Construct a new DB object: connect to neo4j DB.
    *
-   * @param host
+   * @param host The host address of neo4j DB.
+   * @param default_connection The connection pool depth
    */
-  DB(std::string host, std::string dbname = "test");
+  DB(std::string host, int default_connection = 10);
   /**
-   * @brief Destroy the DB object: disconnect from Neo4j DB.
+   * @brief Destroy the DB object: disconnect from neo4j DB.
    *
    */
   ~DB();
@@ -172,7 +196,7 @@ public:
    * @return returnCode error message
    */
   returnCode getUserNode(const std::string &user_pkey,
-                         const std::map<std::string, std::string> &user_info);
+                         std::map<std::string, std::string> &user_info);
   /**
    * @brief Get a task list node.
    *
@@ -185,7 +209,7 @@ public:
   returnCode
   getTaskListNode(const std::string &user_pkey,
                   const std::string &task_list_pkey,
-                  const std::map<std::string, std::string> &task_list_info);
+                  std::map<std::string, std::string> &task_list_info);
   /**
    * @brief Get a task node.
    *
@@ -199,5 +223,5 @@ public:
   returnCode getTaskNode(const std::string &user_pkey,
                          const std::string &task_list_pkey,
                          const std::string &task_pkey,
-                         const std::map<std::string, std::string> &task_info);
+                         std::map<std::string, std::string> &task_info);
 };
