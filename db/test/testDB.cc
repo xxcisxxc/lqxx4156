@@ -448,7 +448,7 @@ void delete_thread(int id, DB *db) {
 TEST(TestDB, TestMultiThread) {
   DB db(host);
   std::map<std::string, std::string> void_info;
-  const int thread_num = 1000;
+  const int thread_num = 100;
 
   // Create thread_num user nodes
   std::vector<std::thread> threads;
