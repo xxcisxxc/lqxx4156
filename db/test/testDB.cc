@@ -93,7 +93,8 @@ TEST(TestDB, testCreateTaskNode) {
   task_info["field2"] = "value2";
   task_info["field3"] = "value3";
   EXPECT_EQ(db.createTaskNode(user_pkey, task_list_pkey, task_info), SUCCESS);
-  EXPECT_EQ(db.createTaskNode(user_pkey, "test1-task-list", task_info), SUCCESS);
+  EXPECT_EQ(db.createTaskNode(user_pkey, "test1-task-list", task_info),
+            SUCCESS);
 }
 
 TEST(TestDB, testReviseUserNode) {
@@ -187,8 +188,9 @@ TEST(TestDB, testReviseTaskNode) {
   task_info["field1"] = "revised1";
   task_info["field2"] = "revised2";
   task_info["field3"] = "revised3";
-  EXPECT_EQ(db.reviseTaskNode(user_pkey, tast_list_pkey, "test1-task", task_info),
-            SUCCESS);
+  EXPECT_EQ(
+      db.reviseTaskNode(user_pkey, tast_list_pkey, "test1-task", task_info),
+      SUCCESS);
 }
 
 TEST(TestDB, testGetUserNode) {
@@ -368,7 +370,8 @@ TEST(TestDB, TestDeleteUserNode) {
   // Ensure delete the user node with all task lists
   EXPECT_EQ(db.getTaskListNode("test0@test.com", "test1-task-list", void_info),
             ERR_NO_NODE);
-  EXPECT_EQ(db.getTaskNode("test0@test.com", "test1-task-list", "test1-task", void_info),
+  EXPECT_EQ(db.getTaskNode("test0@test.com", "test1-task-list", "test1-task",
+                           void_info),
             ERR_NO_NODE);
   EXPECT_EQ(db.deleteUserNode("test1@test.com"), SUCCESS);
   EXPECT_EQ(db.getUserNode("test1@test.com", void_info), ERR_NO_NODE);

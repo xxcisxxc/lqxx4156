@@ -278,12 +278,15 @@ DB::reviseTaskNode(const std::string &user_pkey,
 
 returnCode DB::deleteUserNode(const std::string &user_pkey) {
   // Delete node
-  std::string query = "MATCH (a:User {email: '" + user_pkey + "'})-[r:Owns]->(b:TaskList)-[s:Contains]->(c:Task) DETACH DELETE s, c";
+  std::string query =
+      "MATCH (a:User {email: '" + user_pkey +
+      "'})-[r:Owns]->(b:TaskList)-[s:Contains]->(c:Task) DETACH DELETE s, c";
   neo4j_result_stream_t *results = executeQuery(query);
   if (neo4j_check_failure(results)) {
     return ERR_UNKNOWN;
   }
-  query = "MATCH (a:User {email: '" + user_pkey + "'})-[r:Owns]->(b:TaskList) DETACH DELETE r, b";
+  query = "MATCH (a:User {email: '" + user_pkey +
+          "'})-[r:Owns]->(b:TaskList) DETACH DELETE r, b";
   results = executeQuery(query);
   if (neo4j_check_failure(results)) {
     return ERR_UNKNOWN;
@@ -295,7 +298,7 @@ returnCode DB::deleteUserNode(const std::string &user_pkey) {
   }
   neo4j_close_results(results);
   return SUCCESS;
-  }
+}
 
 returnCode DB::deleteTaskListNode(const std::string &user_pkey,
                                   const std::string &task_list_pkey) {
@@ -307,7 +310,8 @@ returnCode DB::deleteTaskListNode(const std::string &user_pkey,
   if (neo4j_check_failure(results)) {
     return ERR_UNKNOWN;
   }
-  query = "MATCH (n:TaskList {name: '" + revised_list_pkey + "'}) DETACH DELETE "
+  query = "MATCH (n:TaskList {name: '" + revised_list_pkey +
+          "'}) DETACH DELETE "
           "n";
   results = executeQuery(query);
   if (neo4j_check_failure(results)) {
@@ -323,8 +327,8 @@ returnCode DB::deleteTaskNode(const std::string &user_pkey,
   // Delete node
   std::string revised_list_pkey = task_list_pkey + "#" + user_pkey;
   std::string revised_task_pkey = task_pkey + "#" + revised_list_pkey;
-  std::string query = "MATCH (n:Task {name: '" + revised_task_pkey +
-                      "'}) DETACH DELETE n";
+  std::string query =
+      "MATCH (n:Task {name: '" + revised_task_pkey + "'}) DETACH DELETE n";
   neo4j_result_stream_t *results = executeQuery(query);
   if (neo4j_check_failure(results)) {
     return ERR_UNKNOWN;
@@ -434,7 +438,9 @@ DB::getTaskListNode(const std::string &user_pkey,
     }
   }
   if (task_list_info.find("name") != task_list_info.end()) {
-    task_list_info["name"].erase(task_list_info["name"].begin() + task_list_info["name"].find("#"), task_list_info["name"].end());
+    task_list_info["name"].erase(task_list_info["name"].begin() +
+                                     task_list_info["name"].find("#"),
+                                 task_list_info["name"].end());
   }
   neo4j_close_results(results);
   return SUCCESS;
@@ -492,7 +498,9 @@ returnCode DB::getTaskNode(const std::string &user_pkey,
     }
   }
   if (task_info.find("name") != task_info.end()) {
-    task_info["name"].erase(task_info["name"].begin() + task_info["name"].find("#"), task_info["name"].end());
+    task_info["name"].erase(task_info["name"].begin() +
+                                task_info["name"].find("#"),
+                            task_info["name"].end());
   }
   return SUCCESS;
 }

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <condition_variable>
+#include <errno.h>
 #include <map>
 #include <mutex>
 #include <queue>
 #include <string>
-#include <errno.h>
 // third party library
 #include <neo4j-client.h>
 
@@ -46,17 +46,18 @@ private:
    * @brief neo4j return code of duplicated node
    *
    */
-  const std::string error_code_of_dup = "Neo.ClientError.Schema.ConstraintValidationFailed";
+  const std::string error_code_of_dup =
+      "Neo.ClientError.Schema.ConstraintValidationFailed";
   /* method */
   /**
    * @brief Create the connection to neo4j DB.
    *
    * @return neo4j_connection_t* The connection to neo4j DB.
    */
-  neo4j_connection_t * connectDB();
+  neo4j_connection_t *connectDB();
   /**
    * @brief Close the connection to neo4j DB.
-   * 
+   *
    */
   void closeDB();
   /**
@@ -65,17 +66,18 @@ private:
    * @param query
    * @return neo4j_result_stream_t *: a pointer to a list of results
    */
-  neo4j_result_stream_t * executeQuery(const std::string &query);
+  neo4j_result_stream_t *executeQuery(const std::string &query);
   /**
    * @brief Get Neo4j Client Error Message
-   * 
+   *
    */
   std::string get_Neo4jC_error();
   /**
    * @brief Ensure to create database constraints
-   * 
+   *
    */
   void ensureConstraints();
+
 public:
   /**
    * @brief Construct a new DB object: connect to neo4j DB.
