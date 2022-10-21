@@ -740,33 +740,16 @@ neo4j_connection_t *DB::connectDB() {
   if (!connection) {
     throw std::runtime_error("Connection failed");
   }
-  // connections_.push(connection);
   return connection;
 }
 
-void DB::closeDB(neo4j_connection_t *connection) {
-  // while (!connections_.empty()) {
-  //  neo4j_close(connections_.front());
-  //  connections_.pop();
-  //}
-  neo4j_close(connection);
-}
+void DB::closeDB(neo4j_connection_t *connection) { neo4j_close(connection); }
 
 neo4j_result_stream_t *DB::executeQuery(const std::string &query,
                                         neo4j_connection_t *connection) {
   // Execute the query
-  /*std::unique_lock<std::mutex> lck(connections_mutex_);
-  while (connections_.empty()) {
-    connections_cv_.wait(lck);
-  }
-  neo4j_connection_t *connection = connections_.front();*/
-  // connections_.pop();
-  // lck.unlock();
   neo4j_result_stream_t *results =
       neo4j_run(connection, query.c_str(), neo4j_null);
-  // lck.lock();
-  // connections_.push(connection);
-  // connections_cv_.notify_all();
   return results;
 }
 
