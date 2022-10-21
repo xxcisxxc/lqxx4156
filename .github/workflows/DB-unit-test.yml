@@ -25,6 +25,8 @@ jobs:
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
     - name: Install libneo4j-client
       run: sudo apt-get install libcypher-parser-dev libedit-dev && git clone https://github.com/cleishm/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure && make clean check && sudo make install
+    - name: Ensure we can connect to neo4j service
+      run: echo "RETURN 'hello world'" | neo4j-client -u neo4j -p hello4156 localhost --insecure
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
