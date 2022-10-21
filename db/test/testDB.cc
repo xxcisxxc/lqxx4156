@@ -1,7 +1,7 @@
 #include "DB.h"
 #include <gtest/gtest.h>
 
-const std::string host = "neo4j://neo4j:hello4156@localhost:7687";
+const std::string host = "bolt://neo4j:hello4156@localhost:7687";
 
 TEST(TestDB, testconnection) {
   DB *db;
