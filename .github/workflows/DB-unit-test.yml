@@ -21,9 +21,9 @@ jobs:
     - name: Install Java 11
       run: sudo apt-get install openjdk-11-jre
     - name: Install neo4j
-      run: wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add - && echo 'deb https://debian.neo4j.com stable latest' | sudo tee -a /etc/apt/sources.list.d/neo4j.list && sudo apt-get update && sudo apt install neo4j
+      run: wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add - && echo 'deb https://debian.neo4j.com stable latest' | sudo tee -a /etc/apt/sources.list.d/neo4j.list && sudo apt-get update && sudo apt install neo4j && sudo neo4j-admin set-initial-password hello4156
     - name: Run neo4j
-      run: sudo neo4j-admin set-initial-password hello4156 && sudo service neo4j start
+      run:  sudo service neo4j start && sleep 10
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
