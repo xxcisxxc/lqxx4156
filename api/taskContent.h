@@ -22,4 +22,10 @@ struct TaskContent {
     bool IsEmpty() {
         return name == "" && content == "" && date == "";
     }
+
+    void Clear() {
+        name = "";
+        content = "";
+        date = "";
+    }
 };

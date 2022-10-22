@@ -34,7 +34,7 @@ public:
                  (const std::map<std::string, std::string>) &task_info),
                 (override));
     
-    MockedDB() : DB("localhost") {}
+    MockedDB() : DB("testhost") {}
 };
 
 class MockedTaskLists : public TaskListsWorker {
@@ -69,7 +69,6 @@ public:
 
 class TasksWorkerTest : public ::testing::Test {
 protected:
-
     void SetUp() override {
         mockedDB = new MockedDB();
         mockedTaskLists = new MockedTaskLists(*mockedDB);
@@ -91,6 +90,88 @@ protected:
 };
 
 using namespace ::testing;
+
+TEST_F(TasksWorkerTest, TaskStruct2Map) {
+    TaskContent task;
+    task.name = "test_name";
+    task.content = "test_content";
+    task.date = "test_date";
+    std::map<std::string, std::string> mp;
+
+    tasksWorker->TaskStruct2Map(task, mp);
+    EXPECT_EQ(mp.at("name"), "test_name");
+    EXPECT_EQ(mp.at("content"), "test_content");
+    EXPECT_EQ(mp.at("date"), "test_date");   
+
+    task.name = "";
+    mp.clear();
+    tasksWorker->TaskStruct2Map(task, mp);
+    EXPECT_EQ(mp.at("name"), "");
+    EXPECT_EQ(mp.at("content"), "test_content");
+    EXPECT_EQ(mp.at("date"), "test_date");   
+
+    task.content = "";
+    mp.clear();
+    tasksWorker->TaskStruct2Map(task, mp);
+    EXPECT_EQ(mp.at("name"), "");
+    EXPECT_EQ(mp.at("content"), "");
+    EXPECT_EQ(mp.at("date"), "test_date");   
+
+    task.date = "";
+    mp.clear();
+    tasksWorker->TaskStruct2Map(task, mp);
+    EXPECT_EQ(mp.at("name"), "");
+    EXPECT_EQ(mp.at("content"), "");
+    EXPECT_EQ(mp.at("date"), "");   
+}
+
+TEST_F(TasksWorkerTest, Map2TaskStruct) {
+    std::map<std::string, std::string> mp;
+    mp["name"] = "test_name";
+    mp["content"] = "test_content";
+    mp["date"] = "test_date";
+    TaskContent task;
+
+    tasksWorker->Map2TaskStruct(mp, task);
+    EXPECT_EQ(task.name, "test_name");
+    EXPECT_EQ(task.content, "test_content");
+    EXPECT_EQ(task.date, "test_date");   
+
+    mp["name"]= "";
+    task.Clear();
+    tasksWorker->Map2TaskStruct(mp, task);
+    EXPECT_EQ(task.name, "");
+    EXPECT_EQ(task.content, "test_content");
+    EXPECT_EQ(task.date, "test_date");   
+
+    mp["content"]= "";
+    task.Clear();
+    tasksWorker->Map2TaskStruct(mp, task);
+    EXPECT_EQ(task.name, "");
+    EXPECT_EQ(task.content, "");
+    EXPECT_EQ(task.date, "test_date");    
+
+    mp["date"]= "";
+    task.Clear();
+    tasksWorker->Map2TaskStruct(mp, task);
+    EXPECT_EQ(task.name, "");
+    EXPECT_EQ(task.content, "");
+    EXPECT_EQ(task.date, "");   
+
+    // no error is just ok
+    mp.erase("date");
+    testing::internal::CaptureStdout();
+    tasksWorker->Map2TaskStruct(mp, task);
+
+    mp.erase("content");
+    testing::internal::CaptureStdout();
+    tasksWorker->Map2TaskStruct(mp, task);
+
+    mp.erase("name");
+    testing::internal::CaptureStdout();
+    tasksWorker->Map2TaskStruct(mp, task);
+
+}
 
 // Create Function
 TEST_F(TasksWorkerTest, Query) {

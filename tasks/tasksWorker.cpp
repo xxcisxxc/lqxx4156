@@ -7,7 +7,7 @@ TasksWorker:: TasksWorker(DB* _db, TaskListsWorker* _taskListsWorker): db(_db), 
 TasksWorker:: ~TasksWorker() {}
 
 std::string TasksWorker:: Rename (const std::string& name, int suffix) {
-    if (suffix == 0) return name;  
+    if (suffix <= 0) return name;  
     return name + "(" + std::to_string(suffix) + ")";
 }
 
@@ -18,14 +18,11 @@ void TasksWorker:: TaskStruct2Map(const TaskContent& taskContent, std::map<std::
 }
 
 void TasksWorker:: Map2TaskStruct(const std::map<std::string, std::string>& task_info, TaskContent& taskContent) {
-    if(!task_info.count("name")) std::cout << "lose name" << std::endl;
-    else taskContent.name = task_info.at("name");
+    if(task_info.count("name")) taskContent.name = task_info.at("name");
 
-    if(!task_info.count("content")) std::cout << "lose content" << std::endl;
-    else taskContent.content = task_info.at("content");
+    if(task_info.count("content")) taskContent.content = task_info.at("content");
 
-    if(!task_info.count("date")) std::cout << "lose date" << std::endl;
-    else taskContent.date = task_info.at("date");
+    if(task_info.count("date")) taskContent.date = task_info.at("date");
 }
 
 returnCode TasksWorker:: Query(const RequestData& data, TaskContent& out) {
@@ -116,5 +113,20 @@ returnCode TasksWorker:: Revise(const RequestData& data, TaskContent& in) {
                                         data.tasklist_key,
                                         data.task_key,
                                         task_info);
+    return ret;
+}
+
+returnCode TasksWorker:: GetAllTasksName(const RequestData& data, std::vector<std::string>& outTaskNameList) {
+    // request has empty value
+    if(data.RequestTaskListIsEmpty()) return ERR_KEY; 
+
+    // tasklist itself does not exist
+    if(!taskListsWorker->Exists(data)) {
+        return ERR_NO_NODE;
+    }
+
+    returnCode ret = db->getAllTaskNodes(data.user_key,
+                                         data.tasklist_key,
+                                         outTaskNameList);
     return ret;
 }
