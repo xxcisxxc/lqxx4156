@@ -164,11 +164,9 @@ TEST_F(TasksWorkerTest, Map2TaskStruct) {
     tasksWorker->Map2TaskStruct(mp, task);
 
     mp.erase("content");
-    testing::internal::CaptureStdout();
     tasksWorker->Map2TaskStruct(mp, task);
 
     mp.erase("name");
-    testing::internal::CaptureStdout();
     tasksWorker->Map2TaskStruct(mp, task);
 
 }
