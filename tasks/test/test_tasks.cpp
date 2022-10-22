@@ -33,6 +33,12 @@ public:
                  const std::string &task_pkey,
                  (const std::map<std::string, std::string>) &task_info),
                 (override));
+    MOCK_METHOD(returnCode,
+                getAllTaskNodes,
+                (const std::string &user_pkey,
+                const std::string &task_list_pkey,
+                std::vector<std::string> &task_info),
+                (override));
     
     MockedDB() : DB("testhost") {}
 };
@@ -408,6 +414,58 @@ TEST_F(TasksWorkerTest, Revise) {
     data.tasklist_key = "not_exist_tasklist";
     EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(false));
     EXPECT_EQ(tasksWorker->Revise(data, in), ERR_NO_NODE);
+}
+
+
+// Create Function
+TEST_F(TasksWorkerTest, GetAllTasksName) {
+    // setup input
+    data.user_key = "user0";
+    data.tasklist_key = "tasklist0";
+    data.task_key = "task0";
+
+    std::vector<std::string> task_names;
+    std::vector<std::string> new_task_names = {"task0", "task1", "task2"};
+    
+    // should be successful
+    EXPECT_CALL(*mockedDB, getAllTaskNodes(data.user_key, data.tasklist_key, task_names))
+        .WillOnce(DoAll(SetArgReferee<2>(new_task_names), Return(SUCCESS)));
+    EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), SUCCESS);
+    EXPECT_EQ(task_names[0], "task0");
+    EXPECT_EQ(task_names[1], "task1");
+    EXPECT_EQ(task_names[2], "task2");
+    EXPECT_EQ(task_names.size(), 3);
+
+    // should be successful but return empty
+    task_names.clear();
+    EXPECT_CALL(*mockedDB, getAllTaskNodes(data.user_key, data.tasklist_key, task_names))
+        .WillOnce(DoAll(SetArgReferee<2>(new_task_names), Return(SUCCESS)));
+    EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), SUCCESS);
+    EXPECT_EQ(task_names.size(), 0);
+
+    // request is empty
+    data.user_key = "";
+    EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_KEY);
+    EXPECT_EQ(task_names.size(), 0);
+    data.user_key = "user0";
+
+    data.tasklist_key = "";
+    EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_KEY);
+    EXPECT_EQ(task_names.size(), 0);
+    data.tasklist_key = "tasklist0";
+
+    // key error
+    new_task_names.clear();
+    EXPECT_CALL(*mockedDB, getAllTaskNodes(data.user_key, data.tasklist_key, task_names))
+        .WillOnce(DoAll(SetArgReferee<2>(new_task_names), Return(ERR_KEY)));
+    EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_KEY);
+    EXPECT_EQ(task_names.size(), 0);
+
+    // task or tasklist itself does not exist
+    EXPECT_CALL(*mockedDB, getAllTaskNodes(data.user_key, data.tasklist_key, task_names))
+        .WillOnce(DoAll(SetArgReferee<2>(new_task_names), Return(ERR_NO_NODE)));
+    EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_NO_NODE);
+    EXPECT_EQ(task_names.size(), 0);
 }
 
 int main(int argc, char **argv) {
