@@ -11,16 +11,16 @@ class TaskListsWorker;  // forward definition
 class TasksWorker {
 private:
     DB* db;
-    
+
     TaskListsWorker* taskListsWorker;
 
-    std::string Rename(const std::string& tasklist_name, int suffix);
+    virtual std::string Rename(const std::string& tasklist_name, int suffix);
 
-    void TaskStruct2Map(const TaskContent& taskContent, std::map<std::string, std::string>& task_info);
+public: 
+    virtual void TaskStruct2Map(const TaskContent& taskContent, std::map<std::string, std::string>& task_info);
 
-    void Map2TaskStruct(const std::map<std::string, std::string>& task_info, TaskContent& taskContent);
-    
-public:
+    virtual void Map2TaskStruct(const std::map<std::string, std::string>& task_info, TaskContent& taskContent);
+
     TasksWorker(DB* _db, TaskListsWorker* _taskListWorker);
 
     virtual ~TasksWorker();
@@ -32,4 +32,6 @@ public:
     virtual returnCode Delete(const RequestData& data);
 
     virtual returnCode Revise(const RequestData& data, TaskContent& in);
+
+    virtual returnCode GetAllTasksName(const RequestData& data, std::vector<std::string>& outTaskNameList);
 };

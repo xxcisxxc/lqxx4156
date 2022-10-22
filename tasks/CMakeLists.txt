@@ -27,13 +27,21 @@ if (NOT TARGET tasklistsWorker)
     add_subdirectory(${ROOT_DIR}/tasklists ${ROOT_DIR}/build/tasklists)
 endif()
 
+# add neo4j
+if (NOT DEFINED NEO_CLIENT_DIR)
+    set(NEO_CLIENT_DIR /opt/homebrew/Cellar/libneo4j-client/2.2.0)
+endif (NOT DEFINED NEO_CLIENT_DIR)
+
 add_library(tasksWorker OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/tasksWorker.cpp)
-target_include_directories(tasksWorker PUBLIC ${ROOT_DIR})
+target_include_directories(tasksWorker PRIVATE ${NEO_CLIENT_DIR}/include)
+target_include_directories(tasksWorker PRIVATE ${ROOT_DIR})
 
 add_executable(test_tasks ${CMAKE_CURRENT_SOURCE_DIR}/test/test_tasks.cpp)
 target_include_directories(test_tasks PRIVATE ${ROOT_DIR})
 target_include_directories(test_tasks PRIVATE ${ROOT_DIR}/tasklists)
+target_include_directories(test_tasks PRIVATE ${NEO_CLIENT_DIR}/include)
+target_link_directories(test_tasks PRIVATE ${NEO_CLIENT_DIR}/lib)
 target_include_directories(test_tasks PRIVATE ${EXTERNAL_DIR}/googletest/googletest/include)
 target_include_directories(test_tasks PRIVATE ${EXTERNAL_DIR}/googletest/googlemock/include)
-target_link_libraries(test_tasks PRIVATE tasksWorker tasklistsWorker DB.o gtest gmock)
+target_link_libraries(test_tasks PRIVATE tasksWorker tasklistsWorker DB.o gtest gmock neo4j-client)
 

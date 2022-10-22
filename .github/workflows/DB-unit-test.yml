@@ -13,13 +13,21 @@ on:
 jobs:
   run-test-db:
     runs-on: ubuntu-latest
+    services:
+      neo4j:
+        image: neo4j
+        env:
+          NEO4J_AUTH: neo4j/hello4156
+        ports:
+          - 7687:7687
+          - 7474:7474
     steps:
     - name: Install GTest manually
       run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
-    - name: Install mongoDB
-      run: wget https://github.com/mongodb/mongo-c-driver/releases/download/1.23.0/mongo-c-driver-1.23.0.tar.gz && tar xzf mongo-c-driver-1.23.0.tar.gz && cd mongo-c-driver-1.23.0 && mkdir cmake-build && cd cmake-build && cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && cmake --build . && sudo cmake --build . --target install
+    - name: Install libneo4j-client
+      run: sudo apt-get install libcypher-parser-dev libedit-dev && git clone https://github.com/majensen/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure --disable-werror && make clean check && sudo make install
     - uses: actions/checkout@v3
     - name: Build the DB source
       run: cd db && mkdir build && cd build && cmake .. && make
     - name: Run test
-      run: /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
+      run: LD_LIBRARY_PATH=/usr/local/lib /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
