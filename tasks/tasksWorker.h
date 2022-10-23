@@ -9,9 +9,9 @@
 class TaskListsWorker; // forward definition
 
 /*
-  * @brief This class is a worker class for tasks.
-  *
-  */
+ * @brief This class is a worker class for tasks.
+ *
+ */
 class TasksWorker {
 private:
   /* data */
@@ -46,23 +46,23 @@ public:
                               std::map<std::string, std::string> &task_info);
   /**
    * @brief Convert map to TaskContent object
-   * 
-   * @param task_info 
-   * @param taskContent 
+   *
+   * @param task_info
+   * @param taskContent
    */
   virtual void
   Map2TaskStruct(const std::map<std::string, std::string> &task_info,
                  TaskContent &taskContent);
   /**
    * @brief Construct a new Tasks Worker object
-   * 
-   * @param _db 
-   * @param _taskListWorker 
+   *
+   * @param _db
+   * @param _taskListWorker
    */
   TasksWorker(DB *_db, TaskListsWorker *_taskListWorker);
   /**
    * @brief Destroy the Tasks Worker object
-   * 
+   *
    */
   virtual ~TasksWorker();
   /**
@@ -85,27 +85,28 @@ public:
                             std::string &outTaskName);
   /**
    * @brief Delete the task.
-   * 
-   * @param data 
-   * @return returnCode 
+   *
+   * @param data
+   * @return returnCode
    */
   virtual returnCode Delete(const RequestData &data);
 
   /**
    * @brief Update the task with the TaskContent object in.
-   * 
-   * @param data 
-   * @param in 
-   * @return returnCode 
+   *
+   * @param data
+   * @param in
+   * @return returnCode
    */
   virtual returnCode Revise(const RequestData &data, TaskContent &in);
 
   /**
-   * @brief Get all tasks in the tasklist and return the task name list in outTaskNameList.
-   * 
-   * @param data 
-   * @param out 
-   * @return returnCode 
+   * @brief Get all tasks in the tasklist and return the task name list in
+   * outTaskNameList.
+   *
+   * @param data
+   * @param out
+   * @return returnCode
    */
   virtual returnCode GetAllTasksName(const RequestData &data,
                                      std::vector<std::string> &outTaskNameList);
