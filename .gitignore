@@ -43,3 +43,7 @@ libneo4j-client
 
 # MacOS
 .DS_Store
+
+# clang-format
+.clang-format
+.editorconfig

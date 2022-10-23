@@ -169,7 +169,7 @@ public:
    * @return returnCode error message
    */
   virtual returnCode deleteTaskListNode(const std::string &user_pkey,
-                                const std::string &task_list_pkey);
+                                        const std::string &task_list_pkey);
   /**
    * @brief Delete a task node.
    *
@@ -179,8 +179,8 @@ public:
    * @return returnCode error message
    */
   virtual returnCode deleteTaskNode(const std::string &user_pkey,
-                            const std::string &task_list_pkey,
-                            const std::string &task_pkey);
+                                    const std::string &task_list_pkey,
+                                    const std::string &task_pkey);
   /**
    * @brief Get a user node.
    *
@@ -215,9 +215,9 @@ public:
    * @return returnCode error message
    */
   virtual returnCode getTaskNode(const std::string &user_pkey,
-                         const std::string &task_list_pkey,
-                         const std::string &task_pkey,
-                         std::map<std::string, std::string> &task_info);
+                                 const std::string &task_list_pkey,
+                                 const std::string &task_pkey,
+                                 std::map<std::string, std::string> &task_info);
   /**
    * @brief Get all user nodes.
    *
@@ -230,8 +230,9 @@ public:
    * @param [in] user_pkey user primary key
    * @param [out] task_list_info array of task list pkeys
    */
-  virtual returnCode getAllTaskListNodes(const std::string &user_pkey,
-                                 std::vector<std::string> &task_list_info);
+  virtual returnCode
+  getAllTaskListNodes(const std::string &user_pkey,
+                      std::vector<std::string> &task_list_info);
   /**
    * @brief Get all task nodes.
    *
@@ -240,6 +241,6 @@ public:
    * @param [out] task_info array of task pkeys
    */
   virtual returnCode getAllTaskNodes(const std::string &user_pkey,
-                             const std::string &task_list_pkey,
-                             std::vector<std::string> &task_info);
+                                     const std::string &task_list_pkey,
+                                     std::vector<std::string> &task_info);
 };
