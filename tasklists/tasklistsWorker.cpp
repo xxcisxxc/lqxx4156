@@ -4,7 +4,7 @@
 
 TaskListsWorker ::~TaskListsWorker() {}
 
-std::string TaskListsWorker :: Rename(const std::string &tasklist_name,
+std::string TaskListsWorker ::Rename(const std::string &tasklist_name,
                                      int suffix) {
   if (suffix == 0)
     return tasklist_name;
