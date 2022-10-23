@@ -1,3 +1,15 @@
+/**
+ * @file utils.h
+ * @author Shichen Xu
+ * @brief Helper utils for lqxx project.
+ * @date 2022-10
+ *
+ * Some helper templates, macros, and functions
+ * to handle some string, type, format, network, or macro operations in lqxx project.
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #pragma once
 
 #include <cstddef>
@@ -10,6 +22,34 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <type_traits>
+
+/**
+ * In this file, all functions and macros markd by 2 leading underlines '__XXX'
+ * are for inner implementations and should not be called outside this file.
+ */
+
+/* some helper macros */
+
+/* Support for-loop unpack for various argument macros,
+   current maximum argument number is 4, you can modify following lines to support more */
+#define __UTILS_GET_N_TH_ARG(_1, _2, _3, _4, target, ...) target
+
+#define __UTILS_ITER_1(call, arg) call(arg);
+#define __UTILS_ITER_2(call, arg, ...) call(arg); __UTILS_ITER_1(call, __VA_ARGS__)
+#define __UTILS_ITER_3(call, arg, ...) call(arg); __UTILS_ITER_2(call, __VA_ARGS__)
+#define __UTILS_ITER_4(call, arg, ...) call(arg); __UTILS_ITER_3(call, __VA_ARGS__)
+/**
+ * @brief Iterate through the argument list and @call each of them.
+ * e.g. UTILS_CALL_MACRO_FOR_EACH(PRINT, x1, x2, x3) will be expanded to
+ * PRINT(x1); PRINT(x2); PRINT(x3);.
+ * It only supported 4 argument now. You can modify utils.h to support more.
+ */
+#define UTILS_CALL_MACRO_FOR_EACH(call, ...)\
+    __UTILS_GET_N_TH_ARG(__VA_ARGS__,\
+        __UTILS_ITER_4,\
+        __UTILS_ITER_3,\
+        __UTILS_ITER_2,\
+        __UTILS_ITER_1)(call, __VA_ARGS__)
 
 namespace Common {
 
@@ -90,6 +130,7 @@ static constexpr bool all_true(const std::initializer_list<bool>& il) {
  * @brief Judge if the first type is of the same type of the rests.
  * is_same_to_all<int64_t, long, long int>::value == true
  * is_same_to_all<uint32_t, unsigned, unsigned int>::value == true
+ * is_same_to_all<uint32_t, char *, unsigned int>::value == false
  * @tparam T First type.
  * @tparam Args Types to be judged.
  */

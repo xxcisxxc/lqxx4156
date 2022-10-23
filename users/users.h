@@ -1,3 +1,11 @@
+/**
+ * @file users.h
+ * @author Shichen Xu
+ * @brief Users' business logic.
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
 #pragma once
 
 #include <common/utils.h>
@@ -7,6 +15,9 @@
 #include <type_traits>
 #include <utility>
 
+/**
+ * @brief User information, mainly for passing arguments conveniently.
+ */
 struct UserInfo {
 public:
     UserInfo() {}
@@ -26,6 +37,10 @@ public:
     std::string password;
 };
 
+/**
+ * @brief Users.
+ * 
+ */
 class Users {
 public:
     Users(std::shared_ptr<DB> = nullptr);
