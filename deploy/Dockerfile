@@ -1,5 +1,5 @@
 FROM gromacs/cmake-3.15.7-llvm-9-openmpi-master:latest
-WORKDIR /workspace/
+WORKDIR /workspaces/lqxx
 RUN apt-get update &&\
     apt-get install git -y &&\
     apt-get install build-essential -y &&\

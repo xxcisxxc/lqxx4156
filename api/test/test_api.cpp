@@ -7,11 +7,11 @@ class MockedUsers: public Users {
 public:
     ~MockedUsers() {}
 
-    bool Create(const std::string& name, const std::string& email, const std::string& password) override {
+    bool Create(const UserInfo&) override {
         return create_mock_return;
     }
 
-    bool Validate(const std::string& name, const std::string& email, const std::string& password) override {
+    bool Validate(const UserInfo&) override {
         return validate_mock_return;
     }
 

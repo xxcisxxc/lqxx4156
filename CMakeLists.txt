@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(lqxx)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # add submodules
 
 if (NOT TARGET api)

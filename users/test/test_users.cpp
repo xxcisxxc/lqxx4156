@@ -50,29 +50,29 @@ protected:
 
 TEST_F(UsersTest, Create) {
     mocked_db->Clear();
-    EXPECT_TRUE(users->Create("alice", "alice@columbia.edu", "123456"));
-    EXPECT_TRUE(users->Create("bob", "bob@columbia.edu", "123456"));
-    EXPECT_TRUE(users->Create("alice2", "alice2@columbia.edu", "123456"));
-    EXPECT_FALSE(users->Create("alice3", "alice@columbia.edu", "123456"));
+    EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "123456")));
+    EXPECT_TRUE(users->Create(UserInfo("bob", "bob@columbia.edu", "123456")));
+    EXPECT_TRUE(users->Create(UserInfo("alice2", "alice2@columbia.edu", "123456")));
+    EXPECT_FALSE(users->Create(UserInfo("alice3", "alice@columbia.edu", "123456")));
 }
 
 TEST_F(UsersTest, Validate) {
     mocked_db->Clear();
-    EXPECT_FALSE(users->Validate("", "alice@columbia.edu", "123456"));
-    EXPECT_TRUE(users->Create("alice", "alice@columbia.edu", "123456"));
-    EXPECT_TRUE(users->Validate("", "alice@columbia.edu", "123456"));
-    EXPECT_TRUE(users->Validate("alice", "alice@columbia.edu", "123456"));
-    EXPECT_FALSE(users->Validate("not alice", "alice@columbia.edu", "123456"));
-    EXPECT_FALSE(users->Validate("alice", "alice@columbia.edu", "wrong password"));
-    EXPECT_FALSE(users->Validate("", "alice@columbia.edu", ""));
-    EXPECT_FALSE(users->Validate("alice", "alice@columbia.edu", ""));
+    EXPECT_FALSE(users->Validate(UserInfo("", "alice@columbia.edu", "123456")));
+    EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "123456")));
+    EXPECT_TRUE(users->Validate(UserInfo("", "alice@columbia.edu", "123456")));
+    EXPECT_TRUE(users->Validate(UserInfo("alice", "alice@columbia.edu", "123456")));
+    EXPECT_FALSE(users->Validate(UserInfo("not alice", "alice@columbia.edu", "123456")));
+    EXPECT_FALSE(users->Validate(UserInfo("alice", "alice@columbia.edu", "wrong password")));
+    EXPECT_FALSE(users->Validate(UserInfo("", "alice@columbia.edu", "")));
+    EXPECT_FALSE(users->Validate(UserInfo("alice", "alice@columbia.edu", "")));
 }
 
 TEST_F(UsersTest, DuplicatedEmail) {
     mocked_db->Clear();
-    EXPECT_TRUE(users->Create("alice", "alice@columbia.edu", "123456"));
-    EXPECT_TRUE(users->DuplicatedEmail("alice@columbia.edu"));
-    EXPECT_FALSE(users->DuplicatedEmail("bob@columbia.edu"));
+    EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "123456")));
+    EXPECT_TRUE(users->DuplicatedEmail(UserInfo("alice@columbia.edu")));
+    EXPECT_FALSE(users->DuplicatedEmail(UserInfo("bob@columbia.edu")));
 }
 
 int main(int argc, char **argv) {

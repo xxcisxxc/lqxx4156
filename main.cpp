@@ -1,8 +1,19 @@
+#include <common/utils.h>
 #include <api/api.h>
+#include <string>
 
 int main(void) {
-    std::cout << "running" << std::endl;
+    std::string api_host = Common::GetEnv<std::string>("api_host");
+    uint32_t api_port = Common::GetEnv<uint32_t>("api_port");
+
+    if (api_host.empty()) {
+        api_host = "0.0.0.0";
+    }
+    if (!api_port) {
+        api_port = 3001;
+    }
+
     API api;
-    api.Run("0.0.0.0", 3001);
+    api.Run(api_host, api_port);
     return 0;
 }

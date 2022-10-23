@@ -3,7 +3,7 @@ services:
     backend:
         build: .
         volumes: 
-            - ../:/workspace/
+            - ../:/workspaces/lqxx
         ports: 
             - 3001:3001
         command: >
@@ -16,7 +16,7 @@ services:
     backend-test:
         build: .
         volumes: 
-            - ../:/workspace/
+            - ../:/workspaces/lqxx
         command: >
             bash -c " git submodule update --init;
                       mkdir build;
@@ -27,7 +27,7 @@ services:
     bash:
         build: .
         volumes: 
-            - ../:/workspace/
+            - ../:/workspaces/lqxx
         ports: 
             - 3001:3001
         stdin_open: true

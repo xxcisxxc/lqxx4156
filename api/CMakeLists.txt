@@ -48,6 +48,10 @@ if (NOT TARGET users)
     add_subdirectory(${ROOT_DIR}/users ${ROOT_DIR}/build/users)
 endif()
 
+if (NOT TARGET DB.o)
+    add_subdirectory(${ROOT_DIR}/db ${ROOT_DIR}/build/db)
+endif()
+
 # api object
 add_library(api OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/api.cpp)
 target_include_directories(api PUBLIC ${EXTERNAL_DIR})
@@ -58,4 +62,4 @@ target_include_directories(api PUBLIC ${ROOT_DIR})
 # api test executable
 add_executable(test_api ${CMAKE_CURRENT_SOURCE_DIR}/test/test_api.cpp)
 target_include_directories(test_api PRIVATE ${EXTERNAL_DIR}/googletest/include)
-target_link_libraries(test_api PRIVATE api gtest oauthcpp users cpp-jwt)
+target_link_libraries(test_api PRIVATE api gtest oauthcpp users cpp-jwt DB.o neo4j-client)

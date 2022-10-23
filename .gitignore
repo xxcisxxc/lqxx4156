@@ -40,3 +40,5 @@ build/
 googletest
 build
 libneo4j-client
+.cache
+.devcontainer

@@ -135,12 +135,12 @@ DefineHttpHandler(UsersRegister) {
     }
 
     // check if user email is duplicated
-    if (users->DuplicatedEmail(user_email)) {
+    if (users->DuplicatedEmail(UserInfo("", user_email, ""))) {
         ReturnHttpResp(500, "msg", "failed duplicated email");
     }
 
     // create user
-    if (users->Create(user_name, user_email, user_passwd)) {
+    if (users->Create(UserInfo(user_name, user_email, user_passwd))) {
         ReturnHttpResp(200, "msg", "success");
     } else {
         ReturnHttpResp(500, "msg", "failed create user");
@@ -157,7 +157,7 @@ DefineHttpHandler(UsersLogin) {
         ReturnHttpResp(500, "msg", "failed basic auth");
     }
 
-    if (users->Validate({}, user_email, user_passwd)) {
+    if (users->Validate(UserInfo("", user_email, user_passwd))) {
         const std::string token = EncodeTokenFromEmail(user_email, std::chrono::seconds(3600), token_secret_key);
         if (token.empty()) {
             ReturnHttpResp(500, "msg", "failed create token");

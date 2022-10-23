@@ -71,6 +71,8 @@ private:
   void ensureConstraints();
 
 public:
+  DB() {}
+
   /**
    * @brief Construct a new DB object: connect to neo4j DB.
    *
