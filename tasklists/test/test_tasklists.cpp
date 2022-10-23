@@ -2,10 +2,6 @@
 #include <db/DB.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-<<<<<<< HEAD
-#include <iostream>
-=======
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 #include <memory>
 #include <tasklists/tasklistsWorker.h>
 
@@ -26,17 +22,12 @@ public:
               (const std::string &user_pkey, const std::string &task_list_pkey,
                (const std::map<std::string, std::string> &)task_list_info),
               (override));
-<<<<<<< HEAD
   MOCK_METHOD(returnCode, getAllTaskListNodes,
               (const std::string &user_pkey,
                std::vector<std::string> &outNames),
               (override));
 
   MockedDB() : DB("testhost") {}
-=======
-
-  MockedDB() : DB("localhost") {}
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 };
 
 class TaskListTest : public ::testing::Test {
@@ -95,11 +86,6 @@ TEST_F(TaskListTest, Query) {
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.date, "");
-<<<<<<< HEAD
-=======
-
-  // TODO: test for user DNE
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 }
 
 TEST_F(TaskListTest, Create) {
@@ -154,11 +140,6 @@ TEST_F(TaskListTest, Create) {
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist0(2)");
-<<<<<<< HEAD
-=======
-
-  // TODO: test for user DNE
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 }
 
 TEST_F(TaskListTest, Delete) {
@@ -180,11 +161,6 @@ TEST_F(TaskListTest, Delete) {
   data.user_key = "";
   data.tasklist_key = "";
   EXPECT_EQ(tasklistsWorker->Delete(data), ERR_KEY);
-<<<<<<< HEAD
-=======
-
-  // TODO: test for user DNE
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 }
 
 TEST_F(TaskListTest, Revise) {
@@ -227,17 +203,6 @@ TEST_F(TaskListTest, Revise) {
       .WillOnce(Return(ERR_RFIELD));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
 
-<<<<<<< HEAD
-=======
-  // user not exist
-  data.user_key = "not_exist_user";
-  data.tasklist_key = "tasklist0";
-  EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key,
-                                           task_list_info))
-      .WillOnce(Return(ERR_NO_NODE));
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
-
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
   // tasklist not exist
   data.user_key = "user0";
   data.tasklist_key = "not_exist_tasklist";
@@ -245,7 +210,6 @@ TEST_F(TaskListTest, Revise) {
                                            task_list_info))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
-<<<<<<< HEAD
 }
 
 TEST_F(TaskListTest, GetAllTasklist) {
@@ -265,8 +229,6 @@ TEST_F(TaskListTest, GetAllTasklist) {
   // request user_key empty
   data.user_key = "";
   EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_KEY);
-=======
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 }
 
 int main(int argc, char **argv) {

@@ -4,7 +4,7 @@
 
 TaskListsWorker ::~TaskListsWorker() {}
 
-std::string TaskListsWorker ::Rename(const std::string &tasklist_name,
+std::string TaskListsWorker :: Rename(const std::string &tasklist_name,
                                      int suffix) {
   if (suffix == 0)
     return tasklist_name;
@@ -103,7 +103,6 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
 
   std::map<std::string, std::string> task_list_info;
   Content2Map(in, task_list_info);
-<<<<<<< HEAD
 
   returnCode ret = db_instance.reviseTaskListNode(
       data.user_key, data.tasklist_key, task_list_info);
@@ -118,11 +117,6 @@ TaskListsWorker ::GetAllTasklist(const RequestData &data,
     return ERR_KEY;
 
   returnCode ret = db_instance.getAllTaskListNodes(data.user_key, outNames);
-=======
-
-  returnCode ret = db_instance.reviseTaskListNode(
-      data.user_key, data.tasklist_key, task_list_info);
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
   return ret;
 }
 

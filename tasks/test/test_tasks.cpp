@@ -108,51 +108,6 @@ TEST_F(TasksWorkerTest, TaskStruct2Map) {
 }
 
 TEST_F(TasksWorkerTest, Map2TaskStruct) {
-<<<<<<< HEAD
-    std::map<std::string, std::string> mp;
-    mp["name"] = "test_name";
-    mp["content"] = "test_content";
-    mp["date"] = "test_date";
-    TaskContent task;
-
-    tasksWorker->Map2TaskStruct(mp, task);
-    EXPECT_EQ(task.name, "test_name");
-    EXPECT_EQ(task.content, "test_content");
-    EXPECT_EQ(task.date, "test_date");   
-
-    mp["name"]= "";
-    task.Clear();
-    tasksWorker->Map2TaskStruct(mp, task);
-    EXPECT_EQ(task.name, "");
-    EXPECT_EQ(task.content, "test_content");
-    EXPECT_EQ(task.date, "test_date");   
-
-    mp["content"]= "";
-    task.Clear();
-    tasksWorker->Map2TaskStruct(mp, task);
-    EXPECT_EQ(task.name, "");
-    EXPECT_EQ(task.content, "");
-    EXPECT_EQ(task.date, "test_date");    
-
-    mp["date"]= "";
-    task.Clear();
-    tasksWorker->Map2TaskStruct(mp, task);
-    EXPECT_EQ(task.name, "");
-    EXPECT_EQ(task.content, "");
-    EXPECT_EQ(task.date, "");   
-
-    // no error is just ok
-    mp.erase("date");
-    testing::internal::CaptureStdout();
-    tasksWorker->Map2TaskStruct(mp, task);
-
-    mp.erase("content");
-    tasksWorker->Map2TaskStruct(mp, task);
-
-    mp.erase("name");
-    tasksWorker->Map2TaskStruct(mp, task);
-
-=======
   std::map<std::string, std::string> mp;
   mp["name"] = "test_name";
   mp["content"] = "test_content";
@@ -194,7 +149,6 @@ TEST_F(TasksWorkerTest, Map2TaskStruct) {
 
   mp.erase("name");
   tasksWorker->Map2TaskStruct(mp, task);
->>>>>>> 1f9a479b9ed4b4f7693307b4f2ba981ab1dcfe7d
 }
 
 // Create Function
