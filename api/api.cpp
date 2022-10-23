@@ -1,6 +1,5 @@
 #include <api/api.h>
 #include <common/utils.h>
-#include <nlohmann/json.hpp>
 #include <liboauthcpp/src/base64.h>
 #include <jwt/jwt.hpp>
 
@@ -112,9 +111,7 @@ API::API(std::shared_ptr<Users> _users, std::shared_ptr<httplib::Server> _svr):
     }
 }
 
-API::~API() {
-    Stop();
-}
+API::~API() { Stop(); }
 
 DefineHttpHandler(UsersRegister) {
     std::string user_name;
@@ -188,75 +185,75 @@ DefineHttpHandler(UsersLogout) {
 }
 
 DefineHttpHandler(TaskLists) {
-    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
+  const std::vector<std::string> splited_path = Common::Split(req.path, "/");
 
-    // special resolve for "/v1/task_lists/{task_list_name}/tasks/{task_name}"
-    if (splited_path.size() >= 2 && *(splited_path.rbegin() + 1) == "tasks") {
-        Tasks(req, res);
-        return;
-    }
+  // special resolve for "/v1/task_lists/{task_list_name}/tasks/{task_name}"
+  if (splited_path.size() >= 2 && *(splited_path.rbegin() + 1) == "tasks") {
+    Tasks(req, res);
+    return;
+  }
 
-    nlohmann::json result;
-    const std::string token = req.headers.find("Authentication")->second;
+  nlohmann::json result;
+  const std::string token = req.headers.find("Authentication")->second;
 
-    // do something with token
-    const std::string decoded_token = base64_decode(token);
-    // get user_id from decoded_token, format to be discussed
-    // const std::string user_id = some_function(decoded_token);
+  // do something with token
+  const std::string decoded_token = base64_decode(token);
+  // get user_id from decoded_token, format to be discussed
+  // const std::string user_id = some_function(decoded_token);
 
-    // do something with user_id
-    
-    result["msg"] = "success";
-    res.set_content(result.dump(), "text/plain");
+  // do something with user_id
+
+  result["msg"] = "success";
+  res.set_content(result.dump(), "text/plain");
 }
 
 DefineHttpHandler(TaskListsCreate) {
-    // do it later
+  // do it later
 }
 
 DefineHttpHandler(Tasks) {
-    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
+  const std::vector<std::string> splited_path = Common::Split(req.path, "/");
 
-    // some ugly handling for unresolved path
+  // some ugly handling for unresolved path
 
-    if (splited_path.size() > 0 && splited_path.back() == "create") {
-        TasksCreate(req, res);
-        return;
-    }
+  if (splited_path.size() > 0 && splited_path.back() == "create") {
+    TasksCreate(req, res);
+    return;
+  }
 
-    if (splited_path.size() < 3) {
-        // bad path
-    }
+  if (splited_path.size() < 3) {
+    // bad path
+  }
 
-    std::string user_id;
-    std::string task_list_name = *(splited_path.rbegin() + 2);
-    std::string task_name = splited_path.back();
+  std::string user_id;
+  std::string task_list_name = *(splited_path.rbegin() + 2);
+  std::string task_name = splited_path.back();
 
-    // do some logic
+  // do some logic
 }
 
 DefineHttpHandler(TasksCreate) {
-    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
+  const std::vector<std::string> splited_path = Common::Split(req.path, "/");
 
-    std::string user_id;
-    std::string task_list_name = *(splited_path.rbegin() + 2);
-    std::string task_name;
+  std::string user_id;
+  std::string task_list_name = *(splited_path.rbegin() + 2);
+  std::string task_name;
 
-    // unfinised, do it later
+  // unfinised, do it later
 }
 
-void API::Run(const std::string& host, uint32_t port) {
-    AddHttpHandler(svr, "/v1/users/register", Post, UsersRegister);
-    AddHttpHandler(svr, "/v1/users/login", Post, UsersLogin);
-    AddHttpHandler(svr, "/v1/users/logout", Post, UsersLogout);
-    AddHttpHandler(svr, "/v1/task_lists/", Get, TaskLists);
-    AddHttpHandler(svr, "/v1/task_lists/create", Post, TaskListsCreate);
+void API::Run(const std::string &host, uint32_t port) {
+  AddHttpHandler(svr, "/v1/users/register", Post, UsersRegister);
+  AddHttpHandler(svr, "/v1/users/login", Post, UsersLogin);
+  AddHttpHandler(svr, "/v1/users/logout", Post, UsersLogout);
+  AddHttpHandler(svr, "/v1/task_lists/", Get, TaskLists);
+  AddHttpHandler(svr, "/v1/task_lists/create", Post, TaskListsCreate);
 
-    svr->listen(host, port);
+  svr->listen(host, port);
 }
 
 void API::Stop() {
-    if (svr && svr->is_running()) {
-        svr->stop();
-    }
+  if (svr && svr->is_running()) {
+    svr->stop();
+  }
 }

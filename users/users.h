@@ -45,7 +45,7 @@ class Users {
 public:
     Users(std::shared_ptr<DB> = nullptr);
 
-    virtual ~Users();
+  virtual ~Users();
 
     virtual bool Create(const UserInfo&);
 

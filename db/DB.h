@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 // third party library
-#include <neo4j-client.h>
+#include "neo4j-client.h"
 
 /**
  * @brief DB class return code
@@ -104,7 +104,7 @@ public:
    * @param [in] task_list_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   createTaskListNode(const std::string &user_pkey,
                      const std::map<std::string, std::string> &task_list_info);
   /**
@@ -115,7 +115,7 @@ public:
    * @param [in] task_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   createTaskNode(const std::string &user_pkey,
                  const std::string &task_list_pkey,
                  const std::map<std::string, std::string> &task_info);
@@ -137,7 +137,7 @@ public:
    * @param [in] task_list_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   reviseTaskListNode(const std::string &user_pkey,
                      const std::string &task_list_pkey,
                      const std::map<std::string, std::string> &task_list_info);
@@ -150,7 +150,7 @@ public:
    * @param [in] task_info key: field name, value: field value
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   reviseTaskNode(const std::string &user_pkey,
                  const std::string &task_list_pkey,
                  const std::string &task_pkey,
@@ -161,7 +161,7 @@ public:
    * @param [in] user_pkey user primary key
    * @return returnCode error message
    */
-  returnCode deleteUserNode(const std::string &user_pkey);
+  virtual returnCode deleteUserNode(const std::string &user_pkey);
   /**
    * @brief Delete a task list node.
    *
@@ -169,8 +169,8 @@ public:
    * @param [in] task_list_pkey task list primary key
    * @return returnCode error message
    */
-  returnCode deleteTaskListNode(const std::string &user_pkey,
-                                const std::string &task_list_pkey);
+  virtual returnCode deleteTaskListNode(const std::string &user_pkey,
+                                        const std::string &task_list_pkey);
   /**
    * @brief Delete a task node.
    *
@@ -179,9 +179,9 @@ public:
    * @param [in] task_pkey task primary key
    * @return returnCode error message
    */
-  returnCode deleteTaskNode(const std::string &user_pkey,
-                            const std::string &task_list_pkey,
-                            const std::string &task_pkey);
+  virtual returnCode deleteTaskNode(const std::string &user_pkey,
+                                    const std::string &task_list_pkey,
+                                    const std::string &task_pkey);
   /**
    * @brief Get a user node.
    *
@@ -201,7 +201,7 @@ public:
    * value to be filled
    * @return returnCode error message
    */
-  returnCode
+  virtual returnCode
   getTaskListNode(const std::string &user_pkey,
                   const std::string &task_list_pkey,
                   std::map<std::string, std::string> &task_list_info);
@@ -215,24 +215,25 @@ public:
    * to be filled
    * @return returnCode error message
    */
-  returnCode getTaskNode(const std::string &user_pkey,
-                         const std::string &task_list_pkey,
-                         const std::string &task_pkey,
-                         std::map<std::string, std::string> &task_info);
+  virtual returnCode getTaskNode(const std::string &user_pkey,
+                                 const std::string &task_list_pkey,
+                                 const std::string &task_pkey,
+                                 std::map<std::string, std::string> &task_info);
   /**
    * @brief Get all user nodes.
    *
    * @param [out] user_info array of user pkeys
    */
-  returnCode getAllUserNodes(std::vector<std::string> &user_info);
+  virtual returnCode getAllUserNodes(std::vector<std::string> &user_info);
   /**
    * @brief Get all task list nodes.
    *
    * @param [in] user_pkey user primary key
    * @param [out] task_list_info array of task list pkeys
    */
-  returnCode getAllTaskListNodes(const std::string &user_pkey,
-                                 std::vector<std::string> &task_list_info);
+  virtual returnCode
+  getAllTaskListNodes(const std::string &user_pkey,
+                      std::vector<std::string> &task_list_info);
   /**
    * @brief Get all task nodes.
    *
@@ -240,7 +241,7 @@ public:
    * @param [in] task_list_pkey task list primary key
    * @param [out] task_info array of task pkeys
    */
-  returnCode getAllTaskNodes(const std::string &user_pkey,
-                             const std::string &task_list_pkey,
-                             std::vector<std::string> &task_info);
+  virtual returnCode getAllTaskNodes(const std::string &user_pkey,
+                                     const std::string &task_list_pkey,
+                                     std::vector<std::string> &task_info);
 };

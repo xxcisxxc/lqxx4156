@@ -42,3 +42,10 @@ build
 libneo4j-client
 .cache
 .devcontainer
+
+# MacOS
+.DS_Store
+
+# clang-format
+.clang-format
+.editorconfig

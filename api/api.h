@@ -15,8 +15,8 @@
 
 #pragma once
 
-#include <memory>
 #include <httplib.h>
+#include <memory>
 #include <users/users.h>
 
 /* Declare a function that would be called to handle an http request of a certain route.
@@ -48,22 +48,22 @@ public:
      */
     virtual void Run(const std::string& host, uint32_t port);
 
-    virtual void Stop();
+  virtual void Stop();
 
 protected:
-    DeclareHttpHandler(UsersRegister);
+  DeclareHttpHandler(UsersRegister);
 
-    DeclareHttpHandler(UsersLogin);
+  DeclareHttpHandler(UsersLogin);
 
-    DeclareHttpHandler(UsersLogout);
+  DeclareHttpHandler(UsersLogout);
 
-    DeclareHttpHandler(TaskLists);
+  DeclareHttpHandler(TaskLists);
 
-    DeclareHttpHandler(TaskListsCreate);
+  DeclareHttpHandler(TaskListsCreate);
 
-    DeclareHttpHandler(Tasks);
+  DeclareHttpHandler(Tasks);
 
-    DeclareHttpHandler(TasksCreate);
+  DeclareHttpHandler(TasksCreate);
 
 private:
     std::shared_ptr<Users> users;

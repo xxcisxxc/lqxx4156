@@ -3,6 +3,11 @@
 DB::DB(std::string host) {
   this->host_ = host;
 
+  // this is just for unit test
+  if (host == "testhost") {
+    return;
+  }
+
   // Called before neo4j client driver is used.
   neo4j_client_init();
   // Test the connection.

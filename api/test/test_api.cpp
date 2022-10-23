@@ -1,11 +1,11 @@
 #include <api/api.h>
-#include <users/users.h>
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
+#include <users/users.h>
 
-class MockedUsers: public Users {
+class MockedUsers : public Users {
 public:
-    ~MockedUsers() {}
+  ~MockedUsers() {}
 
     bool Create(const UserInfo&) override {
         return create_mock_return;
@@ -15,41 +15,37 @@ public:
         return validate_mock_return;
     }
 
-    void SetCreateResult(bool value) {
-        create_mock_return = value;
-    }
+  void SetCreateResult(bool value) { create_mock_return = value; }
 
-    void SetValidateResult(bool value) {
-        validate_mock_return = value;
-    }
+  void SetValidateResult(bool value) { validate_mock_return = value; }
 
 private:
-    bool create_mock_return;
-    bool validate_mock_return;
+  bool create_mock_return;
+  bool validate_mock_return;
 };
 
-class APITest: public ::testing::Test {
+class APITest : public ::testing::Test {
 protected:
+  void SetUp() override {
+    mocked_users = std::make_shared<MockedUsers>();
+    api = std::make_shared<API>(mocked_users);
+    running_server = std::make_shared<std::thread>(
+        [&]() { this->api->Run(this->test_host, this->test_port); });
+    // wait for some time for the service to be set up
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
 
-    void SetUp() override {
-        mocked_users = std::make_shared<MockedUsers>();
-        api = std::make_shared<API>(mocked_users);
-        running_server = std::make_shared<std::thread>([&](){this->api->Run(this->test_host, this->test_port);});
-        // wait for some time for the service to be set up
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    void TearDown() override {
-        api->Stop();
-        running_server->join();
-    }
+  void TearDown() override {
+    api->Stop();
+    running_server->join();
+  }
 
 protected:
-    std::shared_ptr<API> api;
-    std::shared_ptr<MockedUsers> mocked_users;
-    const std::string test_host = "0.0.0.0";
-    const uint32_t test_port = 3301;
-    std::shared_ptr<std::thread> running_server;
+  std::shared_ptr<API> api;
+  std::shared_ptr<MockedUsers> mocked_users;
+  const std::string test_host = "0.0.0.0";
+  const uint32_t test_port = 3301;
+  std::shared_ptr<std::thread> running_server;
 };
 
 TEST_F(APITest, UsersRegister) {
@@ -237,6 +233,6 @@ TEST_F(APITest, TaskListsCreate) {
 }
 
 int main(int argc, char **argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
