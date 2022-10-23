@@ -18,4 +18,4 @@ endif()
 
 # main executable file
 add_executable(lqxx ${PROJECT_SOURCE_DIR}/main.cpp)
-target_link_libraries(lqxx PRIVATE api DB.o users gtest oauthcpp nlohmann_json cpp-jwt)
+target_link_libraries(lqxx PRIVATE api DB.o users gtest oauthcpp nlohmann_json cpp-jwt neo4j-client)

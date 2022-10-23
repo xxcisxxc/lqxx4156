@@ -34,4 +34,4 @@ target_include_directories(users PUBLIC ${ROOT_DIR})
 # users unit test
 add_executable(test_users ${CMAKE_CURRENT_SOURCE_DIR}/test/test_users.cpp)
 target_include_directories(test_users PRIVATE ${EXTERNAL_DIR}/googletest/include)
-target_link_libraries(test_users PRIVATE users gtest DB.o)
+target_link_libraries(test_users PRIVATE users gtest DB.o neo4j-client)
