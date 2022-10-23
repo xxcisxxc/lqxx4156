@@ -32,4 +32,8 @@ docker-compose run backend_test
 # to create an interactive bash environment
 # by doing so you can run whatever commands you want in the docker container
 docker-compose run bash
+
+# after run clean-ups
+# by doing so you can remove stopped containers and used resources
+docker-compose down
 ```
