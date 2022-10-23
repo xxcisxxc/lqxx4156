@@ -1,0 +1,35 @@
+version: '3'
+services: 
+    backend:
+        build: .
+        volumes: 
+            - ../:/workspace/
+        ports: 
+            - 3001:3001
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./lqxx "
+    backend-test:
+        build: .
+        volumes: 
+            - ../:/workspace/
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./api/test_api "
+    bash:
+        build: .
+        volumes: 
+            - ../:/workspace/
+        ports: 
+            - 3001:3001
+        stdin_open: true
+        tty: true
+        command: /bin/bash

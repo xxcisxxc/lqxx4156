@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(DBTest)
-find_package(GTest CONFIG REQUIRED)
 
 add_library(DB.o OBJECT DB.cc)
 add_executable(DBTest test/testDB.cc $<TARGET_OBJECTS:DB.o>)
