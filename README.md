@@ -23,11 +23,11 @@ go to project root directory.
 cd deploy
 
 # to run the main backend service
-docker-compose up backend
+docker-compose run backend
 
 # to run the tests
 # modify the commands of the test service in 'docker-compose.yml' to run your own unit test
-docker-compose up backend_test
+docker-compose run backend_test
 
 # to create an interactive bash environment
 # by doing so you can run whatever commands you want in the docker container
