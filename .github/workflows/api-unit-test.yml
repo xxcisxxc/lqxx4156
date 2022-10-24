@@ -15,14 +15,5 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Go to directory
-      run: cd deploy
-
-    - name: Build docker images
-      run: docker-compose build
-
     - name: Run tests
-      run: docker-compose run backend-test-api
-    
-    - name: Clean up
-      run: docker-compose down
+      run: rm -rf external/cpp-jwt external/googletest external/json external/liboauthcpp && cd deploy && docker-compose run backend-test
