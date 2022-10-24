@@ -355,8 +355,8 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
         task_req.tasklist_key = json_body.at("tasklist_name");
         task_content.name = json_body.at("task_name");
         try {
-            task_content.content = json_body["content"];
-            task_content.date = json_body["date"];
+            task_content.content = json_body.at("content");
+            task_content.date = json_body.at("date");
         } catch (...) {}
     } catch (std::exception& e) {
         API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
@@ -377,6 +377,15 @@ void API::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/create", Post, TaskListsCreate);
   API_ADD_HTTP_HANDLER(svr, "/v1/tasks", Post, Tasks);
   API_ADD_HTTP_HANDLER(svr, "/v1/tasks/create", Post, TasksCreate);
+  
+    svr->Get(R"(/numbers/(\d+))", [&](const httplib::Request& req, httplib::Response& res) {
+        std::string numbers = req.matches[1];
+        res.set_content(numbers, "text/plain");
+  });
+
+  svr->Get("/numbers", [&](const httplib::Request& req, httplib::Response& res) {
+        res.set_content("numbers", "text/plain");
+  });
 
   svr->listen(host, port);
 }
