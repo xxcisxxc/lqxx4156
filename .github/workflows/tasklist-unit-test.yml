@@ -1,16 +1,25 @@
-name: Tasklist Test
-on: 
+name: tasklist-unit-test
+on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      qc/dev
+      - main
 jobs:
-  Explore-GitHub-Actions:
+  test:
+    name: main test
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - run: echo "Building project"
-      - name: build
-        run: mkdir build && cd build && cmake .. && make
-      - name: Run tasklist test
-        run: ./test/test_tasklists
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Go to directory
+      run: cd deploy
+
+    - name: Run tests
+      run: docker-compose run backend-test-tasklist
+    
+    - name: Clean up
+      run: docker-compose down
