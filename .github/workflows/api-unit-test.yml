@@ -16,6 +16,4 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Run tests
-      run: git config --global --add safe.directory /workspaces/lqxx &&\
-          rm -rf external/cpp-jwt external/googletest external/json external/liboauthcpp &&\
-          cd deploy && docker-compose run backend-test
+      run: git config --global --add safe.directory /workspaces/lqxx && rm -rf external/cpp-jwt external/googletest external/json external/liboauthcpp && cd deploy && docker-compose run backend-test
