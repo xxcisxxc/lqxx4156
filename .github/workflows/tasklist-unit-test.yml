@@ -1,4 +1,4 @@
-name: api-unit-test
+name: tasklist-unit-test
 on:
   pull_request:
     branches:
