@@ -16,4 +16,4 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Run tests
-      run: cd deploy && docker-compose run backend-test
+      run: rm -rf external/cpp-jwt external/googletest external/json external/liboauthcpp && cd deploy && docker-compose run backend-test
