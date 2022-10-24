@@ -1,5 +1,7 @@
 #include <common/utils.h>
 #include <api/api.h>
+#include "db/DB.h"
+#include <memory>
 #include <string>
 
 int main(void) {
@@ -13,7 +15,10 @@ int main(void) {
         api_port = 3001;
     }
 
-    API api;
+    const std::string db_host = "neo4j://neo4j:hello4156@localhost:7687";
+    auto db_instance = std::make_shared<DB>(db_host);
+
+    API api(nullptr, nullptr, nullptr, db_instance, nullptr);
     api.Run(api_host, api_port);
     return 0;
 }
