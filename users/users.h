@@ -29,12 +29,12 @@ public:
     UserInfo(Name&& _name, Email&& _email, Password&& _password): 
         name(std::forward<Name>(_name)),
         email(std::forward<Email>(_email)),
-        password(std::forward<Password>(_password)) {}
+        passwd(std::forward<Password>(_password)) {}
 
 public:
     std::string name;
     std::string email;
-    std::string password;
+    std::string passwd;
 };
 
 /**

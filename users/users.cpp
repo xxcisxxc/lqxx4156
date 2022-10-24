@@ -13,13 +13,13 @@ using UserInfoDbType = std::map<std::string, std::string>;
 
 static inline UserInfoDbType UserInfo2DbType(const UserInfo& user_info) {
     UserInfoDbType user_info_db;
-    UTILS_CALL_MACRO_FOR_EACH(USER_FIELD_PUT_TO, name, email, password);
+    UTILS_CALL_MACRO_FOR_EACH(USER_FIELD_PUT_TO, name, email, passwd);
     return user_info_db;
 }
 
 static inline UserInfo DbType2UserInfo(const UserInfoDbType& user_info_db) {
     UserInfo user_info;
-    UTILS_CALL_MACRO_FOR_EACH(USER_FIELD_GET_FROM, name, email, password);
+    UTILS_CALL_MACRO_FOR_EACH(USER_FIELD_GET_FROM, name, email, passwd);
     return user_info;
 }
 
