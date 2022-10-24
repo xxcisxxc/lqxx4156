@@ -39,7 +39,7 @@ bool Users::Create(const UserInfo& user_info) {
 };
 
 bool Users::Validate(const UserInfo& user_info) {
-    if (user_info.password.empty()) {
+    if (user_info.passwd.empty()) {
         return false;
     }
 
@@ -55,7 +55,7 @@ bool Users::Validate(const UserInfo& user_info) {
     if (user_info.email != true_user_info.email) {
         return false;
     }
-    if (user_info.password != true_user_info.password) {
+    if (user_info.passwd != true_user_info.passwd) {
         return false;
     }
 
