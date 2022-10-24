@@ -302,8 +302,8 @@ API_DEFINE_HTTP_HANDLER(Tasks) {
 
     try {
         const auto request_body = nlohmann::json::parse(req.body);
-        task_name = request_body.at("task_name");
         tasklist_name = request_body.at("tasklist_name");
+        task_name = request_body.at("task_name");
     } catch (...) {}
 
     if (tasklist_name.empty()) {
