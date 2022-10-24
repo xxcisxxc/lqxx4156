@@ -6,6 +6,7 @@
  * @copyright Copyright (c) 2022
  * 
  */
+#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <api/api.h>
 #include <common/utils.h>
@@ -293,22 +294,28 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
 }
 
 API_DEFINE_HTTP_HANDLER(Tasks) {
-    const std::vector<std::string> splited_path = Common::Split(req.path, "/");
-
-    if (Common::LowerCase(splited_path.back()) == "create") {
-        TasksCreate(req, res);
-        return;
-    }
-
     std::string user_email;
     std::string token;
+    std::string task_name;
+    std::string tasklist_name;
     API_CHECK_REQUEST_TOKEN(user_email, token);
 
-    if (Common::LowerCase(splited_path.back()) == "tasks") {
+    try {
+        const auto request_body = nlohmann::json::parse(req.body);
+        task_name = request_body.at("task_name");
+        tasklist_name = request_body.at("tasklist_name");
+    } catch (...) {}
+
+    if (tasklist_name.empty()) {
+        API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
+    }
+
+    if (task_name.empty()) {
         /* Get all tasks. */
         RequestData task_req;
         std::vector<std::string> out_names;
         task_req.user_key = user_email;
+        task_req.tasklist_key = tasklist_name;
         if (tasks_worker->GetAllTasksName(task_req, out_names) != returnCode::SUCCESS) {
             API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
         }
@@ -320,7 +327,8 @@ API_DEFINE_HTTP_HANDLER(Tasks) {
         RequestData task_req;
         TaskContent task_content;
         task_req.user_key = user_email;
-        task_req.task_key = splited_path.back();
+        task_req.task_key = task_name;
+        task_req.tasklist_key = tasklist_name;
         if (tasks_worker->Query(task_req, task_content) != returnCode::SUCCESS) {
             API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
         }
@@ -336,14 +344,16 @@ API_DEFINE_HTTP_HANDLER(Tasks) {
 API_DEFINE_HTTP_HANDLER(TasksCreate) {
     std::string token;
     std::string out_task_name;
+    std::string tasklist_name;
     RequestData task_req;
     TaskContent task_content;
     API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
 
     try {
         const auto json_body = nlohmann::json::parse(req.body);
-        task_req.task_key = json_body.at("name");
-        task_content.name = json_body.at("name");
+        task_req.task_key = json_body.at("task_name");
+        task_req.tasklist_key = json_body.at("tasklist_name");
+        task_content.name = json_body.at("task_name");
         try {
             task_content.content = json_body["content"];
             task_content.date = json_body["date"];
@@ -365,6 +375,8 @@ void API::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/users/logout", Post, UsersLogout);
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists", Get, TaskLists);
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/create", Post, TaskListsCreate);
+  API_ADD_HTTP_HANDLER(svr, "/v1/tasks", Post, Tasks);
+  API_ADD_HTTP_HANDLER(svr, "/v1/tasks/create", Post, TasksCreate);
 
   svr->listen(host, port);
 }
