@@ -6,8 +6,6 @@
  * @copyright Copyright (c) 2022
  * 
  */
-#include "db/DB.h"
-#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <api/api.h>
 #include <common/utils.h>
@@ -104,7 +102,7 @@ static inline std::string DecodeTokenFromBasicAuth(const std::string& auth) noex
     }
 
     const auto token_null = Common::Split(base64_decode(splited_auth[1]), ":");
-    if (token_null.size() != 2 || !token_null[1].empty()) {
+    if (token_null.empty()) {
         return {};
     }
 
@@ -113,7 +111,7 @@ static inline std::string DecodeTokenFromBasicAuth(const std::string& auth) noex
 
 #define API_CHECK_REQUEST_TOKEN(user_email, token)\
     do {\
-        const auto auth_header = req.headers.find("Authentication");\
+        const auto auth_header = req.headers.find("Authorization");\
         if (auth_header == req.headers.cend() ||\
             (user_email = DecodeEmailFromToken(\
                 token = DecodeTokenFromBasicAuth(auth_header->second), token_secret_key)\
@@ -123,8 +121,12 @@ static inline std::string DecodeTokenFromBasicAuth(const std::string& auth) noex
     } while (false)
 
 /* Default arguments not cool, modify later */
-API::API(std::shared_ptr<Users> _users, std::shared_ptr<httplib::Server> _svr):
-    users(_users), svr(_svr),
+API::API(std::shared_ptr<Users> _users,
+      std::shared_ptr<TaskListsWorker> _tasklists_worker,
+      std::shared_ptr<TasksWorker> _tasks_worker,
+      std::shared_ptr<DB> _db,
+      std::shared_ptr<httplib::Server> _svr):
+    users(_users),  tasklists_worker(_tasklists_worker), tasks_worker(_tasks_worker), db(_db), svr(_svr),
     token_secret_key(Common::RandomString(128)) {
 
     if (!db) {
@@ -156,10 +158,14 @@ API_DEFINE_HTTP_HANDLER(UsersRegister) {
     std::string user_passwd;
     std::string user_email;
 
-    const auto auth_header = req.headers.find("Authentication");
+    const auto auth_header = req.headers.find("Authorization");
     if (auth_header == req.headers.cend() ||
         !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email, &user_passwd)) {
         API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");
+    }
+
+    if (user_email.empty() || user_passwd.empty()) {
+        API_RETURN_HTTP_RESP(500, "msg", "failed no email or password");
     }
     
     try {
@@ -186,10 +192,14 @@ API_DEFINE_HTTP_HANDLER(UsersLogin) {
     std::string user_passwd;
     std::string user_email;
 
-    const auto auth_header = req.headers.find("Authentication");
+    const auto auth_header = req.headers.find("Authorization");
     if (auth_header == req.headers.cend() ||
         !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email, &user_passwd)) {
         API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");
+    }
+
+    if (user_email.empty() || user_passwd.empty()) {
+        API_RETURN_HTTP_RESP(500, "msg", "failed no email or password");
     }
 
     if (users->Validate(UserInfo("", user_email, user_passwd))) {
@@ -267,8 +277,10 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
         const auto json_body = nlohmann::json::parse(req.body);
         tasklist_req.task_key = json_body.at("name");
         tasklist_content.name = json_body.at("name");
-        tasklist_content.content = json_body["content"];
-        tasklist_content.date = json_body["date"];
+        try {
+            tasklist_content.content = json_body.at("content");
+            tasklist_content.date = json_body.at("date");
+        } catch (...) {}
     } catch (std::exception& e) {
         API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
     }
@@ -332,8 +344,10 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
         const auto json_body = nlohmann::json::parse(req.body);
         task_req.task_key = json_body.at("name");
         task_content.name = json_body.at("name");
-        task_content.content = json_body["content"];
-        task_content.date = json_body["date"];
+        try {
+            task_content.content = json_body["content"];
+            task_content.date = json_body["date"];
+        } catch (...) {}
     } catch (std::exception& e) {
         API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
     }
@@ -349,7 +363,7 @@ void API::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/users/register", Post, UsersRegister);
   API_ADD_HTTP_HANDLER(svr, "/v1/users/login", Post, UsersLogin);
   API_ADD_HTTP_HANDLER(svr, "/v1/users/logout", Post, UsersLogout);
-  API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/", Get, TaskLists);
+  API_ADD_HTTP_HANDLER(svr, "/v1/task_lists", Get, TaskLists);
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/create", Post, TaskListsCreate);
 
   svr->listen(host, port);

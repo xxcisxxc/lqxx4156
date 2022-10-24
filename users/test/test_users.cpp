@@ -5,7 +5,7 @@
 
 class MockedDB: public DB {
 public:
-    MockedDB(): DB("0.0.0.0") {}
+    MockedDB(): DB() {}
 
     returnCode createUserNode(const std::map<std::string, std::string>& user_info) override {
         const auto pk_it = user_info.find("email");
@@ -23,6 +23,15 @@ public:
     returnCode reviseUserNode(
         const std::string &user_pkey,
         const std::map<std::string, std::string>& user_info) override {
+        return returnCode::SUCCESS;
+    }
+
+    returnCode getUserNode(const std::string &user_pkey,
+                         std::map<std::string, std::string> &user_info) override {
+        if (mocked_data.find(user_pkey) == mocked_data.end()) {
+            return returnCode::ERR_NO_NODE;
+        }
+        user_info = mocked_data[user_pkey];
         return returnCode::SUCCESS;
     }
 

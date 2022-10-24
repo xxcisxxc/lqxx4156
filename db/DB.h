@@ -190,7 +190,7 @@ public:
    * to be filled
    * @return returnCode error message
    */
-  returnCode getUserNode(const std::string &user_pkey,
+  virtual returnCode getUserNode(const std::string &user_pkey,
                          std::map<std::string, std::string> &user_info);
   /**
    * @brief Get a task list node.

@@ -68,6 +68,9 @@ inline void Split(const std::string& str, const std::string& delim, std::vector<
         res->push_back(str.substr(pos, next_pos - pos));
         pos = next_pos + delim.size();
     }
+    if (pos < str.size()) {
+        res->push_back(str.substr(pos));
+    }
 }
 
 /**
