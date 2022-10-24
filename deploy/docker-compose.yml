@@ -1,0 +1,44 @@
+version: '3'
+services: 
+    build-image:
+        image: lqxx-image
+        build: .
+    backend:
+        image: lqxx-image
+        volumes: 
+            - ../:/workspaces/lqxx
+        ports: 
+            - 3001:3001
+        depends_on:
+            - build-image
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./lqxx "
+    backend-test:
+        image: lqxx-image
+        volumes: 
+            - ../:/workspaces/lqxx
+        depends_on:
+            - build-image
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./api/test_api "
+    bash:
+        image: lqxx-image
+        volumes: 
+            - ../:/workspaces/lqxx
+        ports: 
+            - 3001:3001
+        depends_on:
+            - build-image
+        stdin_open: true
+        tty: true
+        command: /bin/bash

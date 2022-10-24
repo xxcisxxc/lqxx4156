@@ -1,0 +1,28 @@
+name: api-unit-test
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+jobs:
+  test:
+    name: main test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Go to directory
+      run: cd deploy
+
+    - name: Build docker images
+      run: docker-compose build
+
+    - name: Run tests
+      run: docker-compose run backend-test
+    
+    - name: Clean up
+      run: docker-compose down

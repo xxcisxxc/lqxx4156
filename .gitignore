@@ -30,3 +30,22 @@
 *.exe
 *.out
 *.app
+
+# IDE Configurations
+*.vscode
+
+# Build Environment
+build/
+.vscode
+googletest
+build
+libneo4j-client
+.cache
+.devcontainer
+
+# MacOS
+.DS_Store
+
+# clang-format
+.clang-format
+.editorconfig
