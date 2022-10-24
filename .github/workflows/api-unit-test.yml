@@ -22,7 +22,7 @@ jobs:
       run: docker-compose build
 
     - name: Run tests
-      run: docker-compose run backend-test
+      run: docker-compose run backend-test-api
     
     - name: Clean up
       run: docker-compose down

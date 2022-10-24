@@ -18,7 +18,7 @@ services:
                       cmake .. &&
                       make &&
                       ./lqxx "
-    backend-test:
+    backend-test-api:
         image: lqxx-image
         volumes: 
             - ../:/workspaces/lqxx
@@ -31,6 +31,32 @@ services:
                       cmake .. &&
                       make &&
                       ./api/test_api "
+    backend-test-tasklist:
+        image: lqxx-image
+        volumes: 
+            - ../:/workspaces/lqxx
+        depends_on:
+            - build-image
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./tasklists/test_tasklists"
+    backend-test-task:
+        image: lqxx-image
+        volumes: 
+            - ../:/workspaces/lqxx
+        depends_on:
+            - build-image
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./tasks/test_tasks"
     bash:
         image: lqxx-image
         volumes: 
