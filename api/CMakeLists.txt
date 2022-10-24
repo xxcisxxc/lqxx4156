@@ -52,6 +52,14 @@ if (NOT TARGET DB.o)
     add_subdirectory(${ROOT_DIR}/db ${ROOT_DIR}/build/db)
 endif()
 
+if (NOT TARGET tasklistsWorker)
+    add_subdirectory(${ROOT_DIR}/tasklists ${ROOT_DIR}/build/tasklists)
+endif()
+
+if (NOT TARGET tasksWorker)
+    add_subdirectory(${ROOT_DIR}/tasks ${ROOT_DIR}/build/tasks)
+endif()
+
 # api object
 add_library(api OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/api.cpp)
 target_include_directories(api PUBLIC ${EXTERNAL_DIR})
@@ -62,4 +70,4 @@ target_include_directories(api PUBLIC ${ROOT_DIR})
 # api test executable
 add_executable(test_api ${CMAKE_CURRENT_SOURCE_DIR}/test/test_api.cpp)
 target_include_directories(test_api PRIVATE ${EXTERNAL_DIR}/googletest/include)
-target_link_libraries(test_api PRIVATE api gtest oauthcpp users cpp-jwt DB.o neo4j-client)
+target_link_libraries(test_api PRIVATE api gtest oauthcpp users cpp-jwt DB.o neo4j-client tasksWorker tasklistsWorker)

@@ -16,10 +16,11 @@
 #include <cstdlib>
 #include <exception>
 #include <initializer_list>
+#include <iterator>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 #include <type_traits>
 
@@ -80,6 +81,22 @@ inline std::vector<std::string> Split(const std::string& str, const std::string&
     std::vector<std::string> res;
     Split(str, delim, &res);
     return res;
+}
+
+inline std::string LowerCase(const std::string& str) {
+    std::string ret;
+    std::transform(str.cbegin(), str.cend(), std::back_inserter(ret), [](const char x) -> char {
+        return ('A' <= x && x <= 'Z') ? x + ('a' - 'A') : x;
+    });
+    return ret;
+}
+
+inline std::string UpperCase(const std::string& str) {
+    std::string ret;
+    std::transform(str.cbegin(), str.cend(), std::back_inserter(ret), [](const char x) -> char {
+        return ('a' <= x && x <= 'z') ? x - ('a' - 'A') : x;
+    });
+    return ret;
 }
 
 /**

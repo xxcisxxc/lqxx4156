@@ -18,11 +18,11 @@ if (NOT TARGET users)
     add_subdirectory(users)
 endif()
 
-if (NOT TARGET tasklists)
+if (NOT TARGET tasklistsWorker)
     add_subdirectory(tasklists)
 endif()
 
-if (NOT TARGET tasks)
+if (NOT TARGET tasksWorker)
     add_subdirectory(tasks)
 endif()
 
@@ -33,4 +33,4 @@ endif (NOT DEFINED NEO_CLIENT_DIR)
 
 # main executable file
 add_executable(lqxx ${PROJECT_SOURCE_DIR}/main.cpp)
-target_link_libraries(lqxx PRIVATE api DB.o users gtest oauthcpp nlohmann_json cpp-jwt neo4j-client)
+target_link_libraries(lqxx PRIVATE api DB.o users gtest oauthcpp nlohmann_json cpp-jwt neo4j-client tasklistsWorker tasksWorker)

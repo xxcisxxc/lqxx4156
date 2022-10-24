@@ -18,10 +18,12 @@
 #include <httplib.h>
 #include <memory>
 #include <users/users.h>
+#include <tasklists/tasklistsWorker.h>
+#include <tasks/tasksWorker.h>
 
 /* Declare a function that would be called to handle an http request of a certain route.
    The function name should be corresponding to the http interface name */
-#define DeclareHttpHandler(name)\
+#define API_DECLARE_HTTP_HANDLER(name)\
     virtual void name(const httplib::Request&, httplib::Response&) noexcept
 
 class API {
@@ -51,25 +53,25 @@ public:
   virtual void Stop();
 
 protected:
-  DeclareHttpHandler(UsersRegister);
+  API_DECLARE_HTTP_HANDLER(UsersRegister);
 
-  DeclareHttpHandler(UsersLogin);
+  API_DECLARE_HTTP_HANDLER(UsersLogin);
 
-  DeclareHttpHandler(UsersLogout);
+  API_DECLARE_HTTP_HANDLER(UsersLogout);
 
-  DeclareHttpHandler(TaskLists);
+  API_DECLARE_HTTP_HANDLER(TaskLists);
 
-  DeclareHttpHandler(TaskListsCreate);
+  API_DECLARE_HTTP_HANDLER(TaskListsCreate);
 
-  DeclareHttpHandler(Tasks);
+  API_DECLARE_HTTP_HANDLER(Tasks);
 
-  DeclareHttpHandler(TasksCreate);
+  API_DECLARE_HTTP_HANDLER(TasksCreate);
 
 private:
+    std::shared_ptr<DB> db;
     std::shared_ptr<Users> users;
-    // to be defined
-    // std::shared_ptr<TaskLists> tasklists;
-    // std::shared_ptr<Tasks> tasks;
+    std::shared_ptr<TaskListsWorker> tasklists_worker;
+    std::shared_ptr<TasksWorker> tasks_worker;
     std::shared_ptr<httplib::Server> svr;
 
     const std::string token_secret_key;
