@@ -44,6 +44,26 @@ mkdir build && cd build && cmake .. && make
 ./db/DBTest && ./tasklists/test_tasklists && ./tasks/test_tasks && ./users/test_users && ./api/test_api
 ```
 
+## Third-Party
+
+### Position
+
+```
+external/cpp-jwt (v1.4-16-g4b66cf7)
+external/googletest (release-1.8.0-3078-gd9bb8412)
+external/json (v3.11.2-15-ga3e6e26d)
+external/liboauthcpp (heads/master)
+httplib.h
+```
+
+### Source
+
+```
+https://github.com/nlohmann/json.git
+https://github.com/arun11299/cpp-jwt.git
+https://github.com/google/googletest.git
+https://github.com/sirikata/liboauthcpp.git
+```
 
 ## RESTful API definition
 
