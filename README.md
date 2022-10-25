@@ -37,6 +37,14 @@ docker-compose run bash
 # by doing so you can remove stopped containers and used resources
 docker-compose down
 ```
+## Test
+
+```
+mkdir build && cd build && cmake .. && make
+./db/DBTest && ./tasklists/test_tasklists && ./tasks/test_tasks && ./users/test_users && ./api/test_api
+```
+
+
 ## RESTful API definition
 
 ### Users
