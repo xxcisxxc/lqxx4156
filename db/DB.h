@@ -2,9 +2,9 @@
 
 #include <errno.h>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
 // third party library
 #include "neo4j-client.h"
 
@@ -192,7 +192,7 @@ public:
    * @return returnCode error message
    */
   virtual returnCode getUserNode(const std::string &user_pkey,
-                         std::map<std::string, std::string> &user_info);
+                                 std::map<std::string, std::string> &user_info);
   /**
    * @brief Get a task list node.
    *
