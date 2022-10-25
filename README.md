@@ -43,7 +43,7 @@ docker-compose down
 mkdir build && cd build && cmake .. && make
 docker run -d -p7474:7474 -p7687:7687 -e NEO4J_AUTH=neo4j/hello4156 neo4j
 sleep 60
-./db/DBTest && ./tasklists/test_tasklists && ./tasks/test_tasks && ./users/test_users && ./api/test_api
+./tasklists/test_tasklists && ./tasks/test_tasks && ./users/test_users && ./api/test_api && ./db/DBTest 
 ```
 
 ## Third-Party
