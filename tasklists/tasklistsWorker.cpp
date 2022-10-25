@@ -25,19 +25,13 @@ void TaskListsWorker ::Content2Map(
 void TaskListsWorker ::Map2Content(
     const std::map<std::string, std::string> &task_list_info,
     TasklistContent &tasklistContent) {
-  if (!task_list_info.count("name"))
-    std::cout << "lose name" << std::endl;
-  else
+  if (task_list_info.count("name"))
     tasklistContent.name = task_list_info.at("name");
 
-  if (!task_list_info.count("content"))
-    std::cout << "lose content" << std::endl;
-  else
+  if (task_list_info.count("content"))
     tasklistContent.content = task_list_info.at("content");
 
-  if (!task_list_info.count("date"))
-    std::cout << "lose date" << std::endl;
-  else
+  if (task_list_info.count("date"))
     tasklistContent.date = task_list_info.at("date");
 }
 
