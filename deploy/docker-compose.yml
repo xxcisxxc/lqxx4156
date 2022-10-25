@@ -57,6 +57,19 @@ services:
                       cmake .. &&
                       make &&
                       ./tasks/test_tasks"
+    backend-test-task:
+        image: lqxx-image
+        volumes: 
+            - ../:/workspaces/lqxx
+        depends_on:
+            - build-image
+        command: >
+            bash -c " git submodule update --init;
+                      mkdir build;
+                      cd build;
+                      cmake .. &&
+                      make &&
+                      ./users/test_users"
     bash:
         image: lqxx-image
         volumes: 
