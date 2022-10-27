@@ -14,6 +14,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
 
     - name: Run tests
       run: cd deploy && docker-compose run backend-test-tasklist
