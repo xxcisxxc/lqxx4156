@@ -112,15 +112,6 @@ Login for a registered user. The user should include his or her email and passwo
 }
 ```
 
-POST /v1/users/logout
-
-User logouts. The user should include a token in the request, and the interface will invalid the token. The user can no long use the token to access our service by this token.
-- basic auth:
-
-```
-{${token}:}
-```
-
 ### Task Lists
 
 GET /v1/task_lists/{task_list_name}
@@ -143,6 +134,31 @@ Get the information of one certain task lists. Token should be included in the r
         "content": "some content",
         "date": "some date"
     }
+}
+```
+
+POST /v1/task_lists/{task_list_name}
+
+Update one task list. The name of the task list can not be modified.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "content": "some content"
+    "date": "some date"
+}
+```
+
+- return
+```
+{
+    "msg": "success"
 }
 ```
 
@@ -182,7 +198,9 @@ Create a new task list for a user.  Token should be included in the request. Tas
 - body
 ```
 {
-    "name": "task_list1"
+    "name": "task_list1",
+    "content": "some content",
+    "date": "some date"
 }
 ```
 
@@ -196,7 +214,7 @@ Create a new task list for a user.  Token should be included in the request. Tas
 
 DEL /v1/task_lists/{task_list_name}
 
-Delete a task list. To do.
+Delete a task list.
 
 - basic auth:
 
@@ -281,5 +299,47 @@ Create a new task for a user and a task list. Task list name should be included 
 {
     "msg": "success",
     "name" "task(1)"
+}
+```
+
+POST /v1/task_lists/{task_list_name}/tasks/{task_name}
+
+Update one task. The name of the task can not be modified.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "content": "some content"
+    "date": "some date"
+}
+```
+
+- return
+```
+{
+    "msg": "success"
+}
+```
+
+DEL /v1/task_lists/{task_list_name}/tasks/{task_name}
+
+Delete a task.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- return
+```
+{
+    "msg": "success"
 }
 ```
