@@ -30,7 +30,7 @@ inline void BuildHttpRespBody(nlohmann::json *js) { return; }
 
 template <typename FirstValue, typename... Rest>
 inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
-                              FirstValue &&value, Rest &&... rest) {
+                              FirstValue &&value, Rest &&...rest) {
   (*js)[field] = std::forward<FirstValue>(value);
   BuildHttpRespBody(js, std::forward<Rest>(rest)...);
 }
