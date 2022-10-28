@@ -71,13 +71,23 @@ protected:
 
   API_DECLARE_HTTP_HANDLER(TaskListsGet);
 
+  API_DECLARE_HTTP_HANDLER(TaskListsUpdate);
+
+  API_DECLARE_HTTP_HANDLER(TaskListsDelete);
+
   API_DECLARE_HTTP_HANDLER(TaskListsCreate);
 
   API_DECLARE_HTTP_HANDLER(TasksAll);
 
   API_DECLARE_HTTP_HANDLER(TasksGet);
 
+  API_DECLARE_HTTP_HANDLER(TasksUpdate);
+
+  API_DECLARE_HTTP_HANDLER(TasksDelete);
+
   API_DECLARE_HTTP_HANDLER(TasksCreate);
+
+  API_DECLARE_HTTP_HANDLER(Health);
 
 private:
   std::shared_ptr<Users> users;

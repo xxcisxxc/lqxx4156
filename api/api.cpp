@@ -6,7 +6,6 @@
  * @copyright Copyright (c) 2022
  *
  */
-#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <api/api.h>
 #include <common/utils.h>
@@ -14,6 +13,7 @@
 #include <jwt/jwt.hpp>
 #include <liboauthcpp/src/base64.h>
 #include <memory>
+#include <utility>
 
 #define API_DEFINE_HTTP_HANDLER(name)                                          \
   void API::name(const httplib::Request &req, httplib::Response &res) noexcept
@@ -30,9 +30,9 @@ inline void BuildHttpRespBody(nlohmann::json *js) { return; }
 
 template <typename FirstValue, typename... Rest>
 inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
-                              FirstValue &&value, Rest &&...rest) {
-  (*js)[field] = value;
-  BuildHttpRespBody(js, rest...);
+                              FirstValue &&value, Rest &&... rest) {
+  (*js)[field] = std::forward<FirstValue>(value);
+  BuildHttpRespBody(js, std::forward<Rest>(rest)...);
 }
 
 #define API_RETURN_HTTP_RESP(code, ...)                                        \
@@ -272,6 +272,50 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", data);
 }
 
+API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
+  std::string token;
+  RequestData tasklist_req;
+  TasklistContent tasklist_content;
+  API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
+
+  tasklist_req.tasklist_key = req.matches[1];
+  nlohmann::json json_body;
+
+  try {
+    json_body = nlohmann::json::parse(req.body);
+  } catch (...) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");
+  }
+
+  if (json_body.find("name") != json_body.end() &&
+      json_body["name"] != tasklist_req.tasklist_key) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed tasklist name can not be changed");
+  }
+  tasklist_content.content = json_body["content"];
+  tasklist_content.date = json_body["date"];
+
+  if (tasklists_worker->Revise(tasklist_req, tasklist_content) !=
+      returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed update tasklist");
+  }
+
+  API_RETURN_HTTP_RESP(200, "msg", "success");
+}
+
+API_DEFINE_HTTP_HANDLER(TaskListsDelete) {
+  std::string token;
+  RequestData tasklist_req;
+  API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
+
+  tasklist_req.tasklist_key = req.matches[1];
+
+  if (tasklists_worker->Delete(tasklist_req) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed delete tasklist");
+  }
+
+  API_RETURN_HTTP_RESP(200, "msg", "success");
+}
+
 API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
   std::string token;
   std::string out_tasklist_name;
@@ -281,12 +325,13 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
 
   try {
     const auto json_body = nlohmann::json::parse(req.body);
-    tasklist_req.task_key = json_body.at("name");
+    tasklist_req.tasklist_key = json_body.at("name");
     tasklist_content.name = json_body.at("name");
-    try {
+    if (json_body.find("content") != json_body.end()) {
       tasklist_content.content = json_body.at("content");
+    }
+    if (json_body.find("date") != json_body.end()) {
       tasklist_content.date = json_body.at("date");
-    } catch (...) {
     }
   } catch (std::exception &e) {
     API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
@@ -349,6 +394,67 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", data);
 }
 
+API_DEFINE_HTTP_HANDLER(TasksUpdate) {
+  std::string user_email;
+  std::string token;
+  RequestData task_req;
+  TaskContent task_content;
+  API_CHECK_REQUEST_TOKEN(user_email, token);
+
+  task_req.user_key = user_email;
+  task_req.task_key = req.matches[2];
+  task_req.tasklist_key = req.matches[1];
+
+  if (task_req.tasklist_key.empty()) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
+  }
+
+  nlohmann::json json_body;
+  try {
+    json_body = nlohmann::json::parse(req.body);
+  } catch (...) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");
+  }
+
+  if (json_body.find("name") != json_body.end() &&
+      json_body["name"] != task_req.task_key) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed task name can not be changed");
+  }
+  if (json_body.find("content") != json_body.end()) {
+    task_content.content = json_body["content"];
+  }
+  if (json_body.find("date") != json_body.end()) {
+    task_content.date = json_body["date"];
+  }
+
+  if (tasks_worker->Revise(task_req, task_content) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+  }
+
+  API_RETURN_HTTP_RESP(200, "msg", "success");
+}
+
+API_DEFINE_HTTP_HANDLER(TasksDelete) {
+  std::string user_email;
+  std::string token;
+  RequestData task_req;
+  API_CHECK_REQUEST_TOKEN(user_email, token);
+
+  task_req.user_key = user_email;
+  task_req.task_key = req.matches[2];
+  task_req.tasklist_key = req.matches[1];
+
+  if (task_req.tasklist_key.empty()) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
+  }
+
+  if (tasks_worker->Delete(task_req) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+  }
+
+  API_RETURN_HTTP_RESP(200, "msg", "success");
+}
+
 API_DEFINE_HTTP_HANDLER(TasksCreate) {
   std::string token;
   std::string out_task_name;
@@ -360,12 +466,13 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
   try {
     const auto json_body = nlohmann::json::parse(req.body);
     task_req.tasklist_key = tasklist_name;
-    task_req.task_key = json_body.at("task_name");
-    task_content.name = json_body.at("task_name");
-    try {
+    task_req.task_key = json_body.at("name");
+    task_content.name = json_body.at("name");
+    if (json_body.find("content") != json_body.end()) {
       task_content.content = json_body.at("content");
+    }
+    if (json_body.find("date") != json_body.end()) {
       task_content.date = json_body.at("date");
-    } catch (...) {
     }
   } catch (std::exception &e) {
     API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
@@ -379,6 +486,15 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "name", out_task_name);
 }
 
+API_DEFINE_HTTP_HANDLER(Health) {
+  try {
+    std::string numbers = req.matches[1];
+    API_RETURN_HTTP_RESP(200, "msg", "success", "data", numbers);
+  } catch (...) {
+    API_RETURN_HTTP_RESP(200, "msg", "success");
+  }
+}
+
 void API::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/users/register", Post, UsersRegister);
   API_ADD_HTTP_HANDLER(svr, "/v1/users/login", Post, UsersLogin);
@@ -386,22 +502,20 @@ void API::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists", Get, TaskListsAll);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Get, TaskListsGet);
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/create", Post, TaskListsCreate);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Post,
+                       TaskListsUpdate);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Delete,
+                       TaskListsDelete);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks)", Get, TasksAll);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Get,
                        TasksGet);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/create)", Post,
                        TasksCreate);
-
-  svr->Get(R"(/numbers/(\d+))",
-           [&](const httplib::Request &req, httplib::Response &res) {
-             std::string numbers = req.matches[1];
-             res.set_content(numbers, "text/plain");
-           });
-
-  svr->Get("/numbers",
-           [&](const httplib::Request &req, httplib::Response &res) {
-             res.set_content("numbers", "text/plain");
-           });
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Post,
+                       TasksUpdate);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Delete,
+                       TasksDelete);
+  API_ADD_HTTP_HANDLER(svr, R"(/health/(\d+))", Get, Health);
 
   svr->listen(host, port);
 }
