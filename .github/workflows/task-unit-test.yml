@@ -1,4 +1,4 @@
-name: tasklist-unit-test
+name: task-unit-test
 on:
   pull_request:
     branches:
@@ -19,5 +19,5 @@ jobs:
       run: git submodule update --init --recursive
 
     - name: Run tests
-      run: cd deploy && docker-compose run backend-test-tasklist
-
+      run: cd deploy && docker-compose run backend-test-task
+    
