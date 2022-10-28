@@ -291,8 +291,12 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
       json_body["name"] != tasklist_req.tasklist_key) {
     API_RETURN_HTTP_RESP(500, "msg", "failed tasklist name can not be changed");
   }
-  tasklist_content.content = json_body["content"];
-  tasklist_content.date = json_body["date"];
+  if (json_body.find("content") != json_body.end()) {
+    tasklist_content.content = json_body["content"];
+  }
+  if (json_body.find("date") != json_body.end()) {
+    tasklist_content.date = json_body["date"];
+  }
 
   if (tasklists_worker->Revise(tasklist_req, tasklist_content) !=
       returnCode::SUCCESS) {
