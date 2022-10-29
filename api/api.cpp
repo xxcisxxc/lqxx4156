@@ -13,6 +13,7 @@
 #include <jwt/jwt.hpp>
 #include <liboauthcpp/src/base64.h>
 #include <memory>
+#include <mutex>
 #include <utility>
 
 #define API_DEFINE_HTTP_HANDLER(name)                                          \
@@ -121,6 +122,12 @@ DecodeTokenFromBasicAuth(const std::string &auth) noexcept {
             .empty()) {                                                        \
       API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");                   \
     }                                                                          \
+    {                                                                          \
+      std::lock_guard<std::mutex> guard(invalid_tokens_lock);                  \
+      if (invalid_tokens.find(token) != invalid_tokens.end()) {                \
+        API_RETURN_HTTP_RESP(500, "msg", "failed token invalid");              \
+      }                                                                        \
+    }                                                                          \
   } while (false)
 
 /* Default arguments not cool, modify later */
@@ -226,7 +233,11 @@ API_DEFINE_HTTP_HANDLER(UsersLogout) {
   std::string token;
   API_CHECK_REQUEST_TOKEN(user_email, token);
 
-  // invalid date the email and token
+  /* invalid date the email and token */
+  {
+    std::lock_guard<std::mutex> guard(invalid_tokens_lock);
+    invalid_tokens.insert(token);
+  }
 
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
@@ -269,7 +280,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
       {"content", tasklist_content.content},
       {"date", tasklist_content.date},
   };
-  API_RETURN_HTTP_RESP(200, "msg", "success", "data", data);
+  API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
 API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
@@ -395,7 +406,7 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
       {"content", task_content.content},
       {"date", task_content.date},
   };
-  API_RETURN_HTTP_RESP(200, "msg", "success", "data", data);
+  API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
 API_DEFINE_HTTP_HANDLER(TasksUpdate) {
