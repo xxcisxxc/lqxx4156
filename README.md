@@ -78,7 +78,7 @@ https://github.com/majensen/libneo4j-client
 ### Http returned status code definition
 - 200 for all successful requests
 - 500 for all failed requests
-- 4XX for wroing paths or unknown resources
+- 4XX for wrong paths or unknown resources
 
 ### Users
 
