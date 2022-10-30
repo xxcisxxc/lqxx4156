@@ -15,6 +15,10 @@ Language & Platform: C++ & Linux
 
 Github: https://github.com/xxcisxxc/lqxx4156
 
+## Format check
+
+![format-check](/documents/format-check.png)
+
 ## Compile & Run
 Pull lastest version of code, ensure docker and docker-compose is properly installed,
 go to project root directory.
@@ -71,6 +75,11 @@ https://github.com/majensen/libneo4j-client
 
 ## RESTful API definition
 
+### Http returned status code definition
+- 200 for all successful requests
+- 500 for all failed requests
+- 4XX for wrong paths or unknown resources
+
 ### Users
 
 POST /v1/users/register
@@ -96,6 +105,8 @@ If
 }
 ```
 
+- status code: 200 on success, 500 for all failed situations.
+
 POST /v1/users/login
 
 Login for a registered user. The user should include his or her email and password in the basic auth field. A message and token will be returned if successful. The user can then use this token to access our services by including the token in the basic auth field of his or her request.
@@ -111,6 +122,8 @@ Login for a registered user. The user should include his or her email and passwo
     "token": "fjkvajkvh4iugh2789erofhb"
 }
 ```
+
+- status code: 200 on success, 500 for all failed situations.
 
 ### Task Lists
 
