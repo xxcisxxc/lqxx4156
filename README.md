@@ -105,6 +105,8 @@ If
 }
 ```
 
+- status code: 200 on success, 500 for all failed situations.
+
 POST /v1/users/login
 
 Login for a registered user. The user should include his or her email and password in the basic auth field. A message and token will be returned if successful. The user can then use this token to access our services by including the token in the basic auth field of his or her request.
@@ -120,6 +122,8 @@ Login for a registered user. The user should include his or her email and passwo
     "token": "fjkvajkvh4iugh2789erofhb"
 }
 ```
+
+- status code: 200 on success, 500 for all failed situations.
 
 ### Task Lists
 
