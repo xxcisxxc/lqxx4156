@@ -37,9 +37,7 @@
 # Build Environment
 build/
 .vscode
-googletest
 build
-libneo4j-client
 .cache
 .devcontainer
 
