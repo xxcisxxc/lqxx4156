@@ -17,7 +17,7 @@ Github: https://github.com/xxcisxxc/lqxx4156
 
 ## Format check
 
-![format-check](/document/format-check.png)
+![format-check](/documents/format-check.png)
 
 ## Compile & Run
 Pull lastest version of code, ensure docker and docker-compose is properly installed,
