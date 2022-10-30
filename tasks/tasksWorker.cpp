@@ -1,4 +1,5 @@
 #include "tasksWorker.h"
+#include "api/taskContent.h"
 #include <iostream>
 #include <tasklists/tasklistsWorker.h>
 
@@ -16,9 +17,15 @@ std::string TasksWorker::Rename(const std::string &name, int suffix) {
 void TasksWorker::TaskStruct2Map(
     const TaskContent &taskContent,
     std::map<std::string, std::string> &task_info) {
-  task_info["name"] = taskContent.name;
-  task_info["content"] = taskContent.content;
-  task_info["date"] = taskContent.date;
+  if (!taskContent.name.empty()) {
+    task_info["name"] = taskContent.name;
+  }
+  if (!taskContent.content.empty()) {
+    task_info["content"] = taskContent.content;
+  }
+  if (!taskContent.date.empty()) {
+    task_info["date"] = taskContent.date;
+  }
 }
 
 void TasksWorker::Map2TaskStruct(
