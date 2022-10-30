@@ -1,4 +1,5 @@
 #include <db/DB.h>
+#include <exception>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -88,23 +89,23 @@ TEST_F(TasksWorkerTest, TaskStruct2Map) {
   task.name = "";
   mp.clear();
   tasksWorker->TaskStruct2Map(task, mp);
-  EXPECT_EQ(mp.at("name"), "");
+  EXPECT_THROW(mp.at("name"), std::exception);
   EXPECT_EQ(mp.at("content"), "test_content");
   EXPECT_EQ(mp.at("date"), "test_date");
 
   task.content = "";
   mp.clear();
   tasksWorker->TaskStruct2Map(task, mp);
-  EXPECT_EQ(mp.at("name"), "");
-  EXPECT_EQ(mp.at("content"), "");
+  EXPECT_THROW(mp.at("name"), std::exception);
+  EXPECT_THROW(mp.at("content"), std::exception);
   EXPECT_EQ(mp.at("date"), "test_date");
 
   task.date = "";
   mp.clear();
   tasksWorker->TaskStruct2Map(task, mp);
-  EXPECT_EQ(mp.at("name"), "");
-  EXPECT_EQ(mp.at("content"), "");
-  EXPECT_EQ(mp.at("date"), "");
+  EXPECT_THROW(mp.at("name"), std::exception);
+  EXPECT_THROW(mp.at("content"), std::exception);
+  EXPECT_THROW(mp.at("date"), std::exception);
 }
 
 TEST_F(TasksWorkerTest, Map2TaskStruct) {
