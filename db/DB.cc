@@ -108,7 +108,8 @@ returnCode DB::createTaskListNode(
   }
 
   std::map<std::string, std::string> revised_info = task_list_info;
-  revised_info["name"] = revised_info["name"] + "#" + user_pkey;
+  revised_info["name"] = revised_info["name"];
+  revised_info["user"] = user_pkey;
   // Create node
   query = "CREATE (n:TaskList {";
   for (auto it = revised_info.begin(); it != revised_info.end(); it++) {
@@ -130,8 +131,9 @@ returnCode DB::createTaskListNode(
     }
   }
   // Create relationship
-  query = "MATCH (a:User {email: '" + user_pkey + "'}), (b:TaskList {name: '" +
-          revised_info["name"] + "'}) MERGE (a)-[r:Owns]->(b)";
+  std::string user_node = "(a:User {email: '" + user_pkey + "'})"
+  std::string task_node = "(b:TaskList {name: '" + revised_info["name"] + "', user: '" + revised_info["user"] + "'})"
+  query = "MATCH " + user_node + ", " + task_node + " MERGE (a)-[r:Owns]->(b)";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -770,7 +772,7 @@ void DB::ensureConstraints() {
   }
   // Create constraints for TaskList_pkey
   query = "CREATE CONSTRAINT TaskList_pkey IF NOT EXISTS FOR (n:TaskList) "
-          "REQUIRE n.name IS UNIQUE";
+          "REQUIRE (n.name, n.user) IS UNIQUE";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     closeDB(connection);
@@ -778,7 +780,7 @@ void DB::ensureConstraints() {
   }
   // Create constraints for Task_pkey
   query = "CREATE CONSTRAINT Task_pkey IF NOT EXISTS FOR (n:Task) "
-          "REQUIRE n.name IS UNIQUE";
+          "REQUIRE (n.name, n.list, n.user) IS UNIQUE";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     closeDB(connection);
