@@ -813,7 +813,8 @@ returnCode DB::addAccess(const std::string &src_user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Check User node exists - src
-  std::string query = "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
+  std::string query =
+      "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -869,8 +870,10 @@ returnCode DB::addAccess(const std::string &src_user_pkey,
   }
 
   // Create or Modify access relationship
-  query = "MATCH (n:User {email: '" + dst_user_pkey + "'}), (m:TaskList {name: '" + task_list_pkey + "', user: '" +
-          src_user_pkey + "'}) MERGE (n)-[r:Access]->(m) SET r.read_write = " + std::to_string(read_write) + " RETURN r";
+  query = "MATCH (n:User {email: '" + dst_user_pkey +
+          "'}), (m:TaskList {name: '" + task_list_pkey + "', user: '" +
+          src_user_pkey + "'}) MERGE (n)-[r:Access]->(m) SET r.read_write = " +
+          std::to_string(read_write) + " RETURN r";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -891,7 +894,8 @@ returnCode DB::checkAccess(const std::string &src_user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Check User node exists - src
-  std::string query = "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
+  std::string query =
+      "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -947,8 +951,9 @@ returnCode DB::checkAccess(const std::string &src_user_pkey,
   }
 
   // Check access relationship
-  query = "MATCH (n:User {email: '" + dst_user_pkey + "'})-[r:Access]->(m:TaskList {name: '" + task_list_pkey + "', user: '" +
-          src_user_pkey + "'}) RETURN r.read_write";
+  query = "MATCH (n:User {email: '" + dst_user_pkey +
+          "'})-[r:Access]->(m:TaskList {name: '" + task_list_pkey +
+          "', user: '" + src_user_pkey + "'}) RETURN r.read_write";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -977,8 +982,9 @@ returnCode DB::removeAccess(const std::string &src_user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Remove access relationship
-  std::string query = "MATCH (n:User {email: '" + dst_user_pkey + "'})-[r:Access]->(m:TaskList {name: '" + task_list_pkey + "', user: '" +
-                      src_user_pkey + "'}) DELETE r";
+  std::string query = "MATCH (n:User {email: '" + dst_user_pkey +
+                      "'})-[r:Access]->(m:TaskList {name: '" + task_list_pkey +
+                      "', user: '" + src_user_pkey + "'}) DELETE r";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -1001,7 +1007,8 @@ returnCode DB::allAccess(const std::string &src_user_pkey,
   list_accesses.clear();
 
   // Check User node exists - src
-  std::string query = "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
+  std::string query =
+      "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -1028,9 +1035,11 @@ returnCode DB::allAccess(const std::string &src_user_pkey,
     closeDB(connection);
     return ERR_NO_NODE;
   }
-  
+
   // Get all TaskList nodes
-  query = "MATCH (n:User {email: '" + dst_user_pkey + "'})-[r:Access]->(m:TaskList) RETURN m.name, m.visibility, r.read_write";
+  query =
+      "MATCH (n:User {email: '" + dst_user_pkey +
+      "'})-[r:Access]->(m:TaskList) RETURN m.name, m.visibility, r.read_write";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
