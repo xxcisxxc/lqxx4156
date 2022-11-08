@@ -3,9 +3,13 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'users/**'
   push:
     branches:
       - main
+    paths:
+      - 'users/**'
 jobs:
   test:
     name: main test
