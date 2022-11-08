@@ -18,8 +18,10 @@
 
 #include <httplib.h>
 #include <memory>
+#include <mutex>
 #include <tasklists/tasklistsWorker.h>
 #include <tasks/tasksWorker.h>
+#include <unordered_set>
 #include <users/users.h>
 
 /* Declare a function that would be called to handle an http request of a
@@ -71,13 +73,23 @@ protected:
 
   API_DECLARE_HTTP_HANDLER(TaskListsGet);
 
+  API_DECLARE_HTTP_HANDLER(TaskListsUpdate);
+
+  API_DECLARE_HTTP_HANDLER(TaskListsDelete);
+
   API_DECLARE_HTTP_HANDLER(TaskListsCreate);
 
   API_DECLARE_HTTP_HANDLER(TasksAll);
 
   API_DECLARE_HTTP_HANDLER(TasksGet);
 
+  API_DECLARE_HTTP_HANDLER(TasksUpdate);
+
+  API_DECLARE_HTTP_HANDLER(TasksDelete);
+
   API_DECLARE_HTTP_HANDLER(TasksCreate);
+
+  API_DECLARE_HTTP_HANDLER(Health);
 
 private:
   std::shared_ptr<Users> users;
@@ -87,4 +99,7 @@ private:
   std::shared_ptr<httplib::Server> svr;
 
   const std::string token_secret_key;
+  std::unordered_set<std::string>
+      invalid_tokens; /* Not a good method, refactor it later */
+  std::mutex invalid_tokens_lock;
 };

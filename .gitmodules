@@ -10,3 +10,6 @@
 [submodule "external/cpp-jwt"]
 	path = external/cpp-jwt
 	url = https://github.com/arun11299/cpp-jwt.git
+[submodule "external/libneo4j-client"]
+	path = external/libneo4j-client
+	url = https://github.com/majensen/libneo4j-client.git
