@@ -140,7 +140,8 @@ returnCode DB::createTaskListNode(
 
   // Create relationship between User and TaskList
   std::string user_node = "(a:User {email: '" + user_pkey + "'})";
-  std::string list_node = "(b:TaskList {name: '" + revised_info["name"] + "', user: '" + revised_info["user"] + "'})";
+  std::string list_node = "(b:TaskList {name: '" + revised_info["name"] +
+                          "', user: '" + revised_info["user"] + "'})";
   query = "MATCH " + user_node + ", " + list_node + " MERGE (a)-[r:Owns]->(b)";
   results = executeQuery(query, connection);
 
@@ -223,9 +224,13 @@ DB::createTaskNode(const std::string &user_pkey,
   }
 
   // Create relationship between TaskList and Task
-  std::string list_node = "(a:TaskList {name: '" + task_list_pkey + "', user: '" + user_pkey + "'})";
-  std::string task_node = "(b:Task {name: '" + revised_info["name"] + "', list: '" + task_list_pkey + "', user: '" + user_pkey + "'})";
-  query = "MATCH " + list_node + ", " + task_node + " MERGE (a)-[r:Contains]->(b)";
+  std::string list_node = "(a:TaskList {name: '" + task_list_pkey +
+                          "', user: '" + user_pkey + "'})";
+  std::string task_node = "(b:Task {name: '" + revised_info["name"] +
+                          "', list: '" + task_list_pkey + "', user: '" +
+                          user_pkey + "'})";
+  query =
+      "MATCH " + list_node + ", " + task_node + " MERGE (a)-[r:Contains]->(b)";
   results = executeQuery(query, connection);
 
   // Check result
@@ -343,9 +348,8 @@ DB::reviseTaskNode(const std::string &user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Modify node Task
-  std::string query = "MATCH (n:Task {name: '" + task_pkey +
-                      "', list: '" + task_list_pkey + "', user: '" + user_pkey +
-                      "'}) SET ";
+  std::string query = "MATCH (n:Task {name: '" + task_pkey + "', list: '" +
+                      task_list_pkey + "', user: '" + user_pkey + "'}) SET ";
   for (auto it = task_info.begin(); it != task_info.end(); it++) {
     query += "n." + it->first + " = '" + it->second + "', ";
   }
@@ -412,17 +416,17 @@ returnCode DB::deleteTaskListNode(const std::string &user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Delete node TaskList
-  std::string query =
-      "MATCH (a:TaskList {name: '" + task_list_pkey +
-      "', user: '" + user_pkey + "'})-[r:Contains]->(b:Task) DETACH DELETE r, b";
+  std::string query = "MATCH (a:TaskList {name: '" + task_list_pkey +
+                      "', user: '" + user_pkey +
+                      "'})-[r:Contains]->(b:Task) DETACH DELETE r, b";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
     closeDB(connection);
     return ERR_UNKNOWN;
   }
-  query = "MATCH (a:TaskList {name: '" + task_list_pkey +
-          "', user: '" + user_pkey + "'}) DETACH DELETE a";
+  query = "MATCH (a:TaskList {name: '" + task_list_pkey + "', user: '" +
+          user_pkey + "'}) DETACH DELETE a";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -442,8 +446,8 @@ returnCode DB::deleteTaskNode(const std::string &user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Delete node Task
-  std::string query = "MATCH (a:Task {name: '" + task_pkey +
-                      "', list: '" + task_list_pkey + "', user: '" + user_pkey +
+  std::string query = "MATCH (a:Task {name: '" + task_pkey + "', list: '" +
+                      task_list_pkey + "', user: '" + user_pkey +
                       "'}) DETACH DELETE a";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
@@ -575,7 +579,7 @@ DB::getTaskListNode(const std::string &user_pkey,
   }
   // Delete user field
   task_list_info.erase("user");
-  
+
   // Success
   neo4j_close_results(results);
   closeDB(connection);
@@ -589,9 +593,9 @@ returnCode DB::getTaskNode(const std::string &user_pkey,
   neo4j_connection_t *connection = connectDB();
 
   // Get node Task
-  std::string query = "MATCH (n:Task {name: '" + task_pkey +
-                      "', list: '" + task_list_pkey +
-                      "', user: '" + user_pkey + "'}) RETURN n";
+  std::string query = "MATCH (n:Task {name: '" + task_pkey + "', list: '" +
+                      task_list_pkey + "', user: '" + user_pkey +
+                      "'}) RETURN n";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -756,8 +760,8 @@ returnCode DB::getAllTaskNodes(const std::string &user_pkey,
     return ERR_NO_NODE;
   }
   // Check TaskList node exists
-  query = "MATCH (n:TaskList {name: '" + task_list_pkey +
-                      "', user: '" + user_pkey + "'}) RETURN n";
+  query = "MATCH (n:TaskList {name: '" + task_list_pkey + "', user: '" +
+          user_pkey + "'}) RETURN n";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -772,8 +776,8 @@ returnCode DB::getAllTaskNodes(const std::string &user_pkey,
   }
 
   // Get all nodes Task
-  query = "MATCH (n:TaskList {name: '" + task_list_pkey +
-                      "', user: '" + user_pkey + "'})-[:Contains]->(m) RETURN m";
+  query = "MATCH (n:TaskList {name: '" + task_list_pkey + "', user: '" +
+          user_pkey + "'})-[:Contains]->(m) RETURN m";
   results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
