@@ -20,6 +20,7 @@ enum returnCode {
                 // field
   ERR_NO_NODE,  // No such node
   ERR_DUP_NODE, // Duplicate node
+  ERR_ACCESS,   // Access denied
 };
 
 /**
@@ -224,6 +225,7 @@ public:
    * @brief Get all user nodes.
    *
    * @param [out] user_info array of user pkeys
+   * @return returnCode error message
    */
   virtual returnCode getAllUserNodes(std::vector<std::string> &user_info);
   /**
@@ -231,6 +233,7 @@ public:
    *
    * @param [in] user_pkey user primary key
    * @param [out] task_list_info array of task list pkeys
+   * @return returnCode error message
    */
   virtual returnCode
   getAllTaskListNodes(const std::string &user_pkey,
@@ -241,8 +244,57 @@ public:
    * @param [in] user_pkey user primary key
    * @param [in] task_list_pkey task list primary key
    * @param [out] task_info array of task pkeys
+   * @return returnCode error message
    */
   virtual returnCode getAllTaskNodes(const std::string &user_pkey,
                                      const std::string &task_list_pkey,
                                      std::vector<std::string> &task_info);
+  /**
+   * @brief Create or Revise access relationship between a user and a task list.
+   *
+   * @param [in] src_user_pkey user that grants access
+   * @param [in] dst_user_pkey user that is granted access
+   * @param [in] task_list_pkey task list primary key
+   * @param [in] read_write read or write access
+   * @return returnCode error message
+   */
+  virtual returnCode addAccess(const std::string &src_user_pkey,
+                               const std::string &dst_user_pkey,
+                               const std::string &task_list_pkey,
+                               const bool read_write);
+  /**
+   * @brief Check access relationship between a user and a task list.
+   *
+   * @param [in] src_user_pkey user that owns the list
+   * @param [in] dst_user_pkey user that ask for access the list
+   * @param [in] task_list_pkey task list primary key
+   * @param [out] read_write read or write access
+   * @return returnCode error message
+   */
+  virtual returnCode checkAccess(const std::string &src_user_pkey,
+                                 const std::string &dst_user_pkey,
+                                 const std::string &task_list_pkey,
+                                 bool &read_write);
+  /**
+   * @brief Delete access relationship between a user and a task list.
+   *
+   * @param [in] src_user_pkey user that grants access
+   * @param [in] dst_user_pkey user that is granted access
+   * @param [in] task_list_pkey task list primary key
+   * @return returnCode error message
+   */
+  virtual returnCode removeAccess(const std::string &src_user_pkey,
+                                  const std::string &dst_user_pkey,
+                                  const std::string &task_list_pkey);
+  /**
+   * @brief
+   *
+   * @param [in] src_user_pkey user that grants access
+   * @param [in] dst_user_pkey user that is granted access
+   * @param [out] list_accesses a map of task list pkeys and read/write access
+   * @return returnCode error message
+   */
+  virtual returnCode allAccess(const std::string &src_user_pkey,
+                               const std::string &dst_user_pkey,
+                               std::map<std::string, bool> &list_accesses);
 };

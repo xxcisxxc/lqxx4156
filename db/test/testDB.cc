@@ -152,6 +152,7 @@ TEST(TestDB, testReviseTaskListNode) {
   task_list_info["field1"] = "revised1";
   task_list_info["field2"] = "revised2";
   task_list_info["field3"] = "revised3";
+  task_list_info["visibility"] = "public";
   EXPECT_EQ(db.reviseTaskListNode(user_pkey, "test1-task-list", task_list_info),
             SUCCESS);
 }
@@ -274,10 +275,11 @@ TEST(TestDB, testGetTaskListNode) {
   task_list_info.clear();
   EXPECT_EQ(db.getTaskListNode(user_pkey, "test1-task-list", task_list_info),
             SUCCESS);
-  EXPECT_EQ(task_list_info.size(), 4);
+  EXPECT_EQ(task_list_info.size(), 5);
   EXPECT_EQ(task_list_info["field1"], "revised1");
   EXPECT_EQ(task_list_info["field2"], "revised2");
   EXPECT_EQ(task_list_info["field3"], "revised3");
+  EXPECT_EQ(task_list_info["visibility"], "public");
 }
 
 TEST(TestDB, testGetTaskNode) {
@@ -375,6 +377,144 @@ TEST(TestDB, TestGetAllTaskNodes) {
               task_pkeys.end());
 }
 
+TEST(TestDB, TestAddAccess) {
+  DB db(host);
+  std::string src_user_pkey = "test0@test.com";
+  std::string dst_user_pkey = "test1@test.com";
+  std::string task_list_pkey0 = "test0-task-list";
+  std::string task_list_pkey1 = "test1-task-list";
+
+  // Add access
+  // Error: src_user_pkey does not exist
+  EXPECT_EQ(db.addAccess("wrong@test.com", dst_user_pkey, task_list_pkey0, true),
+            ERR_NO_NODE);
+  // Error: dst_user_pkey does not exist
+  EXPECT_EQ(db.addAccess(src_user_pkey, "wrong@test.com", task_list_pkey0, true),
+            ERR_NO_NODE);
+  // Error: task_list_pkey does not exist
+  EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, "wrong-task-list", true),
+            ERR_NO_NODE);
+  // Error: task list visibility is private
+  EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, true),
+            ERR_ACCESS);
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"] = "public";
+  EXPECT_EQ(db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
+            SUCCESS);
+  EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, true),
+            SUCCESS);
+  EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey1, false),
+            SUCCESS);
+}
+
+TEST(TestDB, TestGetAccess) {
+  DB db(host);
+  std::string src_user_pkey = "test0@test.com";
+  std::string dst_user_pkey = "test1@test.com";
+  std::string task_list_pkey0 = "test0-task-list";
+  std::string task_list_pkey1 = "test1-task-list";
+  bool read_write;
+  
+  // Check access
+  // Error: src_user_pkey does not exist
+  EXPECT_EQ(db.checkAccess("wrong@test.com", dst_user_pkey, task_list_pkey0, read_write),
+            ERR_NO_NODE);
+  // Error: dst_user_pkey does not exist
+  EXPECT_EQ(db.checkAccess(src_user_pkey, "wrong@test.com", task_list_pkey0, read_write),
+            ERR_NO_NODE);
+  // Error: task_list_pkey does not exist
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, "wrong-task-list", read_write),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, read_write),
+            SUCCESS);
+  EXPECT_TRUE(read_write);
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey1, read_write),
+            SUCCESS);
+  EXPECT_FALSE(read_write);
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"] = "private";
+  EXPECT_EQ(db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
+            SUCCESS);
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, read_write), ERR_ACCESS);
+}
+
+TEST(TestDB, TestReviseAccess) {
+  DB db(host);
+  std::string src_user_pkey = "test0@test.com";
+  std::string dst_user_pkey = "test1@test.com";
+  std::string task_list_pkey = "test0-task-list";
+  bool read_write;
+
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"] = "public";
+  EXPECT_EQ(db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),
+            SUCCESS);
+
+  // Revise access
+  EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey, false),
+            SUCCESS);
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey, read_write), SUCCESS);
+  EXPECT_FALSE(read_write);
+  task_list_pkey = "test1-task-list";
+  EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey, true),
+            SUCCESS);
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey, read_write), SUCCESS);
+  EXPECT_TRUE(read_write);
+}
+
+TEST(TestDB, TestAllAccess) {
+  DB db(host);
+  std::string src_user_pkey = "test0@test.com";
+  std::string dst_user_pkey = "test1@test.com";
+  std::map<std::string, bool> list_accesses;
+
+  // Get all access
+  // Error: src_user_pkey does not exist
+  EXPECT_EQ(db.allAccess("wrong@test.com", dst_user_pkey, list_accesses),
+            ERR_NO_NODE);
+  // Error: dst_user_pkey does not exist
+  EXPECT_EQ(db.allAccess(src_user_pkey, "wrong@test.com", list_accesses),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.allAccess(src_user_pkey, dst_user_pkey, list_accesses), SUCCESS);
+  EXPECT_EQ(list_accesses.size(), 2);
+  EXPECT_FALSE(list_accesses["test0-task-list"]);
+  EXPECT_TRUE(list_accesses["test1-task-list"]);
+  // Will not print private task list
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"] = "private";
+  EXPECT_EQ(db.reviseTaskListNode(src_user_pkey, "test0-task-list", task_list_info),
+            SUCCESS);
+  EXPECT_EQ(db.allAccess(src_user_pkey, dst_user_pkey, list_accesses), SUCCESS);
+  EXPECT_EQ(list_accesses.size(), 1);
+  EXPECT_TRUE(list_accesses["test1-task-list"]);
+  // Empty list
+  EXPECT_EQ(db.allAccess(dst_user_pkey, src_user_pkey, list_accesses), SUCCESS);
+  EXPECT_EQ(list_accesses.size(), 0);
+}
+
+TEST(TestDB, TestRemoveAccess) {
+  DB db(host);
+  std::string src_user_pkey = "test0@test.com";
+  std::string dst_user_pkey = "test1@test.com";
+  std::string task_list_pkey = "test0-task-list";
+  bool read_write;
+
+  // Remove access
+  // Error: src_user_pkey does not exist
+  EXPECT_EQ(db.removeAccess("wrong@test.com", dst_user_pkey, task_list_pkey),
+            SUCCESS);
+  // Error: dst_user_pkey does not exist
+  EXPECT_EQ(db.removeAccess(src_user_pkey, "wrong@test.com", task_list_pkey),
+            SUCCESS);
+  // Error: task_list_pkey does not exist
+  EXPECT_EQ(db.removeAccess(src_user_pkey, dst_user_pkey, "wrong-task-list"),
+            SUCCESS);
+  EXPECT_EQ(db.removeAccess(src_user_pkey, dst_user_pkey, task_list_pkey), SUCCESS);
+  EXPECT_EQ(db.removeAccess(src_user_pkey, dst_user_pkey, task_list_pkey), SUCCESS);
+  EXPECT_EQ(db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey, read_write),
+            ERR_ACCESS);
+}
+
 TEST(TestDB, TestDeleteTaskNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
@@ -422,6 +562,9 @@ TEST(TestDB, TestDeleteUserNode) {
             ERR_NO_NODE);
   EXPECT_EQ(db.getTaskNode("test0@test.com", "test1-task-list", "test1-task",
                            void_info),
+            ERR_NO_NODE);
+  bool void_bool;
+  EXPECT_EQ(db.checkAccess("test0@test.com", "test1@test.com", "test1-task-list", void_bool),
             ERR_NO_NODE);
   EXPECT_EQ(db.deleteUserNode("test1@test.com"), SUCCESS);
   EXPECT_EQ(db.getUserNode("test1@test.com", void_info), ERR_NO_NODE);
