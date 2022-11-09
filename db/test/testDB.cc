@@ -152,7 +152,7 @@ TEST(TestDB, testReviseTaskListNode) {
   task_list_info["field1"] = "revised1";
   task_list_info["field2"] = "revised2";
   task_list_info["field3"] = "revised3";
-  task_list_info["visibility"] = "public";
+  task_list_info["visibility"] = "protected";
   EXPECT_EQ(db.reviseTaskListNode(user_pkey, "test1-task-list", task_list_info),
             SUCCESS);
 }
@@ -279,7 +279,7 @@ TEST(TestDB, testGetTaskListNode) {
   EXPECT_EQ(task_list_info["field1"], "revised1");
   EXPECT_EQ(task_list_info["field2"], "revised2");
   EXPECT_EQ(task_list_info["field3"], "revised3");
-  EXPECT_EQ(task_list_info["visibility"], "public");
+  EXPECT_EQ(task_list_info["visibility"], "protected");
 }
 
 TEST(TestDB, testGetTaskNode) {
@@ -400,7 +400,7 @@ TEST(TestDB, TestAddAccess) {
   EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, true),
             ERR_ACCESS);
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"] = "public";
+  task_list_info["visibility"] = "protected";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
       SUCCESS);
@@ -440,6 +440,14 @@ TEST(TestDB, TestGetAccess) {
       SUCCESS);
   EXPECT_FALSE(read_write);
   std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"] = "public";
+  EXPECT_EQ(
+      db.reviseTaskListNode(src_user_pkey, task_list_pkey1, task_list_info),
+      SUCCESS);
+  EXPECT_EQ(
+      db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey1, read_write),
+      SUCCESS);
+  EXPECT_TRUE(read_write);
   task_list_info["visibility"] = "private";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
@@ -457,7 +465,7 @@ TEST(TestDB, TestReviseAccess) {
   bool read_write;
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"] = "public";
+  task_list_info["visibility"] = "protected";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),
       SUCCESS);
@@ -469,7 +477,11 @@ TEST(TestDB, TestReviseAccess) {
       db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey, read_write),
       SUCCESS);
   EXPECT_FALSE(read_write);
+
   task_list_pkey = "test1-task-list";
+  EXPECT_EQ(
+      db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),
+      SUCCESS);
   EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey, true),
             SUCCESS);
   EXPECT_EQ(
@@ -482,7 +494,8 @@ TEST(TestDB, TestAllAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
-  std::map<std::string, bool> list_accesses;
+  std::map<std::pair<std::string, std::string>, bool> list_accesses;
+  bool read_write;
 
   // Get all access
   // Error: src_user_pkey does not exist
@@ -493,8 +506,10 @@ TEST(TestDB, TestAllAccess) {
             ERR_NO_NODE);
   EXPECT_EQ(db.allAccess(src_user_pkey, dst_user_pkey, list_accesses), SUCCESS);
   EXPECT_EQ(list_accesses.size(), 2);
-  EXPECT_FALSE(list_accesses["test0-task-list"]);
-  EXPECT_TRUE(list_accesses["test1-task-list"]);
+  read_write = list_accesses[{src_user_pkey, "test0-task-list"}];
+  EXPECT_FALSE(read_write);
+  read_write = list_accesses[{src_user_pkey, "test1-task-list"}];
+  EXPECT_TRUE(read_write);
   // Will not print private task list
   std::map<std::string, std::string> task_list_info;
   task_list_info["visibility"] = "private";
@@ -503,17 +518,40 @@ TEST(TestDB, TestAllAccess) {
       SUCCESS);
   EXPECT_EQ(db.allAccess(src_user_pkey, dst_user_pkey, list_accesses), SUCCESS);
   EXPECT_EQ(list_accesses.size(), 1);
-  EXPECT_TRUE(list_accesses["test1-task-list"]);
+  read_write = list_accesses[{src_user_pkey, "test1-task-list"}];
+  EXPECT_TRUE(read_write);
   // Empty list
   EXPECT_EQ(db.allAccess(dst_user_pkey, src_user_pkey, list_accesses), SUCCESS);
   EXPECT_EQ(list_accesses.size(), 0);
+}
+
+TEST(TestDB, TestAllGrant) {
+  DB db(host);
+  std::string src_user_pkey = "test0@test.com";
+  std::string task_list_pkey = "test1-task-list";
+  std::map<std::string, bool> list_grants;
+
+  // Get all grant
+  // Error: src_user_pkey does not exist
+  EXPECT_EQ(db.allGrant("wrong@test.com", task_list_pkey, list_grants),
+            ERR_NO_NODE);
+  // Error: task_list_pkey does not exist
+  EXPECT_EQ(db.allGrant(src_user_pkey, "wrong-task-list", list_grants),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.allGrant(src_user_pkey, task_list_pkey, list_grants), SUCCESS);
+  EXPECT_EQ(list_grants.size(), 1);
+  bool read_write = list_grants["test1@test.com"];
+  EXPECT_TRUE(read_write);
+  EXPECT_EQ(db.allGrant(src_user_pkey, "test0-task-list", list_grants),
+            SUCCESS);
+  EXPECT_EQ(list_grants.size(), 0);
 }
 
 TEST(TestDB, TestRemoveAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
-  std::string task_list_pkey = "test0-task-list";
+  std::string task_list_pkey = "test1-task-list";
   bool read_write;
 
   // Remove access
@@ -533,6 +571,10 @@ TEST(TestDB, TestRemoveAccess) {
   EXPECT_EQ(
       db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey, read_write),
       ERR_ACCESS);
+  std::map<std::string, bool> list_grants;
+  EXPECT_EQ(db.allGrant(src_user_pkey, "test1-task-list", list_grants),
+            SUCCESS);
+  EXPECT_EQ(list_grants.size(), 0);
 }
 
 TEST(TestDB, TestDeleteTaskNode) {
@@ -566,6 +608,11 @@ TEST(TestDB, TestDeleteTaskListNode) {
   EXPECT_EQ(
       db.getTaskNode(user_pkey, "test0-task-list", "test1-task", void_info),
       ERR_NO_NODE);
+  // Ensure delete the task list node with all accesses
+  std::map<std::string, bool> list_grants;
+  EXPECT_EQ(db.allGrant("test0@test.com", "test0-task-list", list_grants),
+            ERR_NO_NODE);
+  EXPECT_EQ(list_grants.size(), 0);
 }
 
 TEST(TestDB, TestDeleteUserNode) {

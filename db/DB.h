@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 // third party library
 #include "neo4j-client.h"
@@ -287,14 +288,33 @@ public:
                                   const std::string &dst_user_pkey,
                                   const std::string &task_list_pkey);
   /**
-   * @brief
+   * @brief Get All the access lists of a dst user.
    *
    * @param [in] src_user_pkey user that grants access
    * @param [in] dst_user_pkey user that is granted access
-   * @param [out] list_accesses a map of task list pkeys and read/write access
+   * @param [out] list_accesses a map: key: (user_pkey, task list pkey), value:
+   * read or write
    * @return returnCode error message
    */
-  virtual returnCode allAccess(const std::string &src_user_pkey,
-                               const std::string &dst_user_pkey,
-                               std::map<std::string, bool> &list_accesses);
+  virtual returnCode
+  allAccess(const std::string &src_user_pkey, const std::string &dst_user_pkey,
+            std::map<std::pair<std::string, std::string>, bool> &list_accesses);
+  /**
+   * @brief Get All the grant lists of a src user and tasklist.
+   *
+   * @param [in] src_user_pkey user that grants access
+   * @param [in] task_list_pkey task list primary key
+   * @param [out] list_accesses a map: key: user_pkey, value: read or write
+   * @return returnCode error message
+   */
+  virtual returnCode allGrant(const std::string &src_user_pkey,
+                              const std::string &task_list_pkey,
+                              std::map<std::string, bool> &list_grants);
+  /**
+   * @brief Get All Public Task Lists.
+   *
+   * @param [out] user_list a list of {user_pkey, task list pkey}
+   */
+  virtual returnCode
+  getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list);
 };
