@@ -312,8 +312,9 @@ public:
                               std::map<std::string, bool> &list_grants);
   /**
    * @brief Get All Public Task Lists.
-   * 
+   *
    * @param [out] user_list a list of {user_pkey, task list pkey}
    */
-  virtual returnCode getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list);
+  virtual returnCode
+  getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list);
 };

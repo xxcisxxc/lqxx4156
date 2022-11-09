@@ -478,7 +478,6 @@ TEST(TestDB, TestReviseAccess) {
       SUCCESS);
   EXPECT_FALSE(read_write);
 
-
   task_list_pkey = "test1-task-list";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),

@@ -1165,15 +1165,16 @@ returnCode DB::allGrant(const std::string &src_user_pkey,
   return SUCCESS;
 }
 
-returnCode DB::getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list)
-{
+returnCode
+DB::getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list) {
   neo4j_connection_t *connection = connectDB();
 
   // clear vector
   user_list.clear();
 
   // Get all public TaskList nodes
-  std::string query = "MATCH (n:TaskList) WHERE n.visibility = 'public' RETURN n.user, n.name";
+  std::string query =
+      "MATCH (n:TaskList) WHERE n.visibility = 'public' RETURN n.user, n.name";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
