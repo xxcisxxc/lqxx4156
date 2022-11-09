@@ -948,6 +948,11 @@ returnCode DB::checkAccess(const std::string &src_user_pkey,
     neo4j_close_results(results);
     closeDB(connection);
     return ERR_ACCESS;
+  } else if (value_str == "public") {
+    read_write = true;
+    neo4j_close_results(results);
+    closeDB(connection);
+    return SUCCESS;
   }
 
   // Check access relationship
@@ -1070,7 +1075,7 @@ returnCode DB::allAccess(
     user_pkey.erase(0, 1);
     value = neo4j_result_field(result, 3);
     neo4j_tostring(value, buf, sizeof(buf));
-    bool read_write = bool(buf[0] - '0');
+    bool read_write = (value_str == "public") ? true : bool(buf[0] - '0');
     list_accesses[{user_pkey, task_list_pkey}] = read_write;
   }
 
@@ -1152,6 +1157,44 @@ returnCode DB::allGrant(const std::string &src_user_pkey,
     neo4j_tostring(value, buf, sizeof(buf));
     bool read_write = bool(buf[0] - '0');
     list_grants[user_pkey] = read_write;
+  }
+
+  // Success
+  neo4j_close_results(results);
+  closeDB(connection);
+  return SUCCESS;
+}
+
+returnCode DB::getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list)
+{
+  neo4j_connection_t *connection = connectDB();
+
+  // clear vector
+  user_list.clear();
+
+  // Get all public TaskList nodes
+  std::string query = "MATCH (n:TaskList) WHERE n.visibility = 'public' RETURN n.user, n.name";
+  neo4j_result_stream_t *results = executeQuery(query, connection);
+  if (neo4j_check_failure(results)) {
+    neo4j_close_results(results);
+    closeDB(connection);
+    return ERR_UNKNOWN;
+  }
+  neo4j_result_t *result;
+  while ((result = neo4j_fetch_next(results)) != NULL) {
+    // Get TaskList info
+    neo4j_value_t value = neo4j_result_field(result, 0);
+    char buf[1024];
+    neo4j_tostring(value, buf, sizeof(buf));
+    std::string user_pkey(buf);
+    user_pkey.pop_back();
+    user_pkey.erase(0, 1);
+    value = neo4j_result_field(result, 1);
+    neo4j_tostring(value, buf, sizeof(buf));
+    std::string task_list_pkey(buf);
+    task_list_pkey.pop_back();
+    task_list_pkey.erase(0, 1);
+    user_list.push_back({user_pkey, task_list_pkey});
   }
 
   // Success

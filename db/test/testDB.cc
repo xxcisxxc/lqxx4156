@@ -152,7 +152,7 @@ TEST(TestDB, testReviseTaskListNode) {
   task_list_info["field1"] = "revised1";
   task_list_info["field2"] = "revised2";
   task_list_info["field3"] = "revised3";
-  task_list_info["visibility"] = "public";
+  task_list_info["visibility"] = "protected";
   EXPECT_EQ(db.reviseTaskListNode(user_pkey, "test1-task-list", task_list_info),
             SUCCESS);
 }
@@ -279,7 +279,7 @@ TEST(TestDB, testGetTaskListNode) {
   EXPECT_EQ(task_list_info["field1"], "revised1");
   EXPECT_EQ(task_list_info["field2"], "revised2");
   EXPECT_EQ(task_list_info["field3"], "revised3");
-  EXPECT_EQ(task_list_info["visibility"], "public");
+  EXPECT_EQ(task_list_info["visibility"], "protected");
 }
 
 TEST(TestDB, testGetTaskNode) {
@@ -400,7 +400,7 @@ TEST(TestDB, TestAddAccess) {
   EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, true),
             ERR_ACCESS);
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"] = "public";
+  task_list_info["visibility"] = "protected";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
       SUCCESS);
@@ -440,6 +440,14 @@ TEST(TestDB, TestGetAccess) {
       SUCCESS);
   EXPECT_FALSE(read_write);
   std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"] = "public";
+  EXPECT_EQ(
+      db.reviseTaskListNode(src_user_pkey, task_list_pkey1, task_list_info),
+      SUCCESS);
+  EXPECT_EQ(
+      db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey1, read_write),
+      SUCCESS);
+  EXPECT_TRUE(read_write);
   task_list_info["visibility"] = "private";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
@@ -457,7 +465,7 @@ TEST(TestDB, TestReviseAccess) {
   bool read_write;
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"] = "public";
+  task_list_info["visibility"] = "protected";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),
       SUCCESS);
@@ -469,7 +477,12 @@ TEST(TestDB, TestReviseAccess) {
       db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey, read_write),
       SUCCESS);
   EXPECT_FALSE(read_write);
+
+
   task_list_pkey = "test1-task-list";
+  EXPECT_EQ(
+      db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),
+      SUCCESS);
   EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey, true),
             SUCCESS);
   EXPECT_EQ(

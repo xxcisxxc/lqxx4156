@@ -310,4 +310,10 @@ public:
   virtual returnCode allGrant(const std::string &src_user_pkey,
                               const std::string &task_list_pkey,
                               std::map<std::string, bool> &list_grants);
+  /**
+   * @brief Get All Public Task Lists.
+   * 
+   * @param [out] user_list a list of {user_pkey, task list pkey}
+   */
+  virtual returnCode getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list);
 };
