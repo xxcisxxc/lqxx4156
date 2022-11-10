@@ -175,9 +175,9 @@ Update one task list. The name of the task list can not be modified.
 }
 ```
 
-GET /v1/task_lists/
+GET /v1/task_lists/?share=false
 
-Get the names of all the task lists information of a user. Token should be included in the request.
+Get the names of all the task lists that are owned by the user. Token should be included in the request.
 
 - basic auth:
 
@@ -197,6 +197,36 @@ Get the names of all the task lists information of a user. Token should be inclu
     ]
 }
 ```
+
+GET v1/task_lists/?share=true
+
+Get the names of all the task lists that are shared to the user from other users. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+
+```
+
+- return
+```
+{
+	"data":[
+		{
+			"user": "a@a.com",
+			"list": "list0",
+			"permission": "write"
+		},
+		{
+			"user": "a@b.com",
+			"list": "list1",
+			"permission": "read"
+		}
+	]
+}
+```
+
 
 POST /v1/task_lists/create
 
@@ -354,5 +384,119 @@ Delete a task.
 ```
 {
     "msg": "success"
+}
+```
+
+POST v1/share/{task_list_name}/create
+
+Create sharing status for a specific tasklist. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "user_lists": [email1, email2, email3 ...],
+	"read_write": [1, 0, 0 ...]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
+}
+```
+
+
+POST v1/share/{task_list_name}
+
+Update sharing status for a specific tasklist. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "user_lists": [email1, email2, email3 ...],
+	"read_write": [1, 0, 0 ...]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
+}
+```
+
+
+DEL v1/share/{task_list_name}
+
+Delete sharing status for a tasklist. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "user_lists": [email1, email2, email3 ...]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
+}
+```
+
+
+GET v1/share/{task_list_name}
+
+Get the sharing status of a specific tasklist. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+	"data" : [
+        {
+            "user": "a",
+            "permission": "read"
+        },
+        {
+            "user": "b",
+            "permission": "write"
+        },
+        {
+            "user": "c",
+            "permission": "read"
+        }
+    ]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
 }
 ```
