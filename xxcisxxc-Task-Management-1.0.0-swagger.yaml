@@ -1,0 +1,572 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: Task-Management API
+    url: https://virtserver.swaggerhub.com/xxcisxxc/Task-Management/1.0.0
+info:
+  description: This is a task management API. You need first register and login before using our service. You can create task lists, add tasks under specific list, and share your lists to other users.
+  version: "1.0.0"
+  title: Task Management API V1
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: Users
+    description: User login, register, and logout APIs
+  - name: TaskLists
+    description: Operations related to task lists
+  - name: Tasks
+    description: Operations related to tasks
+  - name: Share
+    description: Share task lists to other users
+paths:
+  /users/register:
+    post:
+      tags:
+        - Users
+      summary: register an account
+      operationId: registerAccount
+      description: |
+        By passing in the user email and user password, you can register an account in our system
+      security:
+        - regAuth: []
+      responses:
+        '200':
+          description: successfully resgistered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+  /users/login:
+    post:
+      tags:
+      - Users
+      summary: account log in
+      operationId: loginAccount
+      description: |
+        By passing in the user email and user password, you can log into our service. If successful, you will be given a token. Token is valid until logout or an hour.
+      security:
+        - regAuth: []
+      responses:
+        '200':
+          description: successfully logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/loginRet'
+  /users/logout:
+    post:
+      tags:
+      - Users
+      summary: account log out
+      operationId: logoutAccount
+      description: |
+        Logout the service by marking token invalid.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: successfully logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+  /task_lists/create:
+    post:
+      tags:
+      - TaskLists
+      summary: task list creation
+      operationId: TaskListCreate
+      description: |
+        create a task list; name is required.
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Task list information to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/listInfo'
+      responses:
+        '200':
+          description: successfully create task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+  /task_lists/{list_name}:
+    get:
+      tags:
+      - TaskLists
+      summary: task list get
+      operationId: TaskListRead
+      description: |
+        get a task list with list name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name to get
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      responses:
+        '200':
+          description: successfully get task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listInfo'
+    put:
+      tags:
+      - TaskLists
+      summary: task list update
+      operationId: TaskListUpdate
+      description: |
+        update a task list with list name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name to update
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      requestBody:
+        description: Task list information to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/nodeInfo'
+      responses:
+        '200':
+          description: successfully update task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+    delete:
+      tags:
+      - TaskLists
+      summary: task list delete
+      operationId: TaskListDelete
+      description: |
+        delete a task list with list name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name to delete
+          required: true
+          schema:
+            type: string
+            example: hello
+      responses:
+        '200':
+          description: successfully delete task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+  /task_lists:
+    get:
+      tags:
+      - TaskLists
+      summary: get all task list
+      operationId: TaskListAll
+      description: |
+        get a list of task lists the user owns
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: share
+          in: query
+          description: Get the information of all the shared task lists that user can visit.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: successfully get all the task lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/allRet'
+  /task_lists/{list_name}/tasks/create:
+    post:
+      tags:
+      - Tasks
+      summary: task creation
+      operationId: TaskCreate
+      description: |
+        create a task of a task list; name is required.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that operates in
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      requestBody:
+        description: Task information to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/taskInfo'
+      responses:
+        '200':
+          description: successfully create task of a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+  /task_lists/{list_name}/tasks/{task_name}:
+    get:
+      tags:
+      - Tasks
+      summary: task get
+      operationId: TaskRead
+      description: |
+        get a task of a task list with task name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that operates in
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: task_name
+          in: path
+          description: pass a task name to get
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      responses:
+        '200':
+          description: successfully get task of a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listInfo'
+    put:
+      tags:
+      - Tasks
+      summary: task update
+      operationId: TaskUpdate
+      description: |
+        update a task of a task list with task name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that operates in
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: task_name
+          in: path
+          description: pass a task name to update
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      requestBody:
+        description: Task information to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/nodeInfo'
+      responses:
+        '200':
+          description: successfully update task of a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+    delete:
+      tags:
+      - Tasks
+      summary: task delete
+      operationId: TaskDelete
+      description: |
+        delete a task of a task list with task name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that operates in
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: task_name
+          in: path
+          description: pass a task name to delete
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      responses:
+        '200':
+          description: successfully delete task of a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+  /task_lists/{list_name}/tasks:
+    get:
+      tags:
+      - Tasks
+      summary: get all task
+      operationId: TaskAll
+      description: |
+        get a list of tasks of a task list the user owns
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that operates in
+          required: true
+          schema:
+            type: string
+            example: hello
+        - name: other
+          in: query
+          description: if want to visit a shared list, specify the user of that list
+          required: false
+          schema:
+            type: string
+            example: alice@example.com
+      responses:
+        '200':
+          description: successfully get all the tasks of a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/allRet'
+  /share/{list_name}:
+    post:
+      tags:
+       - Share
+      summary: update or create sharing status
+      operationId: ListShareCU
+      description: |
+        Create or update sharing status of a task list
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that is shared
+          required: true
+          schema:
+            type: string
+            example: hello
+      requestBody:
+        description: Permission list to share
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/arrPermits'
+      responses:
+        '200':
+          description: successfully share a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+    get:
+      tags:
+       - Share
+      summary: get sharing status
+      operationId: ListShareR
+      description: |
+        Get the sharing status of a task list
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that is shared
+          required: true
+          schema:
+            type: string
+            example: hello
+      responses:
+        '200':
+          description: successfully share a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/allPermits'
+    delete:
+      tags:
+       - Share
+      summary: delete sharing relationship
+      operationId: ListShareD
+      description: |
+        Delete the sharing relationship of a task list
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: list_name
+          in: path
+          description: pass a list name that is shared
+          required: true
+          schema:
+            type: string
+            example: hello
+      responses:
+        '200':
+          description: successfully share a task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/generalRet'
+components:
+  securitySchemes:
+    regAuth:
+      type: http
+      scheme: basic
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    generalRet:
+      type: object
+      required: 
+        - msg
+      properties:
+        msg:
+          type: string
+          example: success
+    loginRet:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/generalRet"
+      properties:
+        token:
+          type: string
+          format: JWT
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFsaWNlQGNvbHVtYmlhLmVkdSIsImV4cCI6MTY2ODI4NzY1OX0.X61wD1Pa_RX2PRuMSNkngnYFG9Wl3fSfpgOBEGpMThI
+    nodeInfo:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: hello
+    listInfo:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/nodeInfo"
+      required: 
+        - visibility
+      properties:
+        visibility:
+          type: string
+          enum: [public, private]
+    taskInfo:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/nodeInfo"
+    allRet:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/generalRet"
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: string
+            example: hello
+    permits:
+      type: array
+      items:
+        type: object
+        required: 
+          - user
+          - permission
+        properties:
+          user:
+            type: string
+            example: "Alice"
+          permission:
+            type: string
+            enum: [read, write]
+    arrPermits:
+      type: object
+      required: 
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/permits"
+    allPermits:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/arrPermits"
+        - $ref: "#/components/schemas/generalRet"
+externalDocs:
+  url: https://github.com/xxcisxxc/lqxx4156
