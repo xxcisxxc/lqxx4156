@@ -21,6 +21,11 @@ struct RequestData {
    * @brief Task id
    */
   std::string task_key;
+  /**
+   * @brief other user's id, we need to try to access tasklist from the specified user if it contains value
+   * 
+   */
+  std::string other_user_key;
 
   /* methods */
   /*

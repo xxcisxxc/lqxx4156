@@ -46,6 +46,15 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   if (data.RequestIsEmpty())
     return ERR_KEY;
 
+  if (!data.other_user_key.empty()) {
+    bool permission = false;
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    if (ret != SUCCESS)
+      // no permission
+      return ret;
+  }
+
+  // can access
   std::map<std::string, std::string> task_info;
 
   // get all available fields
@@ -68,6 +77,20 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   // request has empty value
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
+
+  if (!data.other_user_key.empty()) {
+    bool permission = false;
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    if (ret != SUCCESS)
+      // no permission
+      return ret;
+    if (!permission) {
+      // read only permission cannot create
+      return ERR_ACCESS;
+    }
+  }
+
+  // can access
   // input value does not have a key
   if (in.LoseKey())
     return ERR_KEY;
@@ -99,6 +122,19 @@ returnCode TasksWorker::Delete(const RequestData &data) {
   if (data.RequestIsEmpty())
     return ERR_KEY;
 
+  if (!data.other_user_key.empty()) {
+    bool permission = false;
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    if (ret != SUCCESS)
+      // no permission
+      return ret;
+    if (!permission) {
+      // read only permission cannot delete
+      return ERR_ACCESS;
+    }
+  }
+
+  // can access
   // tasklist itself does not exist
   if (!taskListsWorker->Exists(data)) {
     return ERR_NO_NODE;
@@ -113,6 +149,19 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   // request has empty value
   if (data.RequestIsEmpty())
     return ERR_KEY;
+
+  if (!data.other_user_key.empty()) {
+    bool permission = false;
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    if (ret != SUCCESS)
+      // no permission
+      return ret;
+    if (!permission) {
+      // read only permission cannot revise
+      return ERR_ACCESS;
+    }
+  }
+  // can access
 
   // if revise, then struct "in" is the value that we would like to revise
   // eg. revise name, then in->name = "revisedName", but in->content = ""
@@ -139,6 +188,15 @@ TasksWorker::GetAllTasksName(const RequestData &data,
   // request has empty value
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
+
+  if (!data.other_user_key.empty()) {
+    bool permission = false;
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    if (ret != SUCCESS)
+      // no permission
+      return ret;
+  }
+  // can access
 
   // tasklist itself does not exist
   if (!taskListsWorker->Exists(data)) {
