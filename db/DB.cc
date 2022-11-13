@@ -1004,16 +1004,16 @@ returnCode DB::removeAccess(const std::string &src_user_pkey,
 }
 
 returnCode DB::allAccess(
-    const std::string &src_user_pkey, const std::string &dst_user_pkey,
+    const std::string &dst_user_pkey,
     std::map<std::pair<std::string, std::string>, bool> &list_accesses) {
   neo4j_connection_t *connection = connectDB();
 
   // clear map
   list_accesses.clear();
 
-  // Check User node exists - src
+  // Check User node exists - dst
   std::string query =
-      "MATCH (n:User {email: '" + src_user_pkey + "'}) RETURN n";
+      "MATCH (n:User {email: '" + dst_user_pkey + "'}) RETURN n";
   neo4j_result_stream_t *results = executeQuery(query, connection);
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
@@ -1021,20 +1021,6 @@ returnCode DB::allAccess(
     return ERR_UNKNOWN;
   }
   neo4j_result_t *result = neo4j_fetch_next(results);
-  if (result == NULL) {
-    neo4j_close_results(results);
-    closeDB(connection);
-    return ERR_NO_NODE;
-  }
-  // Check User node exists - dst
-  query = "MATCH (n:User {email: '" + dst_user_pkey + "'}) RETURN n";
-  results = executeQuery(query, connection);
-  if (neo4j_check_failure(results)) {
-    neo4j_close_results(results);
-    closeDB(connection);
-    return ERR_UNKNOWN;
-  }
-  result = neo4j_fetch_next(results);
   if (result == NULL) {
     neo4j_close_results(results);
     closeDB(connection);
@@ -1130,7 +1116,7 @@ returnCode DB::allGrant(const std::string &src_user_pkey,
   std::string value_str(buf);
   value_str.pop_back();
   value_str.erase(0, 1);
-  if (value_str == "private") {
+  if (value_str != "shared") {
     neo4j_close_results(results);
     closeDB(connection);
     return SUCCESS;
