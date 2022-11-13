@@ -290,21 +290,21 @@ public:
   /**
    * @brief Get All the access lists of a dst user.
    *
-   * @param [in] src_user_pkey user that grants access
    * @param [in] dst_user_pkey user that is granted access
    * @param [out] list_accesses a map: key: (user_pkey, task list pkey), value:
    * read or write
    * @return returnCode error message
    */
   virtual returnCode
-  allAccess(const std::string &src_user_pkey, const std::string &dst_user_pkey,
+  allAccess(const std::string &dst_user_pkey,
             std::map<std::pair<std::string, std::string>, bool> &list_accesses);
   /**
-   * @brief Get All the grant lists of a src user and tasklist.
+   * @brief Get All the grant shared lists of a src user given tasklist.
    *
    * @param [in] src_user_pkey user that grants access
    * @param [in] task_list_pkey task list primary key
-   * @param [out] list_accesses a map: key: user_pkey, value: read or write
+   * @param [out] list_accesses only for shared: a map: key: user_pkey, value:
+   * read or write
    * @return returnCode error message
    */
   virtual returnCode allGrant(const std::string &src_user_pkey,
