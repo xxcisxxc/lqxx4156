@@ -152,7 +152,7 @@ TEST(TestDB, testReviseTaskListNode) {
   task_list_info["field1"] = "revised1";
   task_list_info["field2"] = "revised2";
   task_list_info["field3"] = "revised3";
-  task_list_info["visibility"] = "protected";
+  task_list_info["visibility"] = "shared";
   EXPECT_EQ(db.reviseTaskListNode(user_pkey, "test1-task-list", task_list_info),
             SUCCESS);
 }
@@ -279,7 +279,7 @@ TEST(TestDB, testGetTaskListNode) {
   EXPECT_EQ(task_list_info["field1"], "revised1");
   EXPECT_EQ(task_list_info["field2"], "revised2");
   EXPECT_EQ(task_list_info["field3"], "revised3");
-  EXPECT_EQ(task_list_info["visibility"], "protected");
+  EXPECT_EQ(task_list_info["visibility"], "shared");
 }
 
 TEST(TestDB, testGetTaskNode) {
@@ -400,7 +400,7 @@ TEST(TestDB, TestAddAccess) {
   EXPECT_EQ(db.addAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, true),
             ERR_ACCESS);
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"] = "protected";
+  task_list_info["visibility"] = "shared";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey0, task_list_info),
       SUCCESS);
@@ -465,7 +465,7 @@ TEST(TestDB, TestReviseAccess) {
   bool read_write;
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"] = "protected";
+  task_list_info["visibility"] = "shared";
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, task_list_pkey, task_list_info),
       SUCCESS);
@@ -498,13 +498,9 @@ TEST(TestDB, TestAllAccess) {
   bool read_write;
 
   // Get all access
-  // Error: src_user_pkey does not exist
-  EXPECT_EQ(db.allAccess("wrong@test.com", dst_user_pkey, list_accesses),
-            ERR_NO_NODE);
   // Error: dst_user_pkey does not exist
-  EXPECT_EQ(db.allAccess(src_user_pkey, "wrong@test.com", list_accesses),
-            ERR_NO_NODE);
-  EXPECT_EQ(db.allAccess(src_user_pkey, dst_user_pkey, list_accesses), SUCCESS);
+  EXPECT_EQ(db.allAccess("wrong@test.com", list_accesses), ERR_NO_NODE);
+  EXPECT_EQ(db.allAccess(dst_user_pkey, list_accesses), SUCCESS);
   EXPECT_EQ(list_accesses.size(), 2);
   read_write = list_accesses[{src_user_pkey, "test0-task-list"}];
   EXPECT_FALSE(read_write);
@@ -516,12 +512,12 @@ TEST(TestDB, TestAllAccess) {
   EXPECT_EQ(
       db.reviseTaskListNode(src_user_pkey, "test0-task-list", task_list_info),
       SUCCESS);
-  EXPECT_EQ(db.allAccess(src_user_pkey, dst_user_pkey, list_accesses), SUCCESS);
+  EXPECT_EQ(db.allAccess(dst_user_pkey, list_accesses), SUCCESS);
   EXPECT_EQ(list_accesses.size(), 1);
   read_write = list_accesses[{src_user_pkey, "test1-task-list"}];
   EXPECT_TRUE(read_write);
   // Empty list
-  EXPECT_EQ(db.allAccess(dst_user_pkey, src_user_pkey, list_accesses), SUCCESS);
+  EXPECT_EQ(db.allAccess(src_user_pkey, list_accesses), SUCCESS);
   EXPECT_EQ(list_accesses.size(), 0);
 }
 
