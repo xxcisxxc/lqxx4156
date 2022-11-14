@@ -127,9 +127,9 @@ Login for a registered user. The user should include his or her email and passwo
 
 ### Task Lists
 
-GET /v1/task_lists/{task_list_name}
+GET /v1/task_lists/{task_list_name}?other=xxx@gmail.com
 
-Get the information of one certain task lists. Token should be included in the request. Return failed message if the token is invalid or the task list does not exist.
+Get the information of one certain task lists. If a user is provided, try to get the {task_list_name} from the corresponding user. Token should be included in the request. Return failed message if the token is invalid or the task list does not exist.
 
 - basic auth:
 
@@ -150,9 +150,9 @@ Get the information of one certain task lists. Token should be included in the r
 }
 ```
 
-POST /v1/task_lists/{task_list_name}
+POST /v1/task_lists/{task_list_name}?other=xxx@gmail.com
 
-Update one task list. The name of the task list can not be modified.
+Update one task list. If a user if provided, try to update the {task_list_name} from the corresponding user. The name of the task list can not be modified.
 
 - basic auth:
 
@@ -175,9 +175,9 @@ Update one task list. The name of the task list can not be modified.
 }
 ```
 
-GET /v1/task_lists/
+GET /v1/task_lists/?share=false
 
-Get the names of all the task lists information of a user. Token should be included in the request.
+Get the names of all the task lists that are owned by the user. Token should be included in the request.
 
 - basic auth:
 
@@ -195,6 +195,35 @@ Get the names of all the task lists information of a user. Token should be inclu
         "name2",
         "name3"
     ]
+}
+```
+
+GET v1/task_lists/?share=true
+
+Get the information of all the task lists that are shared from other users to the user. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+
+```
+
+- return
+```
+{
+	"data":[
+		{
+			"user": "a@a.com",
+			"list": "list0",
+			"permission": "write"
+		},
+		{
+			"user": "a@b.com",
+			"list": "list1",
+			"permission": "read"
+		}
+	]
 }
 ```
 
@@ -244,9 +273,9 @@ Delete a task list.
 
 ### Tasks
 
-GET /v1/task_lists/{task_list_name}/tasks/{task_name}
+GET /v1/task_lists/{task_list_name}/tasks/{task_name}?other=xxx.gmail.com
 
-Get the information of one certain task. Token should be included in the request. The name of the task list should be specified in the path. Return failed message if the token is invalid or the task does not exist.
+Get the information of one certain task. If a user is provided, try to get the task info from the specified tasklist of the provided user. Token should be included in the request. The name of the task list should be specified in the path. Return failed message if the token is invalid or the task does not exist.
 
 - basic auth:
 
@@ -267,9 +296,9 @@ Get the information of one certain task. Token should be included in the request
 }
 ```
 
-GET /v1/task_lists/{task_list_name}/tasks
+GET /v1/task_lists/{task_list_name}/tasks?other=xxx@gmail.com
 
-Get the names of all the tasks information of a user in a certain task list. Token should be included in the request.
+Get the names of all the tasks in a certain task list. If a user is provided, try to get the tasks from the specified tasklist of the provided user. Token should be included in the request.
 
 - basic auth:
 
@@ -290,9 +319,9 @@ Get the names of all the tasks information of a user in a certain task list. Tok
 }
 ```
 
-POST /v1/task_lists/{task_list_name}/tasks/create
+POST /v1/task_lists/{task_list_name}/tasks/create?user=xxx@gmail.com
 
-Create a new task for a user and a task list. Task list name should be included in the path.  Token should be included in the request. Task name should be included in the request body. If the name is duplicated, a number suffix will be automatically added.
+Create a new task for a user and a task list. If a user is provided, try to add task to the specified tasklist of the provided user. Task list name should be included in the path.  Task name should be included in the request body. If the name is duplicated, a number suffix will be automatically added. Token should be included in the request. 
 
 - basic auth:
 
@@ -315,9 +344,9 @@ Create a new task for a user and a task list. Task list name should be included 
 }
 ```
 
-POST /v1/task_lists/{task_list_name}/tasks/{task_name}
+POST /v1/task_lists/{task_list_name}/tasks/{task_name}?user=xxx@gmail.com
 
-Update one task. The name of the task can not be modified.
+Update one task. If a user is provided, try to update the task for the specified tasklist of the provided user. The name of the task can not be modified. Token should be included in the request. 
 
 - basic auth:
 
@@ -340,9 +369,9 @@ Update one task. The name of the task can not be modified.
 }
 ```
 
-DEL /v1/task_lists/{task_list_name}/tasks/{task_name}
+DEL /v1/task_lists/{task_list_name}/tasks/{task_name}?user=xxx@gmail.com
 
-Delete a task.
+Delete a task. If a user is provided, try to delete the task from the specified tasklist of the provided user. Token should be included in the request. 
 
 - basic auth:
 
@@ -354,5 +383,94 @@ Delete a task.
 ```
 {
     "msg": "success"
+}
+```
+
+
+POST v1/share/{task_list_name}/create
+
+Create/Update sharing status for a specific tasklist, ie share the tasklist to others with provided permissions. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "user_lists": [email1, email2, email3 ...],
+	"read_write": [1, 0, 0 ...]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
+}
+```
+
+
+DEL v1/share/{task_list_name}
+
+Delete sharing status for a tasklist, ie stop sharing of tasklist to the provided users. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+    "user_lists": [email1, email2, email3 ...]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
+}
+```
+
+
+GET v1/share/{task_list_name}
+
+Get the sharing status of a specific tasklist, ie check a list of users with whom the tasklist is shared, and the corresponding permission they have. Token should be included in the request.
+
+- basic auth:
+
+```
+{${token}:}
+```
+
+- body
+```
+{
+	"data" : [
+        {
+            "user": "a",
+            "permission": "read"
+        },
+        {
+            "user": "b",
+            "permission": "write"
+        },
+        {
+            "user": "c",
+            "permission": "read"
+        }
+    ]
+}
+```
+
+- return
+```
+{
+	"msg": "success"
 }
 ```

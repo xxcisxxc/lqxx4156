@@ -49,7 +49,7 @@ protected:
 
 using namespace ::testing;
 
-TEST_F(TaskListTest, Query) {
+TEST_F(TaskListTest, QueryOwned) {
   // setup input
   data.user_key = "user0";
   data.tasklist_key = "tasklist0";
@@ -88,6 +88,10 @@ TEST_F(TaskListTest, Query) {
   EXPECT_EQ(out.date, "");
 }
 
+TEST_F(TaskListTest, QueryAccess) {
+  
+}
+
 TEST_F(TaskListTest, Create) {
   // setup input
   data.user_key = "user0";
@@ -95,7 +99,8 @@ TEST_F(TaskListTest, Create) {
   std::string name = "tasklist0";
   std::string content = "this is tasklist #0";
   std::string date = "10/15/2022";
-  in = TasklistContent(name, content, date);
+  std::string vis = "private";
+  in = TasklistContent(name, content, date, vis);
 
   std::map<std::string, std::string> task_list_info;
   task_list_info["name"] = name;
@@ -171,7 +176,8 @@ TEST_F(TaskListTest, Revise) {
   std::string newName = "tasklist1";
   std::string newContent = "this is tasklist #1";
   std::string newDate = "16/10/2022";
-  in = TasklistContent(newName, newContent, newDate);
+  std::string vis = "private";
+  in = TasklistContent(newName, newContent, newDate, vis);
 
   std::map<std::string, std::string> task_list_info;
   task_list_info["name"] = newName;
