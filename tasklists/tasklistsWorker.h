@@ -138,6 +138,7 @@ public:
    * 
    * @param [in] data target user and tasklist we'd want to get all grant for
    * @param [out] out_list vector of shareInfo with information about the users who have access to the current user's tasklist
+   * @param [out] isPublic is true when the requested tasklist is public to everyone, and false otherwise
    * @return returnCode 
    */
   virtual returnCode GetAllGrantTaskList(const RequestData& data, 

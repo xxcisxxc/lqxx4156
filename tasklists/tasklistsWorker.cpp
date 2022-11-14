@@ -20,6 +20,8 @@ void TaskListsWorker ::Content2Map(
     task_list_info["content"] = tasklistContent.content;
   if (tasklistContent.date != "")
     task_list_info["date"] = tasklistContent.date;
+  if (tasklistContent.visibility != "")
+    task_list_info["visibility"] = tasklistContent.visibility;
 }
 
 void TaskListsWorker ::Map2Content(
@@ -33,6 +35,9 @@ void TaskListsWorker ::Map2Content(
 
   if (task_list_info.count("date"))
     tasklistContent.date = task_list_info.at("date");
+
+  if (task_list_info.count("visibility"))
+    tasklistContent.visibility = task_list_info.at("visibility");
 }
 
 returnCode TaskListsWorker ::Query(const RequestData &data,
@@ -121,7 +126,10 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
   // can access
   std::map<std::string, std::string> task_list_info;
   Content2Map(in, task_list_info);
-
+  if (!data.other_user_key.empty() && task_list_info.count("visibility")) {
+    // do not let user edit the visibility of another user's tasklist 
+    task_list_info.erase("visibility");
+  }
   returnCode ret = db_instance.reviseTaskListNode(
       data.other_user_key.empty() ? data.user_key : data.other_user_key, data.tasklist_key, task_list_info);
   return ret;
@@ -140,7 +148,7 @@ returnCode TaskListsWorker ::GetAllTasklist(const RequestData &data,
 
 returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data, 
                                       std::vector<shareInfo>& out_list) {
-  if (data.RequestTaskListIsEmpty())
+  if (data.RequestUserIsEmpty())
     return ERR_KEY;
 
   std::map<std::pair<std::string, std::string>, bool> list_accesses;
@@ -170,14 +178,20 @@ returnCode TaskListsWorker ::GetAllGrantTaskList(const RequestData& data,
   returnCode ret;
   // if the tasklist is public, don't call allGrant
   std::map<std::string, std::string> task_list_info;
-  task_list_info["visilibity"];
+  task_list_info["visibility"];
   ret = db_instance.getTaskListNode(data.user_key, 
                                               data.tasklist_key,
                                               task_list_info);
-  
-  if (task_list_info["visibility"] == "public") {
+  if (ret != SUCCESS) {
+    return ret;
+  }
+  else if (task_list_info["visibility"] == "public") {
     isPublic = true;
     return SUCCESS;
+  }
+  else if (task_list_info["visibility"] == "private") {
+    isPublic = false;
+    return ERR_ACCESS;
   }
   else {
     isPublic = false;
@@ -216,7 +230,7 @@ returnCode TaskListsWorker ::ReviseGrantTaskList(const RequestData& data,
   for (int i = 0; i < in_list.size(); i++) {
     ret = db_instance.addAccess(data.user_key, in_list[i].user_name, data.tasklist_key, in_list[i].permission);
     if (ret != SUCCESS) {
-      errUser = data.user_key;
+      errUser = in_list[i].user_name;
       return ret;
     }
   }
@@ -241,7 +255,7 @@ if (data.RequestTaskListIsEmpty())
   for (int i = 0; i < in_list.size(); i++) {
     ret = db_instance.removeAccess(data.user_key, in_list[i], data.tasklist_key);
     if (ret != SUCCESS) {
-      errUser = data.user_key;
+      errUser = in_list[i];
       return ret;
     }
   }
