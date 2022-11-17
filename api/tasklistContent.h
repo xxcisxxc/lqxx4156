@@ -52,6 +52,7 @@ struct TasklistContent {
    * @param _name value for tasklist name
    * @param _content value for tasklist content
    * @param _date value for tasklist date
+   * @param _vis value for tasklist visibility
    */
   TasklistContent(std::string &_name, std::string &_content, std::string &_date, std::string &_vis)
       : name(_name), content(_content), date(_date), visibility(_vis) {}
