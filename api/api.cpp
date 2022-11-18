@@ -6,6 +6,7 @@
  * @copyright Copyright (c) 2022
  *
  */
+#include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <api/api.h>
 #include <common/utils.h>
@@ -16,8 +17,8 @@
 #include <mutex>
 #include <utility>
 
-#define API_DEFINE_HTTP_HANDLER(name)                                          \
-  void API::name(const httplib::Request &req, httplib::Response &res) noexcept
+#define API_DEFINE_HTTP_HANDLER(name, req, res)                                \
+  void Api::name(const httplib::Request &req, httplib::Response &res) noexcept
 
 #define API_ADD_HTTP_HANDLER(server, path, method, func)                       \
   do {                                                                         \
@@ -31,7 +32,7 @@ inline void BuildHttpRespBody(nlohmann::json *js) { return; }
 
 template <typename FirstValue, typename... Rest>
 inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
-                              FirstValue &&value, Rest &&...rest) {
+                              FirstValue &&value, Rest &&... rest) {
   (*js)[field] = std::forward<FirstValue>(value);
   BuildHttpRespBody(js, std::forward<Rest>(rest)...);
 }
@@ -45,6 +46,35 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     return;                                                                    \
   } while (false)
 
+#define API_PARSE_REQ_BODY(req)                                                \
+  ({                                                                           \
+    nlohmann::json json_body;                                                  \
+    try {                                                                      \
+      json_body = nlohmann::json::parse((req).body);                           \
+    } catch (...) {                                                            \
+      API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");    \
+    }                                                                          \
+    std::move(json_body);                                                      \
+  })
+
+#define API_GET_JSON_REQUIRED(json_body, target, field, type)                  \
+  do {                                                                         \
+    if ((json_body).find(#field) == (json_body).end()) {                       \
+      API_RETURN_HTTP_RESP(500, "msg",                                         \
+                           "failed missing required field " #field);           \
+    }                                                                          \
+    (target) = (json_body).at(#field).get<type>();                             \
+  } while (false)
+
+#define API_GET_JSON_OPTIONAL(json_body, target, field, type)                  \
+  do {                                                                         \
+    if ((json_body).find(#field) != (json_body).end()) {                       \
+      (target) = (json_body).at(#field).get<type>();                           \
+    }                                                                          \
+  } while (false)
+
+#define API_GET_OPTIONAL_FROM_REQ_HEADER()
+
 static inline bool
 DecodeEmailAndPasswordFromBasicAuth(const std::string &auth, std::string *email,
                                     std::string *password) noexcept {
@@ -52,19 +82,18 @@ DecodeEmailAndPasswordFromBasicAuth(const std::string &auth, std::string *email,
     return false;
   }
 
-  const auto splited_auth = Common::Split(auth, " ");
+  auto splited_auth = Common::Split(auth, " ");
   if (splited_auth.size() != 2 || splited_auth[0] != "Basic") {
     return false;
   }
 
-  const auto email_password =
-      Common::Split(base64_decode(splited_auth[1]), ":");
+  auto email_password = Common::Split(base64_decode(splited_auth[1]), ":");
   if (email_password.size() != 2) {
     return false;
   }
 
-  *email = email_password[0];
-  *password = email_password[1];
+  *email = std::move(email_password[0]);
+  *password = std::move(email_password[1]);
   return true;
 }
 
@@ -122,16 +151,14 @@ DecodeTokenFromBasicAuth(const std::string &auth) noexcept {
             .empty()) {                                                        \
       API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");                   \
     }                                                                          \
-    {                                                                          \
-      std::lock_guard<std::mutex> guard(invalid_tokens_lock);                  \
-      if (invalid_tokens.find(token) != invalid_tokens.end()) {                \
-        API_RETURN_HTTP_RESP(500, "msg", "failed token invalid");              \
-      }                                                                        \
+    std::lock_guard<std::mutex> guard(invalid_tokens_lock);                    \
+    if (invalid_tokens.find(token) != invalid_tokens.end()) {                  \
+      API_RETURN_HTTP_RESP(500, "msg", "failed token invalid");                \
     }                                                                          \
   } while (false)
 
 /* Default arguments not cool, modify later */
-API::API(std::shared_ptr<Users> _users,
+Api::Api(std::shared_ptr<Users> _users,
          std::shared_ptr<TaskListsWorker> _tasklists_worker,
          std::shared_ptr<TasksWorker> _tasks_worker, std::shared_ptr<DB> _db,
          std::shared_ptr<httplib::Server> _svr)
@@ -162,12 +189,13 @@ API::API(std::shared_ptr<Users> _users,
   }
 }
 
-API::~API() { Stop(); }
+Api::~Api() { Stop(); }
 
-API_DEFINE_HTTP_HANDLER(UsersRegister) {
+API_DEFINE_HTTP_HANDLER(UsersRegister, req, res) {
   std::string user_name;
   std::string user_passwd;
   std::string user_email;
+  nlohmann::json json_body;
 
   const auto auth_header = req.headers.find("Authorization");
   if (auth_header == req.headers.cend() ||
@@ -180,12 +208,8 @@ API_DEFINE_HTTP_HANDLER(UsersRegister) {
     API_RETURN_HTTP_RESP(500, "msg", "failed no email or password");
   }
 
-  try {
-    const auto json_body = nlohmann::json::parse(req.body);
-    user_name = json_body.at("name");
-  } catch (std::exception &e) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
-  }
+  json_body = API_PARSE_REQ_BODY(req);
+  API_GET_JSON_OPTIONAL(json_body, user_name, name, std::string);
 
   // check if user email is duplicated
   if (users->DuplicatedEmail(UserInfo("", user_email, ""))) {
@@ -200,7 +224,7 @@ API_DEFINE_HTTP_HANDLER(UsersRegister) {
   }
 }
 
-API_DEFINE_HTTP_HANDLER(UsersLogin) {
+API_DEFINE_HTTP_HANDLER(UsersLogin, req, res) {
   std::string user_passwd;
   std::string user_email;
 
@@ -228,7 +252,7 @@ API_DEFINE_HTTP_HANDLER(UsersLogin) {
   }
 }
 
-API_DEFINE_HTTP_HANDLER(UsersLogout) {
+API_DEFINE_HTTP_HANDLER(UsersLogout, req, res) {
   std::string user_email;
   std::string token;
   API_CHECK_REQUEST_TOKEN(user_email, token);
@@ -242,7 +266,7 @@ API_DEFINE_HTTP_HANDLER(UsersLogout) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsAll) {
+API_DEFINE_HTTP_HANDLER(TaskListsAll, req, res) {
   std::string user_email;
   std::string token;
   API_CHECK_REQUEST_TOKEN(user_email, token);
@@ -257,11 +281,11 @@ API_DEFINE_HTTP_HANDLER(TaskListsAll) {
   }
   nlohmann::json data;
   std::for_each(out_names.cbegin(), out_names.cend(),
-                [&data](auto &&name) { data.push_back(name); });
-  API_RETURN_HTTP_RESP(200, "msg", "success", "data", data);
+                [&data](auto &name) { data.push_back(std::move(name)); });
+  API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsGet) {
+API_DEFINE_HTTP_HANDLER(TaskListsGet, req, res) {
   std::string user_email;
   std::string token;
   API_CHECK_REQUEST_TOKEN(user_email, token);
@@ -283,31 +307,27 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
+API_DEFINE_HTTP_HANDLER(TaskListsUpdate, req, res) {
   std::string token;
   RequestData tasklist_req;
   TasklistContent tasklist_content;
+  std::string optional_name;
+  nlohmann::json json_body;
+
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
   tasklist_req.tasklist_key = req.matches[1];
-  nlohmann::json json_body;
+  json_body = API_PARSE_REQ_BODY(req);
 
-  try {
-    json_body = nlohmann::json::parse(req.body);
-  } catch (...) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");
-  }
+  API_GET_JSON_OPTIONAL(json_body, optional_name, name, std::string);
 
-  if (json_body.find("name") != json_body.end() &&
-      json_body["name"] != tasklist_req.tasklist_key) {
+  if (!optional_name.empty() && optional_name != tasklist_req.tasklist_key) {
     API_RETURN_HTTP_RESP(500, "msg", "failed tasklist name can not be changed");
   }
-  if (json_body.find("content") != json_body.end()) {
-    tasklist_content.content = json_body["content"];
-  }
-  if (json_body.find("date") != json_body.end()) {
-    tasklist_content.date = json_body["date"];
-  }
+
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content,
+                        std::string);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date, std::string);
 
   if (tasklists_worker->Revise(tasklist_req, tasklist_content) !=
       returnCode::SUCCESS) {
@@ -317,7 +337,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsDelete) {
+API_DEFINE_HTTP_HANDLER(TaskListsDelete, req, res) {
   std::string token;
   RequestData tasklist_req;
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
@@ -331,26 +351,23 @@ API_DEFINE_HTTP_HANDLER(TaskListsDelete) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
+API_DEFINE_HTTP_HANDLER(TaskListsCreate, req, res) {
   std::string token;
   std::string out_tasklist_name;
   RequestData tasklist_req;
   TasklistContent tasklist_content;
+  nlohmann::json json_body;
+
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
-  try {
-    const auto json_body = nlohmann::json::parse(req.body);
-    tasklist_req.tasklist_key = json_body.at("name");
-    tasklist_content.name = json_body.at("name");
-    if (json_body.find("content") != json_body.end()) {
-      tasklist_content.content = json_body.at("content");
-    }
-    if (json_body.find("date") != json_body.end()) {
-      tasklist_content.date = json_body.at("date");
-    }
-  } catch (std::exception &e) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
-  }
+  json_body = API_PARSE_REQ_BODY(req);
+
+  API_GET_JSON_REQUIRED(json_body, tasklist_req.tasklist_key, name,
+                        std::string);
+  API_GET_JSON_REQUIRED(json_body, tasklist_content.name, name, std::string);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content,
+                        std::string);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date, std::string);
 
   if (tasklists_worker->Create(tasklist_req, tasklist_content,
                                out_tasklist_name) != returnCode::SUCCESS) {
@@ -360,7 +377,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "name", out_tasklist_name);
 }
 
-API_DEFINE_HTTP_HANDLER(TasksAll) {
+API_DEFINE_HTTP_HANDLER(TasksAll, req, res) {
   std::string user_email;
   std::string token;
   std::string tasklist_name = req.matches[1];
@@ -377,11 +394,11 @@ API_DEFINE_HTTP_HANDLER(TasksAll) {
   }
   nlohmann::json data;
   std::for_each(out_names.cbegin(), out_names.cend(),
-                [&data](auto &&name) { data.push_back(name); });
-  API_RETURN_HTTP_RESP(200, "msg", "success", "data", data);
+                [&data](auto &name) { data.push_back(std::move(name)); });
+  API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TasksGet) {
+API_DEFINE_HTTP_HANDLER(TasksGet, req, res) {
   std::string user_email;
   std::string token;
   std::string task_name = req.matches[2];
@@ -409,14 +426,16 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TasksUpdate) {
+API_DEFINE_HTTP_HANDLER(TasksUpdate, req, res) {
   std::string user_email;
   std::string token;
   RequestData task_req;
   TaskContent task_content;
-  API_CHECK_REQUEST_TOKEN(user_email, token);
+  nlohmann::json json_body;
+  std::string optional_name;
 
-  task_req.user_key = user_email;
+  API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+
   task_req.task_key = req.matches[2];
   task_req.tasklist_key = req.matches[1];
 
@@ -424,23 +443,15 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
     API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
   }
 
-  nlohmann::json json_body;
-  try {
-    json_body = nlohmann::json::parse(req.body);
-  } catch (...) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");
-  }
+  json_body = API_PARSE_REQ_BODY(req);
+  API_GET_JSON_OPTIONAL(json_body, optional_name, name, std::string);
 
-  if (json_body.find("name") != json_body.end() &&
-      json_body["name"] != task_req.task_key) {
+  if (!optional_name.empty() && optional_name != task_req.task_key) {
     API_RETURN_HTTP_RESP(500, "msg", "failed task name can not be changed");
   }
-  if (json_body.find("content") != json_body.end()) {
-    task_content.content = json_body["content"];
-  }
-  if (json_body.find("date") != json_body.end()) {
-    task_content.date = json_body["date"];
-  }
+
+  API_GET_JSON_OPTIONAL(json_body, task_content.content, content, std::string);
+  API_GET_JSON_OPTIONAL(json_body, task_content.date, date, std::string);
 
   if (tasks_worker->Revise(task_req, task_content) != returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
@@ -449,10 +460,11 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TasksDelete) {
+API_DEFINE_HTTP_HANDLER(TasksDelete, req, res) {
   std::string user_email;
   std::string token;
   RequestData task_req;
+
   API_CHECK_REQUEST_TOKEN(user_email, token);
 
   task_req.user_key = user_email;
@@ -470,28 +482,21 @@ API_DEFINE_HTTP_HANDLER(TasksDelete) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TasksCreate) {
+API_DEFINE_HTTP_HANDLER(TasksCreate, req, res) {
   std::string token;
   std::string out_task_name;
-  std::string tasklist_name = req.matches[1];
   RequestData task_req;
   TaskContent task_content;
+  nlohmann::json json_body;
+
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
 
-  try {
-    const auto json_body = nlohmann::json::parse(req.body);
-    task_req.tasklist_key = tasklist_name;
-    task_req.task_key = json_body.at("name");
-    task_content.name = json_body.at("name");
-    if (json_body.find("content") != json_body.end()) {
-      task_content.content = json_body.at("content");
-    }
-    if (json_body.find("date") != json_body.end()) {
-      task_content.date = json_body.at("date");
-    }
-  } catch (std::exception &e) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
-  }
+  task_req.tasklist_key = req.matches[1];
+  json_body = API_PARSE_REQ_BODY(req);
+  API_GET_JSON_REQUIRED(json_body, task_req.task_key, name, std::string);
+  API_GET_JSON_REQUIRED(json_body, task_content.name, name, std::string);
+  API_GET_JSON_OPTIONAL(json_body, task_content.content, content, std::string);
+  API_GET_JSON_OPTIONAL(json_body, task_content.date, date, std::string);
 
   if (tasks_worker->Create(task_req, task_content, out_task_name) !=
       returnCode::SUCCESS) {
@@ -501,7 +506,7 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "name", out_task_name);
 }
 
-API_DEFINE_HTTP_HANDLER(Health) {
+API_DEFINE_HTTP_HANDLER(Health, req, res) {
   try {
     std::string numbers = req.matches[1];
     API_RETURN_HTTP_RESP(200, "msg", "success", "data", numbers);
@@ -510,7 +515,7 @@ API_DEFINE_HTTP_HANDLER(Health) {
   }
 }
 
-void API::Run(const std::string &host, uint32_t port) {
+void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/users/register", Post, UsersRegister);
   API_ADD_HTTP_HANDLER(svr, "/v1/users/login", Post, UsersLogin);
   API_ADD_HTTP_HANDLER(svr, "/v1/users/logout", Post, UsersLogout);
@@ -535,7 +540,7 @@ void API::Run(const std::string &host, uint32_t port) {
   svr->listen(host, port);
 }
 
-void API::Stop() {
+void Api::Stop() {
   if (svr && svr->is_running()) {
     svr->stop();
   }

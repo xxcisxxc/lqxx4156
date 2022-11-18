@@ -205,7 +205,7 @@ protected:
     mocked_tasks_worker = std::make_shared<MockedTasksWorker>(
         mocked_db.get(), (TaskListsWorker *)(mocked_tasks_worker.get()));
 
-    api = std::make_shared<API>(mocked_users, mocked_tasklists_worker,
+    api = std::make_shared<Api>(mocked_users, mocked_tasklists_worker,
                                 mocked_tasks_worker, mocked_db);
     running_server = std::make_shared<std::thread>(
         [&]() { this->api->Run(this->test_host, this->test_port); });
@@ -220,7 +220,7 @@ protected:
   }
 
 protected:
-  std::shared_ptr<API> api;
+  std::shared_ptr<Api> api;
   std::shared_ptr<MockedUsers> mocked_users;
   std::shared_ptr<MockedTasklistsWorker> mocked_tasklists_worker;
   std::shared_ptr<MockedTasksWorker> mocked_tasks_worker;

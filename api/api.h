@@ -30,7 +30,7 @@
 #define API_DECLARE_HTTP_HANDLER(name)                                         \
   virtual void name(const httplib::Request &, httplib::Response &) noexcept
 
-class API {
+class Api {
 public:
   /**
    * @brief Construct a new API object.
@@ -39,7 +39,7 @@ public:
    * @param _users A shared pointer of Users object.
    * @param _svr A shared pointer of httplib::Server object.
    */
-  API(std::shared_ptr<Users> _users = nullptr,
+  Api(std::shared_ptr<Users> _users = nullptr,
       std::shared_ptr<TaskListsWorker> _tasklists_worker = nullptr,
       std::shared_ptr<TasksWorker> _tasks_worker = nullptr,
       std::shared_ptr<DB> _db = nullptr,
@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroy the API object
    */
-  ~API();
+  ~Api();
 
   /**
    * @brief Listen to the given host and port and run the http service, will be
