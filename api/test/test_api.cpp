@@ -169,8 +169,8 @@ public:
     if (!in.content.empty()) {
       it->second.content = in.content;
     }
-    if (!in.date.empty()) {
-      it->second.date = in.date;
+    if (!in.startDate.empty()) {
+      it->second.startDate = in.startDate;
     }
     return returnCode::SUCCESS;
   }

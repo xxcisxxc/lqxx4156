@@ -10,6 +10,13 @@
  * input
  */
 
+enum Priority {
+  NULL_PRIORITY, // null value   0
+  VERY_URGENT,   // very urgent  1
+  URGENT,        // urgent       2
+  NORMAL         // normal       3
+};
+
 struct TaskContent {
   /* data */
   /*
@@ -21,15 +28,27 @@ struct TaskContent {
    */
   std::string content;
   /*
-   * @brief Task due date
+   * @brief Task start date
    */
-  std::string date;
+  std::string startDate;
+  /*
+   * @brief Task end date
+   */
+  std::string endDate;
+  /*
+   * @brief Task priority: very urgent, urgent, normal
+   */
+  Priority priority;
+  /*
+   * @brief Task progress: To do, Doing or Done or self-defined
+   */
+  std::string status;
 
   /* methods */
   /*
    * @brief TaskContent default constructor
    */
-  TaskContent() {}
+  TaskContent() : priority(NULL_PRIORITY) {}
 
   /*
    * @brief TaskContent constructor with parameters
@@ -37,8 +56,11 @@ struct TaskContent {
    * @param _content Task content
    * @param _date Task due date
    */
-  TaskContent(std::string &_name, std::string &_content, std::string &_date)
-      : name(_name), content(_content), date(_date) {}
+  TaskContent(std::string &_name, std::string &_content,
+              std::string &_startDate, std::string &_endDate,
+              Priority &_priority, std::string &_status)
+      : name(_name), content(_content), startDate(_startDate),
+        endDate(_endDate), priority(_priority), status(_status) {}
 
   /*
    * @brief Check if the task has a name
@@ -50,7 +72,11 @@ struct TaskContent {
    * @brief Check if the TaskContent object is empty
    * @return true if the TaskContent object is empty
    */
-  bool IsEmpty() { return name == "" && content == "" && date == ""; }
+  bool IsEmpty() {
+    return name == "" && content == "" && startDate == "" && endDate == "" &&
+           priority == NULL_PRIORITY && status == "";
+    ;
+  }
 
   /*
    * @brief clear the TaskContent object
@@ -58,6 +84,9 @@ struct TaskContent {
   void Clear() {
     name = "";
     content = "";
-    date = "";
+    startDate = "";
+    endDate = "";
+    priority = NULL_PRIORITY;
+    status = "";
   }
 };

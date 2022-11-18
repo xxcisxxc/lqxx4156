@@ -404,7 +404,7 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
   nlohmann::json data{
       {"name", task_content.name},
       {"content", task_content.content},
-      {"date", task_content.date},
+      {"date", task_content.startDate},
   };
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
@@ -439,7 +439,7 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
     task_content.content = json_body["content"];
   }
   if (json_body.find("date") != json_body.end()) {
-    task_content.date = json_body["date"];
+    task_content.startDate = json_body["date"];
   }
 
   if (tasks_worker->Revise(task_req, task_content) != returnCode::SUCCESS) {
@@ -487,7 +487,7 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
       task_content.content = json_body.at("content");
     }
     if (json_body.find("date") != json_body.end()) {
-      task_content.date = json_body.at("date");
+      task_content.startDate = json_body.at("date");
     }
   } catch (std::exception &e) {
     API_RETURN_HTTP_RESP(500, "msg", "failed body format error");
