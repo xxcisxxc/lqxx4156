@@ -34,7 +34,7 @@ struct TasklistContent {
 
   /**
    * @brief visibility of the tasklist: true for public, false for private
-   * 
+   *
    */
   std::string visibility;
 
@@ -54,7 +54,8 @@ struct TasklistContent {
    * @param _date value for tasklist date
    * @param _vis value for tasklist visibility
    */
-  TasklistContent(std::string &_name, std::string &_content, std::string &_date, std::string &_vis)
+  TasklistContent(std::string &_name, std::string &_content, std::string &_date,
+                  std::string &_vis)
       : name(_name), content(_content), date(_date), visibility(_vis) {}
 
   /**
@@ -74,9 +75,9 @@ struct TasklistContent {
 
 /**
  * @brief This is a structure that uses as either input/output for
- * tasklistWorker object's properties/fields. It is used to deal with sharing 
- * of tasklists between users. 
- * 
+ * tasklistWorker object's properties/fields. It is used to deal with sharing
+ * of tasklists between users.
+ *
  */
 struct shareInfo {
   /**
@@ -107,6 +108,8 @@ struct shareInfo {
    * @param _content value for tasklist content
    * @param _date value for tasklist date
    */
-  shareInfo(std::string& _user_name, std::string& _task_list_name, bool _permission)
-    : user_name(_user_name), task_list_name(_task_list_name), permission(_permission) {}
+  shareInfo(std::string &_user_name, std::string &_task_list_name,
+            bool _permission)
+      : user_name(_user_name), task_list_name(_task_list_name),
+        permission(_permission) {}
 };
