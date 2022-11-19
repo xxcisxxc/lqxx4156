@@ -23,8 +23,17 @@ void TasksWorker::TaskStruct2Map(
   if (!taskContent.content.empty()) {
     task_info["content"] = taskContent.content;
   }
-  if (!taskContent.date.empty()) {
-    task_info["date"] = taskContent.date;
+  if (!taskContent.startDate.empty()) {
+    task_info["startDate"] = taskContent.startDate;
+  }
+  if (!taskContent.endDate.empty()) {
+    task_info["endDate"] = taskContent.endDate;
+  }
+  if (taskContent.priority != NULL_PRIORITY) {
+    task_info["priority"] = std::to_string((int)taskContent.priority);
+  }
+  if (!taskContent.status.empty()) {
+    task_info["status"] = taskContent.status;
   }
 }
 
@@ -37,8 +46,17 @@ void TasksWorker::Map2TaskStruct(
   if (task_info.count("content"))
     taskContent.content = task_info.at("content");
 
-  if (task_info.count("date"))
-    taskContent.date = task_info.at("date");
+  if (task_info.count("startDate"))
+    taskContent.startDate = task_info.at("startDate");
+
+  if (task_info.count("endDate"))
+    taskContent.endDate = task_info.at("endDate");
+
+  if (task_info.count("priority"))
+    taskContent.priority = (Priority)stoi(task_info.at("priority"));
+
+  if (task_info.count("status"))
+    taskContent.status = task_info.at("status");
 }
 
 returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
@@ -48,7 +66,8 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
+                                     data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;
@@ -80,7 +99,8 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
+                                     data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;
@@ -124,7 +144,8 @@ returnCode TasksWorker::Delete(const RequestData &data) {
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
+                                     data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;
@@ -152,7 +173,8 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
+                                     data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;
@@ -191,7 +213,8 @@ TasksWorker::GetAllTasksName(const RequestData &data,
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db->checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
+                                     data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;

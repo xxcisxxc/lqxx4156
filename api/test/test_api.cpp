@@ -358,6 +358,9 @@ public:
     if (!in.date.empty()) {
       it->second.date = in.date;
     }
+    if (!in.startDate.empty()) {
+      it->second.startDate = in.startDate;
+    }
     return returnCode::SUCCESS;
   }
 
