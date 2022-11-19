@@ -450,11 +450,13 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
   if (tasks_worker->Query(task_req, task_content) != returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
   }
-  data = {
-      {"name", std::move(task_content.name)},
-      {"content", std::move(task_content.content)},
-      {"date", std::move(task_content.date)},
-  };
+  data = {{"name", std::move(task_content.name)},
+          {"content", std::move(task_content.content)},
+          {"date", std::move(task_content.date)},
+          {"start_date", std::move(task_content.startDate)},
+          {"end_date", std::move(task_content.endDate)},
+          {"priority", task_content.priority},
+          {"status", std::move(task_content.status)}};
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
@@ -484,6 +486,10 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
 
   API_GET_JSON_OPTIONAL(json_body, task_content.content, content);
   API_GET_JSON_OPTIONAL(json_body, task_content.date, date);
+  API_GET_JSON_OPTIONAL(json_body, task_content.startDate, start_date);
+  API_GET_JSON_OPTIONAL(json_body, task_content.endDate, end_date);
+  API_GET_JSON_OPTIONAL(json_body, task_content.priority, priority);
+  API_GET_JSON_OPTIONAL(json_body, task_content.status, status);
 
   if (tasks_worker->Revise(task_req, task_content) != returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
@@ -525,10 +531,15 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
 
   task_req.tasklist_key = API_REQ().matches[1];
   json_body = API_PARSE_REQ_BODY();
+
   API_GET_JSON_REQUIRED(json_body, task_req.task_key, name);
   API_GET_JSON_REQUIRED(json_body, task_content.name, name);
   API_GET_JSON_OPTIONAL(json_body, task_content.content, content);
   API_GET_JSON_OPTIONAL(json_body, task_content.date, date);
+  API_GET_JSON_OPTIONAL(json_body, task_content.startDate, start_date);
+  API_GET_JSON_OPTIONAL(json_body, task_content.endDate, end_date);
+  API_GET_JSON_OPTIONAL(json_body, task_content.priority, priority);
+  API_GET_JSON_OPTIONAL(json_body, task_content.status, status);
 
   if (tasks_worker->Create(task_req, task_content, out_task_name) !=
       returnCode::SUCCESS) {

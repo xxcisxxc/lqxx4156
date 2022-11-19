@@ -277,7 +277,8 @@ public:
   returnCode Query(const RequestData &data, TaskContent &out) override {
     std::string query_user_key = data.user_key;
     if (!data.other_user_key.empty()) {
-      if (!CheckWritePerm(data.user_key, data.other_user_key, data.tasklist_key)) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
         return returnCode::ERR_ACCESS;
       }
       query_user_key = data.other_user_key;
@@ -296,7 +297,8 @@ public:
                              std::vector<std::string> &outNames) override {
     std::string query_user_key = data.user_key;
     if (!data.other_user_key.empty()) {
-      if (!CheckWritePerm(data.user_key, data.other_user_key, data.tasklist_key)) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
         return returnCode::ERR_ACCESS;
       }
       query_user_key = data.other_user_key;
@@ -316,7 +318,8 @@ public:
                     std::string &outTasklistName) override {
     std::string query_user_key = data.user_key;
     if (!data.other_user_key.empty()) {
-      if (!CheckWritePerm(data.user_key, data.other_user_key, data.tasklist_key)) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
         return returnCode::ERR_ACCESS;
       }
       query_user_key = data.other_user_key;
@@ -341,7 +344,8 @@ public:
   returnCode Revise(const RequestData &data, TaskContent &in) override {
     std::string query_user_key = data.user_key;
     if (!data.other_user_key.empty()) {
-      if (!CheckWritePerm(data.user_key, data.other_user_key, data.tasklist_key)) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
         return returnCode::ERR_ACCESS;
       }
       query_user_key = data.other_user_key;
@@ -367,7 +371,8 @@ public:
   returnCode Delete(const RequestData &data) override {
     std::string query_user_key = data.user_key;
     if (!data.other_user_key.empty()) {
-      if (!CheckWritePerm(data.user_key, data.other_user_key, data.tasklist_key)) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
         return returnCode::ERR_ACCESS;
       }
       query_user_key = data.other_user_key;
@@ -1399,9 +1404,9 @@ TEST_F(APITest, Share) {
     request_body["name"] = "tasks_test_name_1";
     request_body["content"] = "some_content_1";
     request_body["date"] = "some_date_1";
-    auto result =
-        client.Post("/v1/task_lists/tasklists_test_name_1/tasks/create?other=Alice@columbia.edu",
-                    request_body.dump(), "text/plain");
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "create?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }
@@ -1413,9 +1418,9 @@ TEST_F(APITest, Share) {
     request_body["name"] = "tasks_test_name_2";
     request_body["content"] = "some_content_2";
     request_body["date"] = "some_date_2";
-    auto result =
-        client.Post("/v1/task_lists/tasklists_test_name_1/tasks/create?other=Alice@columbia.edu",
-                    request_body.dump(), "text/plain");
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "create?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }
@@ -1427,9 +1432,9 @@ TEST_F(APITest, Share) {
     request_body["name"] = "tasks_test_name_3";
     request_body["content"] = "some_content_3";
     request_body["date"] = "some_date_3";
-    auto result =
-        client.Post("/v1/task_lists/tasklists_test_name_1/tasks/create?other=Alice@columbia.edu",
-                    request_body.dump(), "text/plain");
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "create?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("failed"), std::string::npos);
   }
@@ -1437,8 +1442,8 @@ TEST_F(APITest, Share) {
   {
     httplib::Client client(test_host, test_port);
     client.set_basic_auth(token_test_user_1, "");
-    auto result = client.Get(
-        "/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1?other=Alice@columbia.edu");
+    auto result = client.Get("/v1/task_lists/tasklists_test_name_1/tasks/"
+                             "tasks_test_name_1?other=Alice@columbia.edu");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
     EXPECT_NE(result->body.find("tasks_test_name_1"), std::string::npos);
@@ -1459,8 +1464,7 @@ TEST_F(APITest, Share) {
   {
     httplib::Client client(test_host, test_port);
     client.set_basic_auth(token, "");
-    auto result = client.Get(
-        "/v1/task_lists/tasklists_test_name_1/tasks");
+    auto result = client.Get("/v1/task_lists/tasklists_test_name_1/tasks");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
     EXPECT_NE(result->body.find("tasks_test_name_1"), std::string::npos);
@@ -1473,9 +1477,9 @@ TEST_F(APITest, Share) {
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_new";
     request_body["date"] = "some_date_1_new";
-    auto result =
-        client.Post("/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1?other=Alice@columbia.edu",
-                    request_body.dump(), "text/plain");
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "tasks_test_name_1?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }
@@ -1494,8 +1498,8 @@ TEST_F(APITest, Share) {
   {
     httplib::Client client(test_host, test_port);
     client.set_basic_auth(token_test_user_1, "");
-    auto result = client.Delete(
-        "/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1?other=Alice@columbia.edu");
+    auto result = client.Delete("/v1/task_lists/tasklists_test_name_1/tasks/"
+                                "tasks_test_name_1?other=Alice@columbia.edu");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }
@@ -1503,8 +1507,7 @@ TEST_F(APITest, Share) {
   {
     httplib::Client client(test_host, test_port);
     client.set_basic_auth(token, "");
-    auto result = client.Get(
-        "/v1/task_lists/tasklists_test_name_1/tasks");
+    auto result = client.Get("/v1/task_lists/tasklists_test_name_1/tasks");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
     EXPECT_EQ(result->body.find("tasks_test_name_1"), std::string::npos);
