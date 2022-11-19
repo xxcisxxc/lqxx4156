@@ -81,7 +81,12 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     }                                                                          \
   } while (false)
 
-#define API_GET_OPTIONAL_FROM_REQ_HEADER()
+#define API_GET_PARAM_OPTIONAL(target, key)                                    \
+  do {                                                                         \
+    if (API_REQ().has_param(#key)) {                                           \
+      (target) = API_REQ().get_param_value(#key);                              \
+    }                                                                          \
+  } while (false)
 
 static inline bool
 DecodeEmailAndPasswordFromBasicAuth(const std::string &auth, std::string *email,
@@ -275,22 +280,39 @@ API_DEFINE_HTTP_HANDLER(UsersLogout) {
 }
 
 API_DEFINE_HTTP_HANDLER(TaskListsAll) {
-  std::string user_email;
   std::string token;
+  std::string share;
   RequestData tasklist_req;
   std::vector<std::string> out_names;
+  std::vector<shareInfo> out_share_info;
   nlohmann::json data;
 
-  API_CHECK_REQUEST_TOKEN(user_email, token);
+  API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
+  API_GET_PARAM_OPTIONAL(share, share);
 
-  /* Get all task lists */
-  tasklist_req.user_key = user_email;
-  if (tasklists_worker->GetAllTasklist(tasklist_req, out_names) !=
-      returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+  if (share == "true") {
+    /* Get all shared task lists */
+    if (tasklists_worker->GetAllAccessTaskList(tasklist_req, out_share_info) !=
+        returnCode::SUCCESS) {
+      API_RETURN_HTTP_RESP(500, "msg", "failed get shared task lists");
+    }
+    std::transform(out_share_info.begin(), out_share_info.end(),
+                   std::back_inserter(data), [](shareInfo &info) {
+                     return nlohmann::json{
+                         {"user", std::move(info.user_name)},
+                         {"permission", info.permission ? "write" : "read"},
+                         {"list", info.task_list_name}};
+                   });
+  } else {
+    /* Get all task lists */
+    if (tasklists_worker->GetAllTasklist(tasklist_req, out_names) !=
+        returnCode::SUCCESS) {
+      API_RETURN_HTTP_RESP(500, "msg", "failed get all task lists");
+    }
+    std::for_each(out_names.cbegin(), out_names.cend(),
+                  [&data](auto &name) { data.push_back(std::move(name)); });
   }
-  std::for_each(out_names.cbegin(), out_names.cend(),
-                [&data](auto &name) { data.push_back(std::move(name)); });
+
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
@@ -303,6 +325,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
   /* Get one certain task list */
+  API_GET_PARAM_OPTIONAL(tasklist_req.other_user_key, other);
   tasklist_req.tasklist_key = API_REQ().matches[1];
   if (tasklists_worker->Query(tasklist_req, tasklist_content) !=
       returnCode::SUCCESS) {
@@ -328,6 +351,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   json_body = API_PARSE_REQ_BODY();
 
   API_GET_JSON_OPTIONAL(json_body, optional_name, name);
+  API_GET_PARAM_OPTIONAL(tasklist_req.other_user_key, other);
 
   if (!optional_name.empty() && optional_name != tasklist_req.tasklist_key) {
     API_RETURN_HTTP_RESP(500, "msg", "failed tasklist name can not be changed");
@@ -654,6 +678,7 @@ void Api::Stop() {
 #undef API_CHECK_REQUEST_TOKEN
 #undef API_GET_JSON_REQUIRED
 #undef API_GET_JSON_OPTIONAL
+#undef API_GET_PARAM_OPTIONAL
 #undef API_PARSE_REQ_BODY
 #undef API_GET_OPTIONAL_FROM_REQ_HEADER
 #undef API_REQ
