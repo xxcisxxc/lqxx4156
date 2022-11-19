@@ -2,9 +2,9 @@
 #include <db/DB.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <memory>
 #include <tasklists/tasklistsWorker.h>
-#include <iostream>
 
 class MockedDB : public DB {
 public:
@@ -30,33 +30,31 @@ public:
   MOCK_METHOD(returnCode, addAccess,
               (const std::string &src_user_pkey,
                const std::string &dst_user_pkey,
-               const std::string &task_list_pkey,
-               const bool read_write),
+               const std::string &task_list_pkey, const bool read_write),
               (override));
   MOCK_METHOD(returnCode, checkAccess,
               (const std::string &src_user_pkey,
-              const std::string &dst_user_pkey,
-              const std::string &task_list_pkey,
-              bool &read_write),
+               const std::string &dst_user_pkey,
+               const std::string &task_list_pkey, bool &read_write),
               (override));
   MOCK_METHOD(returnCode, removeAccess,
               (const std::string &src_user_pkey,
-              const std::string &dst_user_pkey,
-              const std::string &task_list_pkey),
+               const std::string &dst_user_pkey,
+               const std::string &task_list_pkey),
               (override));
-  MOCK_METHOD(returnCode, allAccess,
-              (const std::string &dst_user_pkey,
-              (std::map<std::pair<std::string, std::string>, bool> &)list_accesses),
-              (override));
+  MOCK_METHOD(
+      returnCode, allAccess,
+      (const std::string &dst_user_pkey,
+       (std::map<std::pair<std::string, std::string>, bool> &)list_accesses),
+      (override));
   MOCK_METHOD(returnCode, allGrant,
               (const std::string &src_user_pkey,
-              const std::string &task_list_pkey,
-              (std::map<std::string, bool> &)list_grants),
+               const std::string &task_list_pkey,
+               (std::map<std::string, bool> &)list_grants),
               (override));
   MOCK_METHOD(returnCode, getAllPublic,
               ((std::vector<std::pair<std::string, std::string>> &)user_list),
               (override));
-
 
   MockedDB() : DB("testhost") {}
 };
@@ -135,12 +133,12 @@ TEST_F(TaskListTest, QueryAccess) {
 
   // normal get with access, and read-write permission, should be successful
   out = TasklistContent();
-  EXPECT_CALL(mockedDB,
-              checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission))
-              .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
-  EXPECT_CALL(mockedDB,
-              getTaskListNode(data.other_user_key, data.tasklist_key, task_list_info))
-              .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                    data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, getTaskListNode(data.other_user_key, data.tasklist_key,
+                                        task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist0");
   EXPECT_EQ(out.content, "this is tasklist #0");
@@ -149,12 +147,12 @@ TEST_F(TaskListTest, QueryAccess) {
 
   // normal get with access, and read-only permission, should be successful
   out = TasklistContent();
-  EXPECT_CALL(mockedDB,
-              checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission))
-              .WillOnce(DoAll(SetArgReferee<3>(false), Return(SUCCESS)));
-  EXPECT_CALL(mockedDB,
-              getTaskListNode(data.other_user_key, data.tasklist_key, task_list_info))
-              .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                    data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(false), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, getTaskListNode(data.other_user_key, data.tasklist_key,
+                                        task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist0");
   EXPECT_EQ(out.content, "this is tasklist #0");
@@ -163,9 +161,9 @@ TEST_F(TaskListTest, QueryAccess) {
 
   // have no access
   out = TasklistContent();
-  EXPECT_CALL(mockedDB,
-              checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission))
-              .WillOnce(DoAll(SetArgReferee<3>(true), Return(ERR_ACCESS)));
+  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                    data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(ERR_ACCESS)));
   EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_ACCESS);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
@@ -310,7 +308,7 @@ TEST_F(TaskListTest, ReviseAccess) {
   std::string newName = "tasklist1";
   std::string newContent = "this is tasklist #1";
   std::string newDate = "16/10/2022";
-  std::string newVis = ""; 
+  std::string newVis = "";
   in = TasklistContent(newName, newContent, newDate, newVis);
 
   std::map<std::string, std::string> task_list_info;
@@ -320,30 +318,36 @@ TEST_F(TaskListTest, ReviseAccess) {
 
   bool permission = false;
 
-  // normal revise with access, read-write permission, and does not try to revise visibility, should be successful
-  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission))
-    .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
-  EXPECT_CALL(mockedDB, reviseTaskListNode(data.other_user_key, data.tasklist_key, task_list_info))
-    .WillOnce(Return(SUCCESS));
+  // normal revise with access, read-write permission, and does not try to
+  // revise visibility, should be successful
+  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                    data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, reviseTaskListNode(data.other_user_key,
+                                           data.tasklist_key, task_list_info))
+      .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
 
-  // revise with access, read-write permission, and try to revise visibility, should not modify the visibility and be successful
+  // revise with access, read-write permission, and try to revise visibility,
+  // should not modify the visibility and be successful
   newVis = "public";
   in = TasklistContent(newName, newContent, newDate, newVis);
-  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission))
-    .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
-  EXPECT_CALL(mockedDB, reviseTaskListNode(data.other_user_key, data.tasklist_key, task_list_info))
-    .WillOnce(Return(SUCCESS));
+  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                    data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, reviseTaskListNode(data.other_user_key,
+                                           data.tasklist_key, task_list_info))
+      .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
   EXPECT_EQ(task_list_info.count("visibility"), 0);
 
   // revise with access and read-only permission, should be unsuccessful
   newVis = "";
   in = TasklistContent(newName, newContent, newDate, newVis);
-  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission))
-    .WillOnce(DoAll(SetArgReferee<3>(false), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                    data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(false), Return(SUCCESS)));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_ACCESS);
-
 }
 
 TEST_F(TaskListTest, GetAllTasklist) {
@@ -365,10 +369,9 @@ TEST_F(TaskListTest, GetAllTasklist) {
   EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_KEY);
 }
 
-
 /*
-returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data, 
-                                      std::vector<shareInfo>& out_list) 
+returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data,
+                                      std::vector<shareInfo>& out_list)
                                       */
 TEST_F(TaskListTest, GetAllAccessTaskList) {
   // setup input
@@ -377,17 +380,18 @@ TEST_F(TaskListTest, GetAllAccessTaskList) {
   std::map<std::pair<std::string, std::string>, bool> list_accesses;
   std::map<std::pair<std::string, std::string>, bool> new_list_accesses;
   for (int i = 0; i < 20; i++) {
-    new_list_accesses[std::make_pair("user" + std::to_string(i), "tasklist" + std::to_string(i))] = false;
+    new_list_accesses[std::make_pair("user" + std::to_string(i),
+                                     "tasklist" + std::to_string(i))] = false;
   }
 
   // normal getAllAccessTaskList call, should be successful
   EXPECT_CALL(mockedDB, allAccess(data.user_key, list_accesses))
-    .WillOnce(DoAll(SetArgReferee<1>(new_list_accesses), Return(SUCCESS)));
+      .WillOnce(DoAll(SetArgReferee<1>(new_list_accesses), Return(SUCCESS)));
   EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
   EXPECT_EQ(outList.size(), 20);
 
   int ind = 0;
-  for (auto& it : new_list_accesses) {
+  for (auto &it : new_list_accesses) {
     EXPECT_EQ(outList[ind].user_name, it.first.first);
     EXPECT_EQ(outList[ind].task_list_name, it.first.second);
     EXPECT_EQ(outList[ind].permission, false);
@@ -400,7 +404,6 @@ TEST_F(TaskListTest, GetAllAccessTaskList) {
   EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), ERR_KEY);
   EXPECT_EQ(outList.size(), 0);
 }
-
 
 TEST_F(TaskListTest, GetAllGrantTaskList) {
   // setup input
@@ -419,14 +422,16 @@ TEST_F(TaskListTest, GetAllGrantTaskList) {
   bool isPublic = false;
 
   // normal GetAllGrantTaskList call, should be successful
-  EXPECT_CALL(mockedDB, getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
-    .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   EXPECT_CALL(mockedDB, allGrant(data.user_key, data.tasklist_key, list_grants))
-    .WillOnce(DoAll(SetArgReferee<2>(new_list_grants), Return(SUCCESS)));
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic), SUCCESS);
+      .WillOnce(DoAll(SetArgReferee<2>(new_list_grants), Return(SUCCESS)));
+  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+            SUCCESS);
   EXPECT_EQ(outList.size(), 20);
   int ind = 0;
-  for (auto& it : new_list_grants) {
+  for (auto &it : new_list_grants) {
     EXPECT_EQ(outList[ind].user_name, it.first);
     EXPECT_EQ(outList[ind].task_list_name, "");
     EXPECT_EQ(outList[ind].permission, false);
@@ -437,45 +442,49 @@ TEST_F(TaskListTest, GetAllGrantTaskList) {
   // call with public tasklist
   outList.clear();
   new_task_list_info["visibility"] = "public";
-  EXPECT_CALL(mockedDB, getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
-    .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic), SUCCESS);
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
+  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+            SUCCESS);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, true);
-
 
   // call with private tasklist
   outList.clear();
   new_task_list_info["visibility"] = "private";
-  EXPECT_CALL(mockedDB, getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
-    .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic), ERR_ACCESS);
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
+  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+            ERR_ACCESS);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
-
 
   // call when getTasklistNode failed
   outList.clear();
   new_task_list_info["visibility"] = "shared";
   new_list_grants.clear();
-  EXPECT_CALL(mockedDB, getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
-    .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   EXPECT_CALL(mockedDB, allGrant(data.user_key, data.tasklist_key, list_grants))
-    .WillOnce(DoAll(SetArgReferee<2>(new_list_grants), Return(ERR_ACCESS)));
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic), ERR_ACCESS);
+      .WillOnce(DoAll(SetArgReferee<2>(new_list_grants), Return(ERR_ACCESS)));
+  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+            ERR_ACCESS);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
 
   // reqeust has empty value
   outList.clear();
   data.user_key = "";
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+            ERR_KEY);
   EXPECT_EQ(outList.size(), 0);
 }
 
-
 TEST_F(TaskListTest, ReviseGrantTaskList) {
-  //setup input
+  // setup input
   data.user_key = "user";
   data.tasklist_key = "tasklist";
   std::vector<shareInfo> in_list;
@@ -489,28 +498,31 @@ TEST_F(TaskListTest, ReviseGrantTaskList) {
 
   // normal call, should be successful
   for (int i = 0; i < in_list.size(); i++) {
-    EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[i].user_name, data.tasklist_key, in_list[i].permission))
-      .WillOnce(Return(SUCCESS));
+    EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[i].user_name,
+                                    data.tasklist_key, in_list[i].permission))
+        .WillOnce(Return(SUCCESS));
   }
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser), SUCCESS);
+  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+            SUCCESS);
   EXPECT_EQ(errUser, "");
-
 
   // failed on third user
   for (int i = 0; i < 3; i++) {
-    EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[i].user_name, data.tasklist_key, in_list[i].permission))
-      .WillOnce(Return(SUCCESS));
+    EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[i].user_name,
+                                    data.tasklist_key, in_list[i].permission))
+        .WillOnce(Return(SUCCESS));
   }
   // errors are all similar logic
-  EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[3].user_name, data.tasklist_key, in_list[3].permission))
-    .WillOnce(Return(ERR_ACCESS));
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser), ERR_ACCESS);
+  EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[3].user_name,
+                                  data.tasklist_key, in_list[3].permission))
+      .WillOnce(Return(ERR_ACCESS));
+  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+            ERR_ACCESS);
   EXPECT_EQ(errUser, in_list[3].user_name);
 }
 
-
 TEST_F(TaskListTest, RemoveGrantTaskList) {
-  //setup input
+  // setup input
   data.user_key = "user";
   data.tasklist_key = "tasklist";
   std::vector<std::string> in_list;
@@ -521,39 +533,42 @@ TEST_F(TaskListTest, RemoveGrantTaskList) {
 
   // normal call, should be successful
   for (int i = 0; i < in_list.size(); i++) {
-    EXPECT_CALL(mockedDB, removeAccess(data.user_key, in_list[i], data.tasklist_key))
-      .WillOnce(Return(SUCCESS));
+    EXPECT_CALL(mockedDB,
+                removeAccess(data.user_key, in_list[i], data.tasklist_key))
+        .WillOnce(Return(SUCCESS));
   }
-  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data, in_list, errUser), SUCCESS);
+  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data, in_list, errUser),
+            SUCCESS);
   EXPECT_EQ(errUser, "");
-  
 
   // failed on fouth user
   for (int i = 0; i < 4; i++) {
-    EXPECT_CALL(mockedDB, removeAccess(data.user_key, in_list[i], data.tasklist_key))
-      .WillOnce(Return(SUCCESS));
+    EXPECT_CALL(mockedDB,
+                removeAccess(data.user_key, in_list[i], data.tasklist_key))
+        .WillOnce(Return(SUCCESS));
   }
-  EXPECT_CALL(mockedDB, removeAccess(data.user_key, in_list[4], data.tasklist_key))
+  EXPECT_CALL(mockedDB,
+              removeAccess(data.user_key, in_list[4], data.tasklist_key))
       .WillOnce(Return(ERR_NO_NODE));
-  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data, in_list, errUser), ERR_NO_NODE);
+  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data, in_list, errUser),
+            ERR_NO_NODE);
   EXPECT_EQ(errUser, in_list[4]);
 }
 
 TEST_F(TaskListTest, GetAllPublicTaskList) {
-  //setup input
+  // setup input
   std::vector<std::pair<std::string, std::string>> out_list;
   std::vector<std::pair<std::string, std::string>> new_out_list;
   for (int i = 0; i < 20; i++) {
-    new_out_list.push_back(std::make_pair("user"+std::to_string(i), "tasklist" + std::to_string(i)));
+    new_out_list.push_back(std::make_pair("user" + std::to_string(i),
+                                          "tasklist" + std::to_string(i)));
   }
 
   // normal call, should be successful
   EXPECT_CALL(mockedDB, getAllPublic(out_list))
-    .WillOnce(DoAll(SetArgReferee<0>(new_out_list), Return(SUCCESS)));
+      .WillOnce(DoAll(SetArgReferee<0>(new_out_list), Return(SUCCESS)));
   EXPECT_EQ(tasklistsWorker->GetAllPublicTaskList(out_list), SUCCESS);
-
 }
-
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

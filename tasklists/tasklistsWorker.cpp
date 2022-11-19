@@ -46,11 +46,11 @@ returnCode TaskListsWorker ::Query(const RequestData &data,
   // TODO: may need a returnCode representing empty request
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
-  
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db_instance.checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db_instance.checkAccess(data.other_user_key, data.user_key,
+                                             data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;
@@ -60,9 +60,9 @@ returnCode TaskListsWorker ::Query(const RequestData &data,
   std::map<std::string, std::string> task_list_info;
 
   // get all available fields
-  returnCode ret = db_instance.getTaskListNode(data.other_user_key.empty() ? data.user_key : data.other_user_key, 
-                                              data.tasklist_key,
-                                              task_list_info);
+  returnCode ret = db_instance.getTaskListNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, task_list_info);
 
   if (ret != SUCCESS)
     return ret;
@@ -113,7 +113,8 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
-    returnCode ret = db_instance.checkAccess(data.other_user_key, data.user_key, data.tasklist_key, permission);
+    returnCode ret = db_instance.checkAccess(data.other_user_key, data.user_key,
+                                             data.tasklist_key, permission);
     if (ret != SUCCESS)
       // no permission
       return ret;
@@ -127,15 +128,17 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
   std::map<std::string, std::string> task_list_info;
   Content2Map(in, task_list_info);
   if (!data.other_user_key.empty() && task_list_info.count("visibility")) {
-    // do not let user edit the visibility of another user's tasklist 
+    // do not let user edit the visibility of another user's tasklist
     task_list_info.erase("visibility");
   }
   returnCode ret = db_instance.reviseTaskListNode(
-      data.other_user_key.empty() ? data.user_key : data.other_user_key, data.tasklist_key, task_list_info);
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, task_list_info);
   return ret;
 }
 
-returnCode TaskListsWorker ::GetAllTasklist(const RequestData &data,
+returnCode
+TaskListsWorker ::GetAllTasklist(const RequestData &data,
                                  std::vector<std::string> &outNames) {
   // request has empty value
   if (data.RequestUserIsEmpty())
@@ -145,9 +148,9 @@ returnCode TaskListsWorker ::GetAllTasklist(const RequestData &data,
   return ret;
 }
 
-
-returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data, 
-                                      std::vector<shareInfo>& out_list) {
+returnCode
+TaskListsWorker ::GetAllAccessTaskList(const RequestData &data,
+                                       std::vector<shareInfo> &out_list) {
   if (data.RequestUserIsEmpty())
     return ERR_KEY;
 
@@ -167,10 +170,8 @@ returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data,
   return ret;
 }
 
-
-returnCode TaskListsWorker ::GetAllGrantTaskList(const RequestData& data, 
-                                      std::vector<shareInfo>& out_list,
-                                      bool& isPublic) {
+returnCode TaskListsWorker ::GetAllGrantTaskList(
+    const RequestData &data, std::vector<shareInfo> &out_list, bool &isPublic) {
   // request has empty value
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
@@ -179,21 +180,17 @@ returnCode TaskListsWorker ::GetAllGrantTaskList(const RequestData& data,
   // if the tasklist is public, don't call allGrant
   std::map<std::string, std::string> task_list_info;
   task_list_info["visibility"];
-  ret = db_instance.getTaskListNode(data.user_key, 
-                                              data.tasklist_key,
-                                              task_list_info);
+  ret = db_instance.getTaskListNode(data.user_key, data.tasklist_key,
+                                    task_list_info);
   if (ret != SUCCESS) {
     return ret;
-  }
-  else if (task_list_info["visibility"] == "public") {
+  } else if (task_list_info["visibility"] == "public") {
     isPublic = true;
     return SUCCESS;
-  }
-  else if (task_list_info["visibility"] == "private") {
+  } else if (task_list_info["visibility"] == "private") {
     isPublic = false;
     return ERR_ACCESS;
-  }
-  else {
+  } else {
     isPublic = false;
   }
 
@@ -212,23 +209,24 @@ returnCode TaskListsWorker ::GetAllGrantTaskList(const RequestData& data,
   return ret;
 }
 
-
 /*
  virtual returnCode addAccess(const std::string &src_user_pkey,
                                const std::string &dst_user_pkey,
                                const std::string &task_list_pkey,
                                const bool read_write);
                                */
-returnCode TaskListsWorker ::ReviseGrantTaskList(const RequestData& data, 
-                              std::vector<shareInfo>& in_list,
-                              std::string& errUser) {
-  
+returnCode
+TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
+                                      std::vector<shareInfo> &in_list,
+                                      std::string &errUser) {
+
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
 
   returnCode ret;
   for (int i = 0; i < in_list.size(); i++) {
-    ret = db_instance.addAccess(data.user_key, in_list[i].user_name, data.tasklist_key, in_list[i].permission);
+    ret = db_instance.addAccess(data.user_key, in_list[i].user_name,
+                                data.tasklist_key, in_list[i].permission);
     if (ret != SUCCESS) {
       errUser = in_list[i].user_name;
       return ret;
@@ -238,22 +236,23 @@ returnCode TaskListsWorker ::ReviseGrantTaskList(const RequestData& data,
   return ret;
 }
 
-
 /*
   virtual returnCode removeAccess(const std::string &src_user_pkey,
                                   const std::string &dst_user_pkey,
                                   const std::string &task_list_pkey);
 */
-returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData& data, 
-                                std::vector<std::string>& in_list,
-                                std::string& errUser) {
+returnCode
+TaskListsWorker ::RemoveGrantTaskList(const RequestData &data,
+                                      std::vector<std::string> &in_list,
+                                      std::string &errUser) {
 
-if (data.RequestTaskListIsEmpty())
+  if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
 
   returnCode ret;
   for (int i = 0; i < in_list.size(); i++) {
-    ret = db_instance.removeAccess(data.user_key, in_list[i], data.tasklist_key);
+    ret =
+        db_instance.removeAccess(data.user_key, in_list[i], data.tasklist_key);
     if (ret != SUCCESS) {
       errUser = in_list[i];
       return ret;
@@ -262,12 +261,11 @@ if (data.RequestTaskListIsEmpty())
   return ret;
 }
 
-
-returnCode TaskListsWorker ::GetAllPublicTaskList(std::vector<std::pair<std::string, std::string>>& out_list) {
+returnCode TaskListsWorker ::GetAllPublicTaskList(
+    std::vector<std::pair<std::string, std::string>> &out_list) {
   returnCode ret = db_instance.getAllPublic(out_list);
   return ret;
 }
-
 
 bool TaskListsWorker ::Exists(const RequestData &data) {
   TasklistContent out;
