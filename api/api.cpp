@@ -308,12 +308,10 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
       returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
   }
-  data = {
-      {"name", std::move(tasklist_content.name)},
-      {"content", std::move(tasklist_content.content)},
-      {"date", std::move(tasklist_content.date)},
-      {"visibility", std::move(tasklist_content.visibility)}
-  };
+  data = {{"name", std::move(tasklist_content.name)},
+          {"content", std::move(tasklist_content.content)},
+          {"date", std::move(tasklist_content.date)},
+          {"visibility", std::move(tasklist_content.visibility)}};
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
