@@ -415,6 +415,7 @@ API_DEFINE_HTTP_HANDLER(TasksAll) {
   std::vector<std::string> out_names;
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+  API_GET_PARAM_OPTIONAL(task_req.other_user_key, other);
 
   task_req.tasklist_key = API_REQ().matches[1];
 
@@ -436,6 +437,7 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
   nlohmann::json data;
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+  API_GET_PARAM_OPTIONAL(task_req.other_user_key, other);
 
   task_req.tasklist_key = API_REQ().matches[1];
   task_req.task_key = API_REQ().matches[2];
@@ -457,7 +459,6 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
 }
 
 API_DEFINE_HTTP_HANDLER(TasksUpdate) {
-  std::string user_email;
   std::string token;
   RequestData task_req;
   TaskContent task_content;
@@ -465,6 +466,7 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
   std::string optional_name;
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+  API_GET_PARAM_OPTIONAL(task_req.other_user_key, other);
 
   task_req.task_key = API_REQ().matches[2];
   task_req.tasklist_key = API_REQ().matches[1];
@@ -495,6 +497,7 @@ API_DEFINE_HTTP_HANDLER(TasksDelete) {
   RequestData task_req;
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+  API_GET_PARAM_OPTIONAL(task_req.other_user_key, other);
 
   task_req.task_key = API_REQ().matches[2];
   task_req.tasklist_key = API_REQ().matches[1];
@@ -518,6 +521,7 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
   nlohmann::json json_body;
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+  API_GET_PARAM_OPTIONAL(task_req.other_user_key, other);
 
   task_req.tasklist_key = API_REQ().matches[1];
   json_body = API_PARSE_REQ_BODY();

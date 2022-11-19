@@ -319,9 +319,9 @@ Get the names of all the tasks in a certain task list. If a user is provided, tr
 }
 ```
 
-POST /v1/task_lists/{task_list_name}/tasks/create?user=xxx@gmail.com
+POST /v1/task_lists/{task_list_name}/tasks/create?other=xxx@gmail.com
 
-Create a new task for a user and a task list. If a user is provided, try to add task to the specified tasklist of the provided user. Task list name should be included in the path.  Task name should be included in the request body. If the name is duplicated, a number suffix will be automatically added. Token should be included in the request. 
+Create a new task for a user and a task list. If `other` is provided, try to add task to the specified tasklist of the provided user. Task list name should be included in the path.  Task name should be included in the request body. If the name is duplicated, a number suffix will be automatically added. Token should be included in the request. 
 
 - basic auth:
 
@@ -344,9 +344,9 @@ Create a new task for a user and a task list. If a user is provided, try to add 
 }
 ```
 
-POST /v1/task_lists/{task_list_name}/tasks/{task_name}?user=xxx@gmail.com
+POST /v1/task_lists/{task_list_name}/tasks/{task_name}?other=xxx@gmail.com
 
-Update one task. If a user is provided, try to update the task for the specified tasklist of the provided user. The name of the task can not be modified. Token should be included in the request. 
+Update one task. If `other` is provided, try to update the task for the specified tasklist of the provided user. The name of the task can not be modified. Token should be included in the request. 
 
 - basic auth:
 
@@ -369,9 +369,9 @@ Update one task. If a user is provided, try to update the task for the specified
 }
 ```
 
-DEL /v1/task_lists/{task_list_name}/tasks/{task_name}?user=xxx@gmail.com
+DEL /v1/task_lists/{task_list_name}/tasks/{task_name}?other=xxx@gmail.com
 
-Delete a task. If a user is provided, try to delete the task from the specified tasklist of the provided user. Token should be included in the request. 
+Delete a task. If `other` is provided, try to delete the task from the specified tasklist of the provided user. Token should be included in the request. 
 
 - basic auth:
 
