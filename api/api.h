@@ -89,6 +89,12 @@ protected:
 
   API_DECLARE_HTTP_HANDLER(TasksCreate);
 
+  API_DECLARE_HTTP_HANDLER(ShareGet);
+
+  API_DECLARE_HTTP_HANDLER(ShareCreate);
+
+  API_DECLARE_HTTP_HANDLER(ShareDelete);
+
   API_DECLARE_HTTP_HANDLER(Health);
 
 private:
@@ -103,3 +109,5 @@ private:
       invalid_tokens; /* Not a good method, refactor it later */
   std::mutex invalid_tokens_lock;
 };
+
+#undef API_DECLARE_HTTP_HANDLER

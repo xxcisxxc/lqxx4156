@@ -6,26 +6,34 @@
  * @copyright Copyright (c) 2022
  *
  */
+#include "api/requestData.h"
+#include "api/tasklistContent.h"
+#include "db/DB.h"
 #include "nlohmann/json_fwd.hpp"
 #include <algorithm>
 #include <api/api.h>
 #include <common/utils.h>
 #include <iostream>
+#include <iterator>
 #include <jwt/jwt.hpp>
 #include <liboauthcpp/src/base64.h>
 #include <memory>
 #include <mutex>
 #include <utility>
 
-#define API_DEFINE_HTTP_HANDLER(name, req, res)                                \
-  void Api::name(const httplib::Request &req, httplib::Response &res) noexcept
+#define API_REQ() __api_req_x92k_no_conflict
+#define API_RES() __api_res_s8iw_no_conflict
+
+#define API_DEFINE_HTTP_HANDLER(name)                                          \
+  void Api::name(const httplib::Request &API_REQ(),                            \
+                 httplib::Response &API_RES()) noexcept
 
 #define API_ADD_HTTP_HANDLER(server, path, method, func)                       \
   do {                                                                         \
-    (server)->method(                                                          \
-        (path), [this](const httplib::Request &req, httplib::Response &res) {  \
-          this->func(req, res);                                                \
-        });                                                                    \
+    (server)->method((path), [this](const httplib::Request &API_REQ(),         \
+                                    httplib::Response &API_RES()) {            \
+      this->func(API_REQ(), API_RES());                                        \
+    });                                                                        \
   } while (false)
 
 inline void BuildHttpRespBody(nlohmann::json *js) { return; }
@@ -41,35 +49,35 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
   do {                                                                         \
     nlohmann::json result;                                                     \
     BuildHttpRespBody(&result, __VA_ARGS__);                                   \
-    res.status = (code);                                                       \
-    res.set_content(result.dump(), "text/plain");                              \
+    API_RES().status = (code);                                                 \
+    API_RES().set_content(result.dump(), "text/plain");                        \
     return;                                                                    \
   } while (false)
 
-#define API_PARSE_REQ_BODY(req)                                                \
+#define API_PARSE_REQ_BODY()                                                   \
   ({                                                                           \
     nlohmann::json json_body;                                                  \
     try {                                                                      \
-      json_body = nlohmann::json::parse((req).body);                           \
+      json_body = nlohmann::json::parse((API_REQ()).body);                     \
     } catch (...) {                                                            \
       API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");    \
     }                                                                          \
     std::move(json_body);                                                      \
   })
 
-#define API_GET_JSON_REQUIRED(json_body, target, field, type)                  \
+#define API_GET_JSON_REQUIRED(json_body, target, field)                        \
   do {                                                                         \
     if ((json_body).find(#field) == (json_body).end()) {                       \
       API_RETURN_HTTP_RESP(500, "msg",                                         \
                            "failed missing required field " #field);           \
     }                                                                          \
-    (target) = (json_body).at(#field).get<type>();                             \
+    (target) = (json_body).at(#field);                                         \
   } while (false)
 
-#define API_GET_JSON_OPTIONAL(json_body, target, field, type)                  \
+#define API_GET_JSON_OPTIONAL(json_body, target, field)                        \
   do {                                                                         \
     if ((json_body).find(#field) != (json_body).end()) {                       \
-      (target) = (json_body).at(#field).get<type>();                           \
+      (target) = (json_body).at(#field);                                       \
     }                                                                          \
   } while (false)
 
@@ -143,8 +151,8 @@ DecodeTokenFromBasicAuth(const std::string &auth) noexcept {
 
 #define API_CHECK_REQUEST_TOKEN(user_email, token)                             \
   do {                                                                         \
-    const auto auth_header = req.headers.find("Authorization");                \
-    if (auth_header == req.headers.cend() ||                                   \
+    const auto auth_header = API_REQ().headers.find("Authorization");          \
+    if (auth_header == API_REQ().headers.cend() ||                             \
         (user_email = DecodeEmailFromToken(                                    \
              token = DecodeTokenFromBasicAuth(auth_header->second),            \
              token_secret_key))                                                \
@@ -191,14 +199,14 @@ Api::Api(std::shared_ptr<Users> _users,
 
 Api::~Api() { Stop(); }
 
-API_DEFINE_HTTP_HANDLER(UsersRegister, req, res) {
+API_DEFINE_HTTP_HANDLER(UsersRegister) {
   std::string user_name;
   std::string user_passwd;
   std::string user_email;
   nlohmann::json json_body;
 
-  const auto auth_header = req.headers.find("Authorization");
-  if (auth_header == req.headers.cend() ||
+  const auto auth_header = API_REQ().headers.find("Authorization");
+  if (auth_header == API_REQ().headers.cend() ||
       !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email,
                                            &user_passwd)) {
     API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");
@@ -208,8 +216,8 @@ API_DEFINE_HTTP_HANDLER(UsersRegister, req, res) {
     API_RETURN_HTTP_RESP(500, "msg", "failed no email or password");
   }
 
-  json_body = API_PARSE_REQ_BODY(req);
-  API_GET_JSON_OPTIONAL(json_body, user_name, name, std::string);
+  json_body = API_PARSE_REQ_BODY();
+  API_GET_JSON_OPTIONAL(json_body, user_name, name);
 
   // check if user email is duplicated
   if (users->DuplicatedEmail(UserInfo("", user_email, ""))) {
@@ -224,12 +232,12 @@ API_DEFINE_HTTP_HANDLER(UsersRegister, req, res) {
   }
 }
 
-API_DEFINE_HTTP_HANDLER(UsersLogin, req, res) {
+API_DEFINE_HTTP_HANDLER(UsersLogin) {
   std::string user_passwd;
   std::string user_email;
 
-  const auto auth_header = req.headers.find("Authorization");
-  if (auth_header == req.headers.cend() ||
+  const auto auth_header = API_REQ().headers.find("Authorization");
+  if (auth_header == API_REQ().headers.cend() ||
       !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email,
                                            &user_passwd)) {
     API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");
@@ -252,7 +260,7 @@ API_DEFINE_HTTP_HANDLER(UsersLogin, req, res) {
   }
 }
 
-API_DEFINE_HTTP_HANDLER(UsersLogout, req, res) {
+API_DEFINE_HTTP_HANDLER(UsersLogout) {
   std::string user_email;
   std::string token;
   API_CHECK_REQUEST_TOKEN(user_email, token);
@@ -266,48 +274,50 @@ API_DEFINE_HTTP_HANDLER(UsersLogout, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsAll, req, res) {
+API_DEFINE_HTTP_HANDLER(TaskListsAll) {
   std::string user_email;
   std::string token;
+  RequestData tasklist_req;
+  std::vector<std::string> out_names;
+  nlohmann::json data;
+
   API_CHECK_REQUEST_TOKEN(user_email, token);
 
   /* Get all task lists */
-  RequestData tasklist_req;
-  std::vector<std::string> out_names;
   tasklist_req.user_key = user_email;
   if (tasklists_worker->GetAllTasklist(tasklist_req, out_names) !=
       returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
   }
-  nlohmann::json data;
   std::for_each(out_names.cbegin(), out_names.cend(),
                 [&data](auto &name) { data.push_back(std::move(name)); });
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsGet, req, res) {
-  std::string user_email;
+API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   std::string token;
-  API_CHECK_REQUEST_TOKEN(user_email, token);
-
-  /* Get one certain task list */
   RequestData tasklist_req;
   TasklistContent tasklist_content;
-  tasklist_req.user_key = user_email;
-  tasklist_req.tasklist_key = req.matches[1];
+  nlohmann::json data;
+
+  API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
+
+  /* Get one certain task list */
+  tasklist_req.tasklist_key = API_REQ().matches[1];
   if (tasklists_worker->Query(tasklist_req, tasklist_content) !=
       returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
   }
-  nlohmann::json data{
-      {"name", tasklist_content.name},
-      {"content", tasklist_content.content},
-      {"date", tasklist_content.date},
+  data = {
+      {"name", std::move(tasklist_content.name)},
+      {"content", std::move(tasklist_content.content)},
+      {"date", std::move(tasklist_content.date)},
+      {"visibility", std::move(tasklist_content.visibility)}
   };
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsUpdate, req, res) {
+API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   std::string token;
   RequestData tasklist_req;
   TasklistContent tasklist_content;
@@ -316,18 +326,18 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate, req, res) {
 
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
-  tasklist_req.tasklist_key = req.matches[1];
-  json_body = API_PARSE_REQ_BODY(req);
+  tasklist_req.tasklist_key = API_REQ().matches[1];
+  json_body = API_PARSE_REQ_BODY();
 
-  API_GET_JSON_OPTIONAL(json_body, optional_name, name, std::string);
+  API_GET_JSON_OPTIONAL(json_body, optional_name, name);
 
   if (!optional_name.empty() && optional_name != tasklist_req.tasklist_key) {
     API_RETURN_HTTP_RESP(500, "msg", "failed tasklist name can not be changed");
   }
 
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content,
-                        std::string);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date, std::string);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.visibility, visibility);
 
   if (tasklists_worker->Revise(tasklist_req, tasklist_content) !=
       returnCode::SUCCESS) {
@@ -337,12 +347,13 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsDelete, req, res) {
+API_DEFINE_HTTP_HANDLER(TaskListsDelete) {
   std::string token;
   RequestData tasklist_req;
+
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
-  tasklist_req.tasklist_key = req.matches[1];
+  tasklist_req.tasklist_key = API_REQ().matches[1];
 
   if (tasklists_worker->Delete(tasklist_req) != returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed delete tasklist");
@@ -351,7 +362,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsDelete, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TaskListsCreate, req, res) {
+API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
   std::string token;
   std::string out_tasklist_name;
   RequestData tasklist_req;
@@ -360,14 +371,13 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate, req, res) {
 
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
-  json_body = API_PARSE_REQ_BODY(req);
+  json_body = API_PARSE_REQ_BODY();
 
-  API_GET_JSON_REQUIRED(json_body, tasklist_req.tasklist_key, name,
-                        std::string);
-  API_GET_JSON_REQUIRED(json_body, tasklist_content.name, name, std::string);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content,
-                        std::string);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date, std::string);
+  API_GET_JSON_REQUIRED(json_body, tasklist_req.tasklist_key, name);
+  API_GET_JSON_REQUIRED(json_body, tasklist_content.name, name);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date);
+  API_GET_JSON_OPTIONAL(json_body, tasklist_content.visibility, visibility);
 
   if (tasklists_worker->Create(tasklist_req, tasklist_content,
                                out_tasklist_name) != returnCode::SUCCESS) {
@@ -377,17 +387,16 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "name", out_tasklist_name);
 }
 
-API_DEFINE_HTTP_HANDLER(TasksAll, req, res) {
-  std::string user_email;
+API_DEFINE_HTTP_HANDLER(TasksAll) {
   std::string token;
-  std::string tasklist_name = req.matches[1];
-  API_CHECK_REQUEST_TOKEN(user_email, token);
-
-  /* Get all tasks. */
   RequestData task_req;
   std::vector<std::string> out_names;
-  task_req.user_key = user_email;
-  task_req.tasklist_key = tasklist_name;
+
+  API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+
+  task_req.tasklist_key = API_REQ().matches[1];
+
+  /* Get all tasks. */
   if (tasks_worker->GetAllTasksName(task_req, out_names) !=
       returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
@@ -398,35 +407,34 @@ API_DEFINE_HTTP_HANDLER(TasksAll, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TasksGet, req, res) {
-  std::string user_email;
+API_DEFINE_HTTP_HANDLER(TasksGet) {
   std::string token;
-  std::string task_name = req.matches[2];
-  std::string tasklist_name = req.matches[1];
-  API_CHECK_REQUEST_TOKEN(user_email, token);
+  RequestData task_req;
+  TaskContent task_content;
+  nlohmann::json data;
 
-  if (tasklist_name.empty()) {
+  API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
+
+  task_req.tasklist_key = API_REQ().matches[1];
+  task_req.task_key = API_REQ().matches[2];
+
+  if (task_req.tasklist_key.empty()) {
     API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
   }
 
   /* Get one certain task. */
-  RequestData task_req;
-  TaskContent task_content;
-  task_req.user_key = user_email;
-  task_req.task_key = task_name;
-  task_req.tasklist_key = tasklist_name;
   if (tasks_worker->Query(task_req, task_content) != returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
   }
-  nlohmann::json data{
-      {"name", task_content.name},
-      {"content", task_content.content},
-      {"date", task_content.date},
+  data = {
+      {"name", std::move(task_content.name)},
+      {"content", std::move(task_content.content)},
+      {"date", std::move(task_content.date)},
   };
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
 
-API_DEFINE_HTTP_HANDLER(TasksUpdate, req, res) {
+API_DEFINE_HTTP_HANDLER(TasksUpdate) {
   std::string user_email;
   std::string token;
   RequestData task_req;
@@ -436,22 +444,22 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate, req, res) {
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
 
-  task_req.task_key = req.matches[2];
-  task_req.tasklist_key = req.matches[1];
+  task_req.task_key = API_REQ().matches[2];
+  task_req.tasklist_key = API_REQ().matches[1];
 
   if (task_req.tasklist_key.empty()) {
     API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
   }
 
-  json_body = API_PARSE_REQ_BODY(req);
-  API_GET_JSON_OPTIONAL(json_body, optional_name, name, std::string);
+  json_body = API_PARSE_REQ_BODY();
+  API_GET_JSON_OPTIONAL(json_body, optional_name, name);
 
   if (!optional_name.empty() && optional_name != task_req.task_key) {
     API_RETURN_HTTP_RESP(500, "msg", "failed task name can not be changed");
   }
 
-  API_GET_JSON_OPTIONAL(json_body, task_content.content, content, std::string);
-  API_GET_JSON_OPTIONAL(json_body, task_content.date, date, std::string);
+  API_GET_JSON_OPTIONAL(json_body, task_content.content, content);
+  API_GET_JSON_OPTIONAL(json_body, task_content.date, date);
 
   if (tasks_worker->Revise(task_req, task_content) != returnCode::SUCCESS) {
     API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
@@ -460,16 +468,14 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TasksDelete, req, res) {
-  std::string user_email;
+API_DEFINE_HTTP_HANDLER(TasksDelete) {
   std::string token;
   RequestData task_req;
 
-  API_CHECK_REQUEST_TOKEN(user_email, token);
+  API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
 
-  task_req.user_key = user_email;
-  task_req.task_key = req.matches[2];
-  task_req.tasklist_key = req.matches[1];
+  task_req.task_key = API_REQ().matches[2];
+  task_req.tasklist_key = API_REQ().matches[1];
 
   if (task_req.tasklist_key.empty()) {
     API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
@@ -482,7 +488,7 @@ API_DEFINE_HTTP_HANDLER(TasksDelete, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
-API_DEFINE_HTTP_HANDLER(TasksCreate, req, res) {
+API_DEFINE_HTTP_HANDLER(TasksCreate) {
   std::string token;
   std::string out_task_name;
   RequestData task_req;
@@ -491,12 +497,12 @@ API_DEFINE_HTTP_HANDLER(TasksCreate, req, res) {
 
   API_CHECK_REQUEST_TOKEN(task_req.user_key, token);
 
-  task_req.tasklist_key = req.matches[1];
-  json_body = API_PARSE_REQ_BODY(req);
-  API_GET_JSON_REQUIRED(json_body, task_req.task_key, name, std::string);
-  API_GET_JSON_REQUIRED(json_body, task_content.name, name, std::string);
-  API_GET_JSON_OPTIONAL(json_body, task_content.content, content, std::string);
-  API_GET_JSON_OPTIONAL(json_body, task_content.date, date, std::string);
+  task_req.tasklist_key = API_REQ().matches[1];
+  json_body = API_PARSE_REQ_BODY();
+  API_GET_JSON_REQUIRED(json_body, task_req.task_key, name);
+  API_GET_JSON_REQUIRED(json_body, task_content.name, name);
+  API_GET_JSON_OPTIONAL(json_body, task_content.content, content);
+  API_GET_JSON_OPTIONAL(json_body, task_content.date, date);
 
   if (tasks_worker->Create(task_req, task_content, out_task_name) !=
       returnCode::SUCCESS) {
@@ -506,9 +512,104 @@ API_DEFINE_HTTP_HANDLER(TasksCreate, req, res) {
   API_RETURN_HTTP_RESP(200, "msg", "success", "name", out_task_name);
 }
 
-API_DEFINE_HTTP_HANDLER(Health, req, res) {
+API_DEFINE_HTTP_HANDLER(ShareGet) {
+  std::string token;
+  RequestData share_info_req;
+  bool is_public;
+  std::vector<shareInfo> share_info;
+  nlohmann::json data;
+
+  API_CHECK_REQUEST_TOKEN(share_info_req.user_key, share_info_req.tasklist_key);
+  share_info_req.tasklist_key = API_REQ().matches[1];
+
+  if (tasklists_worker->GetAllGrantTaskList(share_info_req, share_info,
+                                            is_public) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed get share info");
+  }
+
+  if (is_public) {
+    API_RETURN_HTTP_RESP(200, "msg", "success", "data", "task list is public");
+  }
+
+  std::transform(share_info.begin(), share_info.end(), std::back_inserter(data),
+                 [](shareInfo &info) {
+                   return nlohmann::json{
+                       {"user", std::move(info.user_name)},
+                       {"permission", info.permission ? "write" : "read"}};
+                 });
+
+  API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
+}
+
+API_DEFINE_HTTP_HANDLER(ShareCreate) {
+  std::string token;
+  RequestData share_create_req;
+  std::vector<shareInfo> share_info;
+  std::string err_user;
+  nlohmann::json json_body;
+  nlohmann::json user_permission;
+
+  API_CHECK_REQUEST_TOKEN(share_create_req.user_key, token);
+  json_body = API_PARSE_REQ_BODY();
+  share_create_req.tasklist_key = API_REQ().matches[1];
+
+  API_GET_JSON_REQUIRED(json_body, user_permission, user_permission);
+
+  if (!user_permission.is_array()) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed user_permission must be array");
+  }
+
+  /* Do not want to use for-loop, but API_GET_JSON_REQUIRED can not be used in
+   * lambda. * Bad Bad C++. */
+  for (auto &json_entry : user_permission) {
+    share_info.emplace_back();
+    share_info.back().task_list_name = API_REQ().matches[1];
+    API_GET_JSON_REQUIRED(json_entry, share_info.back().user_name, user);
+    API_GET_JSON_REQUIRED(json_entry, share_info.back().permission, permission);
+  }
+
+  if (tasklists_worker->ReviseGrantTaskList(share_create_req, share_info,
+                                            err_user) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg",
+                         err_user.empty()
+                             ? "falied all users"
+                             : "failed last updated user is " + err_user);
+  }
+
+  API_RETURN_HTTP_RESP(200, "msg", "success");
+}
+
+API_DEFINE_HTTP_HANDLER(ShareDelete) {
+  std::string token;
+  RequestData share_delete_req;
+  std::string err_user;
+  std::vector<std::string> user_str_list;
+  nlohmann::json json_body;
+  nlohmann::json user_json_list;
+
+  API_CHECK_REQUEST_TOKEN(share_delete_req.user_key, token);
+
+  share_delete_req.tasklist_key = API_REQ().matches[1];
+  json_body = API_PARSE_REQ_BODY();
+  API_GET_JSON_REQUIRED(json_body, user_json_list, user_list);
+
+  std::transform(user_json_list.cbegin(), user_json_list.cend(),
+                 std::back_inserter(user_str_list), [](auto &&x) { return x; });
+
+  if (tasklists_worker->RemoveGrantTaskList(share_delete_req, user_str_list,
+                                            err_user) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg",
+                         err_user.empty()
+                             ? "failed all users"
+                             : "failed last deleted user is " + err_user);
+  }
+
+  API_RETURN_HTTP_RESP(200, "msg", "success");
+}
+
+API_DEFINE_HTTP_HANDLER(Health) {
   try {
-    std::string numbers = req.matches[1];
+    std::string numbers = API_REQ().matches[1];
     API_RETURN_HTTP_RESP(200, "msg", "success", "data", numbers);
   } catch (...) {
     API_RETURN_HTTP_RESP(200, "msg", "success");
@@ -535,6 +636,9 @@ void Api::Run(const std::string &host, uint32_t port) {
                        TasksUpdate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Delete,
                        TasksDelete);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Get, ShareGet);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+)/create)", Post, ShareCreate);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Delete, ShareDelete);
   API_ADD_HTTP_HANDLER(svr, R"(/health/(\d+))", Get, Health);
 
   svr->listen(host, port);
@@ -545,3 +649,14 @@ void Api::Stop() {
     svr->stop();
   }
 }
+
+#undef API_ADD_HTTP_HANDLER
+#undef API_DEFINE_HTTP_HANDLER
+#undef API_RETURN_HTTP_RESP
+#undef API_CHECK_REQUEST_TOKEN
+#undef API_GET_JSON_REQUIRED
+#undef API_GET_JSON_OPTIONAL
+#undef API_PARSE_REQ_BODY
+#undef API_GET_OPTIONAL_FROM_REQ_HEADER
+#undef API_REQ
+#undef API_RES

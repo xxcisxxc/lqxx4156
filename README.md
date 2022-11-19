@@ -400,8 +400,21 @@ Create/Update sharing status for a specific tasklist, ie share the tasklist to o
 - body
 ```
 {
-    "user_lists": [email1, email2, email3 ...],
-	"read_write": [1, 0, 0 ...]
+    "user_permission": 
+    [
+        {
+            "user": "a",
+            "permission": true
+        },
+        {
+            "user": "b",
+            "permission": false
+        },
+        {
+            "user": "c",
+            "permission": true
+        }
+    ]
 }
 ```
 
@@ -426,7 +439,7 @@ Delete sharing status for a tasklist, ie stop sharing of tasklist to the provide
 - body
 ```
 {
-    "user_lists": [email1, email2, email3 ...]
+    "user_list": [email1, email2, email3 ...]
 }
 ```
 

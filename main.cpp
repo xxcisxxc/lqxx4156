@@ -18,7 +18,7 @@ int main(void) {
   const std::string db_host = "neo4j://neo4j:hello4156@localhost:7687";
   auto db_instance = std::make_shared<DB>(db_host);
 
-  API api(nullptr, nullptr, nullptr, db_instance, nullptr);
+  Api api(nullptr, nullptr, nullptr, db_instance, nullptr);
   api.Run(api_host, api_port);
   return 0;
 }
