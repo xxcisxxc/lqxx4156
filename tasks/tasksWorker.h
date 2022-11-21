@@ -13,7 +13,7 @@ class TaskListsWorker; // forward definition
  *
  */
 class TasksWorker {
-private:
+protected:
   /* data */
   /**
    * @brief DB object

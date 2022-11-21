@@ -1,3 +1,5 @@
+#include "api/tasklistContent.h"
+#include "tasks/tasksWorker.h"
 #include <algorithm>
 #include <api/api.h>
 #include <db/DB.h>
@@ -33,15 +35,35 @@ private:
   bool duplicatedemail_return;
 };
 
+class MockedTasksWorker;
+
 class MockedTasklistsWorker : public TaskListsWorker {
+
+  friend MockedTasksWorker;
+
 public:
   MockedTasklistsWorker(DB &_db) : TaskListsWorker(_db) {}
 
   ~MockedTasklistsWorker() {}
 
   returnCode Query(const RequestData &data, TasklistContent &out) override {
-    const auto it = mocked_data[data.user_key].find(data.tasklist_key);
-    if (it == mocked_data[data.user_key].cend()) {
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      auto share_it = mocked_share[data.other_user_key].find(data.tasklist_key);
+      if (share_it == mocked_share[data.other_user_key].end()) {
+        return returnCode::ERR_NO_NODE;
+      }
+      if (std::find_if(share_it->second.begin(), share_it->second.end(),
+                       [&data](shareInfo &info) {
+                         return info.user_name == data.user_key;
+                       }) == share_it->second.end()) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    const auto it = mocked_data[query_user_key].find(data.tasklist_key);
+    if (it == mocked_data[query_user_key].cend()) {
       return returnCode::ERR_NO_NODE;
     }
     out = it->second;
@@ -57,6 +79,33 @@ public:
     std::transform(it->second.cbegin(), it->second.cend(),
                    std::back_inserter(outNames),
                    [](auto &&x) { return x.first; });
+    return returnCode::SUCCESS;
+  }
+
+  returnCode GetAllAccessTaskList(const RequestData &data,
+                                  std::vector<shareInfo> &out_list) override {
+    if (data.RequestUserIsEmpty()) {
+      return returnCode::ERR_KEY;
+    }
+    for (const auto &ut : mocked_share) {
+      const auto &user = ut.first;
+      const auto &tasklists = ut.second;
+      for (const auto &ts : tasklists) {
+        const auto &tasklist = ts.first;
+        const auto &share_list = ts.second;
+        auto it = std::find_if(share_list.begin(), share_list.end(),
+                               [&data](const shareInfo &info) {
+                                 return info.user_name == data.user_key;
+                               });
+        if (it != share_list.end()) {
+          shareInfo info;
+          info.task_list_name = it->task_list_name;
+          info.user_name = user;
+          info.permission = it->permission;
+          out_list.push_back(std::move(info));
+        }
+      }
+    }
     return returnCode::SUCCESS;
   }
 
@@ -79,8 +128,26 @@ public:
   }
 
   returnCode Revise(const RequestData &data, TasklistContent &in) override {
-    auto it = mocked_data[data.user_key].find(data.tasklist_key);
-    if (it == mocked_data[data.user_key].end()) {
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      auto share_it = mocked_share[data.other_user_key].find(data.tasklist_key);
+      if (share_it == mocked_share[data.other_user_key].end()) {
+        return returnCode::ERR_NO_NODE;
+      }
+      auto share_info_it = std::find_if(
+          share_it->second.begin(), share_it->second.end(),
+          [&data](shareInfo &info) { return info.user_name == data.user_key; });
+      if (share_info_it == share_it->second.end()) {
+        return returnCode::ERR_ACCESS;
+      }
+      if (share_info_it->permission == false) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    auto it = mocked_data[query_user_key].find(data.tasklist_key);
+    if (it == mocked_data[query_user_key].end()) {
       return returnCode::ERR_NO_NODE;
     }
     if (!in.content.empty()) {
@@ -106,11 +173,98 @@ public:
            mocked_data[data.user_key].end();
   }
 
+  returnCode GetAllGrantTaskList(const RequestData &data,
+                                 std::vector<shareInfo> &out_list,
+                                 bool &isPublic) override {
+    if (data.RequestUserIsEmpty() || data.RequestTaskListIsEmpty()) {
+      return returnCode::ERR_RFIELD;
+    }
+    auto user_it = mocked_share.find(data.user_key);
+    if (user_it == mocked_share.end()) {
+      return returnCode::ERR_NO_NODE;
+    }
+    auto tasklist_it = user_it->second.find(data.tasklist_key);
+    if (tasklist_it == user_it->second.end()) {
+      return returnCode::ERR_NO_NODE;
+    }
+
+    isPublic = false;
+
+    if (mocked_data[data.user_key][data.tasklist_key].visibility == "public") {
+      isPublic = true;
+      return returnCode::SUCCESS;
+    }
+
+    if (mocked_data[data.user_key][data.tasklist_key].visibility == "private") {
+      return returnCode::ERR_ACCESS;
+    }
+
+    out_list = tasklist_it->second;
+    return returnCode::SUCCESS;
+  }
+
+  returnCode ReviseGrantTaskList(const RequestData &data,
+                                 std::vector<shareInfo> &in_list,
+                                 std::string &errUser) override {
+
+    if (data.RequestTaskListIsEmpty() || data.RequestUserIsEmpty()) {
+      return ERR_KEY;
+    }
+
+    if (mocked_data[data.user_key].find(data.tasklist_key) ==
+        mocked_data[data.user_key].end()) {
+      return returnCode::ERR_NO_NODE;
+    }
+
+    auto &share_list = mocked_share[data.user_key][data.tasklist_key];
+    for (const auto &share : in_list) {
+      auto it = std::find_if(
+          share_list.begin(), share_list.end(),
+          [&share](shareInfo &x) { return x.user_name == share.user_name; });
+      if (it == share_list.end()) {
+        share_list.push_back(share);
+      } else {
+        (*it) = share;
+      }
+    }
+
+    return returnCode::SUCCESS;
+  }
+
+  returnCode RemoveGrantTaskList(const RequestData &data,
+                                 std::vector<std::string> &in_list,
+                                 std::string &errUser) override {
+
+    if (data.RequestTaskListIsEmpty() || data.RequestUserIsEmpty()) {
+      return returnCode::ERR_KEY;
+    }
+
+    if (mocked_data[data.user_key].find(data.tasklist_key) ==
+        mocked_data[data.user_key].end()) {
+      return returnCode::ERR_NO_NODE;
+    }
+
+    auto &share_list = mocked_share[data.user_key][data.tasklist_key];
+    for (const auto &user : in_list) {
+      auto it =
+          std::find_if(share_list.begin(), share_list.end(),
+                       [&user](shareInfo &x) { return x.user_name == user; });
+      if (it != share_list.end()) {
+        share_list.erase(it);
+      }
+    }
+
+    return returnCode::SUCCESS;
+  }
+
   void Clear() { mocked_data.clear(); }
 
 private:
   /* (user_key, tasklist_key) -> TasklistContent */
   std::map<std::string, std::map<std::string, TasklistContent>> mocked_data;
+  /* (user_key, tasklsit_key) -> shareInfo */
+  std::map<std::string, std::map<std::string, std::vector<shareInfo>>>
+      mocked_share;
 };
 
 class MockedTasksWorker : public TasksWorker {
@@ -121,7 +275,16 @@ public:
   ~MockedTasksWorker() {}
 
   returnCode Query(const RequestData &data, TaskContent &out) override {
-    const auto &mocked_tasks = mocked_data[data.user_key][data.tasklist_key];
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    const auto &mocked_tasks = mocked_data[query_user_key][data.tasklist_key];
     const auto it = mocked_tasks.find(data.task_key);
     if (it == mocked_tasks.cend()) {
       return returnCode::ERR_NO_NODE;
@@ -132,8 +295,17 @@ public:
 
   returnCode GetAllTasksName(const RequestData &data,
                              std::vector<std::string> &outNames) override {
-    const auto it = mocked_data[data.user_key].find(data.tasklist_key);
-    if (it == mocked_data[data.user_key].cend()) {
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    const auto it = mocked_data[query_user_key].find(data.tasklist_key);
+    if (it == mocked_data[query_user_key].cend()) {
       return returnCode::ERR_NO_NODE;
     }
     std::transform(it->second.cbegin(), it->second.cend(),
@@ -144,7 +316,16 @@ public:
 
   returnCode Create(const RequestData &data, TaskContent &in,
                     std::string &outTasklistName) override {
-    auto &mocked_tasks = mocked_data[data.user_key][data.tasklist_key];
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    auto &mocked_tasks = mocked_data[query_user_key][data.tasklist_key];
     std::string task_key = data.task_key;
     const auto it = mocked_tasks.find(data.tasklist_key);
     if (it != mocked_tasks.cend()) {
@@ -161,7 +342,16 @@ public:
   }
 
   returnCode Revise(const RequestData &data, TaskContent &in) override {
-    auto &mocked_tasks = mocked_data[data.user_key][data.tasklist_key];
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    auto &mocked_tasks = mocked_data[query_user_key][data.tasklist_key];
     auto it = mocked_tasks.find(data.task_key);
     if (it == mocked_tasks.end()) {
       return returnCode::ERR_NO_NODE;
@@ -172,17 +362,53 @@ public:
     if (!in.date.empty()) {
       it->second.date = in.date;
     }
+    if (!in.startDate.empty()) {
+      it->second.startDate = in.startDate;
+    }
     return returnCode::SUCCESS;
   }
 
   returnCode Delete(const RequestData &data) override {
-    auto &mocked_tasks = mocked_data[data.user_key][data.tasklist_key];
+    std::string query_user_key = data.user_key;
+    if (!data.other_user_key.empty()) {
+      if (!CheckWritePerm(data.user_key, data.other_user_key,
+                          data.tasklist_key)) {
+        return returnCode::ERR_ACCESS;
+      }
+      query_user_key = data.other_user_key;
+    }
+
+    auto &mocked_tasks = mocked_data[query_user_key][data.tasklist_key];
     auto it = mocked_tasks.find(data.task_key);
     if (it == mocked_tasks.end()) {
       return returnCode::ERR_NO_NODE;
     }
     mocked_tasks.erase(it);
     return returnCode::SUCCESS;
+  }
+
+  bool CheckWritePerm(const std::string &user, const std::string &other_user,
+                      const std::string &tasklist) {
+    MockedTasklistsWorker *mocked_tasklists_worker =
+        dynamic_cast<MockedTasklistsWorker *>(taskListsWorker);
+    if (!mocked_tasklists_worker) {
+      return false;
+    }
+    const auto &shared_list = mocked_tasklists_worker->mocked_share;
+    auto tasklists_it = shared_list.find(other_user);
+    if (tasklists_it == shared_list.end()) {
+      return false;
+    }
+    auto sharelist_it = tasklists_it->second.find(tasklist);
+    if (sharelist_it == tasklists_it->second.end()) {
+      return false;
+    }
+    auto shareinfo_it =
+        std::find_if(sharelist_it->second.begin(), sharelist_it->second.end(),
+                     [&user](const shareInfo &info) {
+                       return info.user_name == user && info.permission == true;
+                     });
+    return shareinfo_it != sharelist_it->second.end();
   }
 
   void Clear() { mocked_data.clear(); }
@@ -203,9 +429,9 @@ protected:
     mocked_tasklists_worker =
         std::make_shared<MockedTasklistsWorker>(*mocked_db);
     mocked_tasks_worker = std::make_shared<MockedTasksWorker>(
-        mocked_db.get(), (TaskListsWorker *)(mocked_tasks_worker.get()));
+        mocked_db.get(), (TaskListsWorker *)(mocked_tasklists_worker.get()));
 
-    api = std::make_shared<API>(mocked_users, mocked_tasklists_worker,
+    api = std::make_shared<Api>(mocked_users, mocked_tasklists_worker,
                                 mocked_tasks_worker, mocked_db);
     running_server = std::make_shared<std::thread>(
         [&]() { this->api->Run(this->test_host, this->test_port); });
@@ -220,7 +446,7 @@ protected:
   }
 
 protected:
-  std::shared_ptr<API> api;
+  std::shared_ptr<Api> api;
   std::shared_ptr<MockedUsers> mocked_users;
   std::shared_ptr<MockedTasklistsWorker> mocked_tasklists_worker;
   std::shared_ptr<MockedTasksWorker> mocked_tasks_worker;
@@ -770,6 +996,512 @@ TEST_F(APITest, Tasks) {
         "/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("failed"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    auto result = client.Get("/v1/task_lists/tasklists_test_name_1/tasks");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_EQ(result->body.find("tasks_test_name_1"), std::string::npos);
+    EXPECT_NE(result->body.find("tasks_test_name_2"), std::string::npos);
+  }
+
+  mocked_tasklists_worker->Clear();
+  mocked_tasks_worker->Clear();
+}
+
+TEST_F(APITest, Share) {
+  std::string token;
+  std::string token_test_user_1;
+  std::string token_test_user_2;
+  std::string token_test_user_3;
+  mocked_tasklists_worker->Clear();
+  mocked_tasks_worker->Clear();
+
+  /* Create user tokens and task lists */
+
+  {
+    httplib::Client client(test_host, test_port);
+    nlohmann::json req_body;
+    client.set_basic_auth("Alice@columbia.edu", "123456");
+    mocked_users->SetValidateResult(true);
+    auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("token"), std::string::npos);
+
+    try {
+      token = nlohmann::json::parse(result->body).at("token");
+    } catch (std::exception &e) {
+      EXPECT_TRUE(false);
+    }
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    nlohmann::json req_body;
+    client.set_basic_auth("test_user_1", "123456");
+    mocked_users->SetValidateResult(true);
+    auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("token"), std::string::npos);
+
+    try {
+      token_test_user_1 = nlohmann::json::parse(result->body).at("token");
+    } catch (std::exception &e) {
+      EXPECT_TRUE(false);
+    }
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    nlohmann::json req_body;
+    client.set_basic_auth("test_user_2", "123456");
+    mocked_users->SetValidateResult(true);
+    auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("token"), std::string::npos);
+
+    try {
+      token_test_user_2 = nlohmann::json::parse(result->body).at("token");
+    } catch (std::exception &e) {
+      EXPECT_TRUE(false);
+    }
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    nlohmann::json req_body;
+    client.set_basic_auth("test_user_3", "123456");
+    mocked_users->SetValidateResult(true);
+    auto result = client.Post("/v1/users/login", req_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("token"), std::string::npos);
+
+    try {
+      token_test_user_3 = nlohmann::json::parse(result->body).at("token");
+    } catch (std::exception &e) {
+      EXPECT_TRUE(false);
+    }
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["name"] = "tasklists_test_name_1";
+    request_body["content"] = "some_content_1";
+    request_body["date"] = "some_date_1";
+    request_body["visibility"] = "shared";
+    auto result =
+        client.Post("/v1/task_lists/create", request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["name"] = "tasklists_test_name_2";
+    request_body["content"] = "some_content_2";
+    request_body["date"] = "some_date_2";
+    request_body["visibility"] = "public";
+    auto result =
+        client.Post("/v1/task_lists/create", request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["name"] = "tasklists_test_name_3";
+    request_body["content"] = "some_content_3";
+    request_body["date"] = "some_date_3";
+    request_body["visibility"] = "private";
+    auto result =
+        client.Post("/v1/task_lists/create", request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  /* Creation test */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_permission"] = {
+        {{"user", "test_user_1"}, {"permission", true}},
+        {{"user", "test_user_2"}, {"permission", false}}};
+    auto result = client.Post("/v1/share/tasklists_test_name_1/create",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_permission"] = {
+        {{"user", "test_user_1"}, {"permission", true}},
+        {{"user", "test_user_2"}, {"permission", false}}};
+    auto result = client.Post("/v1/share/tasklists_test_name_2/create",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_permission"] = {
+        {{"user", "test_user_1"}, {"permission", true}},
+        {{"user", "test_user_2"}, {"permission", false}}};
+    auto result = client.Post("/v1/share/tasklists_test_name_3/create",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  /* Getting test */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    auto result = client.Get("/v1/share/tasklists_test_name_1");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_1"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_2"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    auto result = client.Get("/v1/share/tasklists_test_name_2");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("public"), std::string::npos);
+  }
+
+  /* Deletion test */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_list"] = {"test_user_1"};
+    auto result = client.Delete("/v1/share/tasklists_test_name_1",
+                                request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    auto result = client.Get("/v1/share/tasklists_test_name_1");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_EQ(result->body.find("test_user_1"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_2"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_permission"] = {
+        {{"user", "test_user_1"}, {"permission", true}}};
+    auto result = client.Post("/v1/share/tasklists_test_name_1/create",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    auto result = client.Get("/v1/share/tasklists_test_name_1");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_1"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_2"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_list"] = {"test_user_1", "test_user_2"};
+    auto result = client.Delete("/v1/share/tasklists_test_name_1",
+                                request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    auto result = client.Get("/v1/share/tasklists_test_name_1");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_EQ(result->body.find("test_user_1"), std::string::npos);
+    EXPECT_EQ(result->body.find("test_user_2"), std::string::npos);
+  }
+
+  /* Add back */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    request_body["user_permission"] = {
+        {{"user", "test_user_1"}, {"permission", true}},
+        {{"user", "test_user_2"}, {"permission", false}}};
+    auto result = client.Post("/v1/share/tasklists_test_name_1/create",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    nlohmann::json request_body;
+    auto result = client.Get("/v1/share/tasklists_test_name_1");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_1"), std::string::npos);
+    EXPECT_NE(result->body.find("test_user_2"), std::string::npos);
+  }
+
+  /* Task lists related */
+
+  /* Get task lists */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_2, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_3, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("failed"), std::string::npos);
+  }
+
+  /* Update task lists */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    nlohmann::json request_body;
+    request_body["content"] = "some_content_1_new";
+    request_body["date"] = "some_date_1_new";
+    auto result = client.Post(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu",
+        request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("some_content_1_new"), std::string::npos);
+    EXPECT_NE(result->body.find("some_date_1_new"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_3, "");
+    nlohmann::json request_body;
+    request_body["content"] = "some_content_3_new";
+    request_body["date"] = "some_date_3_new";
+    auto result = client.Post(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu",
+        request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("failed"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    nlohmann::json request_body;
+    request_body["visibility"] = "public"; /* Should be ignored */
+    auto result = client.Post(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu",
+        request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("shared"), std::string::npos);
+    EXPECT_EQ(result->body.find("public"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get("/v1/task_lists?share=true");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("tasklists_test_name_1"), std::string::npos);
+    EXPECT_NE(result->body.find("tasklists_test_name_2"), std::string::npos);
+    EXPECT_NE(result->body.find("tasklists_test_name_3"), std::string::npos);
+  }
+
+  /* Tasks related */
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    nlohmann::json request_body;
+    request_body["name"] = "tasks_test_name_1";
+    request_body["content"] = "some_content_1";
+    request_body["date"] = "some_date_1";
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "create?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    nlohmann::json request_body;
+    request_body["name"] = "tasks_test_name_2";
+    request_body["content"] = "some_content_2";
+    request_body["date"] = "some_date_2";
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "create?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_2, "");
+    nlohmann::json request_body;
+    request_body["name"] = "tasks_test_name_3";
+    request_body["content"] = "some_content_3";
+    request_body["date"] = "some_date_3";
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "create?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("failed"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get("/v1/task_lists/tasklists_test_name_1/tasks/"
+                             "tasks_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("tasks_test_name_1"), std::string::npos);
+    EXPECT_NE(result->body.find("some_content_1"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1/tasks?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("tasks_test_name_1"), std::string::npos);
+    EXPECT_NE(result->body.find("tasks_test_name_2"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    auto result = client.Get("/v1/task_lists/tasklists_test_name_1/tasks");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("tasks_test_name_1"), std::string::npos);
+    EXPECT_NE(result->body.find("tasks_test_name_2"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    nlohmann::json request_body;
+    request_body["content"] = "some_content_1_new";
+    request_body["date"] = "some_date_1_new";
+    auto result = client.Post("/v1/task_lists/tasklists_test_name_1/tasks/"
+                              "tasks_test_name_1?other=Alice@columbia.edu",
+                              request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token, "");
+    auto result = client.Get(
+        "/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("some_content_1_new"), std::string::npos);
+    EXPECT_NE(result->body.find("some_date_1_new"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Delete("/v1/task_lists/tasklists_test_name_1/tasks/"
+                                "tasks_test_name_1?other=Alice@columbia.edu");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
   }
 
   {

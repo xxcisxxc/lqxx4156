@@ -49,6 +49,18 @@ private:
   void Map2Content(const std::map<std::string, std::string> &task_info,
                    TasklistContent &tasklistContent);
 
+  /**
+   * @brief check permission of accessing other user's list
+   *
+   * @param srcUser the user who share the list
+   * @param dstUser the user who try to access the share
+   * @param tasklist the target tasklist
+   * @return returnCode
+   */
+  returnCode checkPermission(const std::string &srcUser,
+                             const std::string &dstUser,
+                             const std::string &tasklist, bool &permission);
+
 public:
   /**
    * @brief Construct a new Task Lists Worker object
@@ -109,6 +121,67 @@ public:
    */
   virtual returnCode GetAllTasklist(const RequestData &data,
                                     std::vector<std::string> &outNames);
+
+  /**
+   * @brief Get the all Tasklist info that are shared by others
+   *
+   * @param [in] data target user that we'd want to get all grant for
+   * @param [out] out_list vector of shareInfo with information about the users,
+   * tasklists and permissions that current user have access to
+   * @return returnCode
+   */
+  virtual returnCode GetAllAccessTaskList(const RequestData &data,
+                                          std::vector<shareInfo> &out_list);
+
+  /**
+   * @brief Get the all Tasklist info that are sharing to others
+   *
+   * @param [in] data target user and tasklist we'd want to get all grant for
+   * @param [out] out_list vector of shareInfo with information about the users
+   * who have access to the current user's tasklist
+   * @param [out] isPublic is true when the requested tasklist is public to
+   * everyone, and false otherwise
+   * @return returnCode
+   */
+  virtual returnCode GetAllGrantTaskList(const RequestData &data,
+                                         std::vector<shareInfo> &out_list,
+                                         bool &isPublic);
+
+  /**
+   * @brief Create if not exists or Revise the share status for a tasklist. It
+   * is guaranteed that all operations on users before errUser in the in_list
+   * are successful
+   *
+   * @param [in] data target tasklist that we'd want to revise share status
+   * @param [in] in_list list of shareInfo to add/revise for target tasklist
+   * @param [out] errUser the user that causes the err
+   * @return returnCode
+   */
+  virtual returnCode ReviseGrantTaskList(const RequestData &data,
+                                         std::vector<shareInfo> &in_list,
+                                         std::string &errUser);
+
+  /**
+   * @brief Delete the share for a tasklist. It is guaranteed that
+   * all deletions on users before errUser in the in_list are successful
+   *
+   * @param [in] data target tasklist that we'd want to delete share status
+   * @param [in] in_list list of users with whom to remove tasklist share
+   * @param [out] errUser the user that causes the err
+   * @return returnCode
+   */
+  virtual returnCode RemoveGrantTaskList(const RequestData &data,
+                                         std::vector<std::string> &in_list,
+                                         std::string &errUser);
+
+  /**
+   * @brief Get all public tasklists
+   *
+   * @param [out] out_list a list of (user, task_list) pair that are public
+   * @return returnCode
+   */
+  virtual returnCode GetAllPublicTaskList(
+      std::vector<std::pair<std::string, std::string>> &out_list);
 
   /**
    * @brief Check if a tasklist exists
