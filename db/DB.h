@@ -6,23 +6,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <common/errorCode.h>
 // third party library
 #include "neo4j-client.h"
-
-/**
- * @brief DB class return code
- *
- */
-enum returnCode {
-  SUCCESS,
-  ERR_UNKNOWN,  // Unknown error
-  ERR_KEY,      // No primary key or revise primary key
-  ERR_RFIELD,   // No required field (no password, etc.) or revise unmodified
-                // field
-  ERR_NO_NODE,  // No such node
-  ERR_DUP_NODE, // Duplicate node
-  ERR_ACCESS,   // Access denied
-};
 
 /**
  * @brief This class connect and interact with neo4j DB.
