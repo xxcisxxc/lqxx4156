@@ -255,7 +255,7 @@ TEST_F(TaskListTest, ReviseOwned) {
 
   std::string newName = "tasklist1";
   std::string newContent = "this is tasklist #1";
-  std::string newDate = "16/10/2022";
+  std::string newDate = "12/10/2022";
   std::string newVis = "private";
   in = TasklistContent(newName, newContent, newDate, newVis);
 
@@ -307,7 +307,7 @@ TEST_F(TaskListTest, ReviseAccess) {
 
   std::string newName = "tasklist1";
   std::string newContent = "this is tasklist #1";
-  std::string newDate = "16/10/2022";
+  std::string newDate = "12/10/2022";
   std::string newVis = "";
   in = TasklistContent(newName, newContent, newDate, newVis);
 

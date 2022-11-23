@@ -1,4 +1,5 @@
 #include "tasklistsWorker.h"
+#include "common/utils.h"
 #include <iostream>
 #include <map>
 
@@ -78,6 +79,9 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
 
   if (!in.visibility.empty() && in.visibility != "public" && in.visibility != "shared" && in.visibility != "private")
     return ERR_FORMAT;
+  
+  if (!in.date.empty() && !Common::IsDate(in.date))
+    return ERR_FORMAT;
 
   std::map<std::string, std::string> task_list_info;
   Content2Map(in, task_list_info);
@@ -111,6 +115,9 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
     return ERR_RFIELD;
 
   if (!in.visibility.empty() && in.visibility != "public" && in.visibility != "shared" && in.visibility != "private")
+    return ERR_FORMAT;
+
+  if (!in.date.empty() && !Common::IsDate(in.date))
     return ERR_FORMAT;
 
   if (!data.other_user_key.empty()) {
