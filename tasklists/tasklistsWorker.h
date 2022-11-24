@@ -165,14 +165,11 @@ public:
    * @brief Delete the share for a tasklist. It is guaranteed that
    * all deletions on users before errUser in the in_list are successful
    *
-   * @param [in] data target tasklist that we'd want to delete share status
-   * @param [in] in_list list of users with whom to remove tasklist share
-   * @param [out] errUser the user that causes the err
+   * @param [in] data target tasklists that we'd want to delete share status
    * @return returnCode
    */
-  virtual returnCode RemoveGrantTaskList(const RequestData &data,
-                                         std::vector<std::string> &in_list,
-                                         std::string &errUser);
+  virtual returnCode RemoveGrantTaskList(const RequestData &data);
+
 
   /**
    * @brief Get all public tasklists
