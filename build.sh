@@ -1,5 +1,5 @@
 sudo apt update
-sudo apt install build-essential git cmake libssl-dev autoconf libtool clang-format libcypher-parser-dev libedit-dev -y
+sudo apt install build-essential git cmake libssl-dev autoconf libtool clang-format libcypher-parser-dev libedit-dev libssl-dev -y
 git submodule update --init
 cd external/googletest && mkdir build && cd build && cmake .. && make && sudo make install && cd ../../..
 cd external/libneo4j-client && ./autogen.sh && ./configure --disable-werror && make clean check && sudo make install && cd ../../..
