@@ -23,6 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: build environment
-        run: ./build.sh
+        run: ./build.sh && mkdir build && cd build && cmake .. && make
       - name: clang-tidy check
         uses: HorstBaerbel/action-clang-tidy@1.2
