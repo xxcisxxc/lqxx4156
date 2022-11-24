@@ -1,4 +1,4 @@
-name: Static Checkings
+name: Lint Checkings
 on: [push, pull_request]
 jobs:
   formatting-check:
@@ -22,5 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: build environment
+        run: ./build.sh
       - name: clang-tidy check
         uses: HorstBaerbel/action-clang-tidy@1.2
