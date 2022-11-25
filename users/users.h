@@ -8,8 +8,8 @@
  */
 #pragma once
 
-#include <common/utils.h>
-#include <db/DB.h>
+#include "common/utils.h"
+#include "db/DB.h"
 #include <memory>
 #include <string>
 #include <type_traits>

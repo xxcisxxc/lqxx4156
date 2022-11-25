@@ -6,17 +6,17 @@
  * @copyright Copyright (c) 2022
  *
  */
-#include "api/requestData.h"
-#include "api/tasklistContent.h"
+#include "requestData.h"
+#include "tasklistContent.h"
 #include "db/DB.h"
-#include "nlohmann/json_fwd.hpp"
+#include <nlohmann/json_fwd.hpp>
 #include <algorithm>
-#include <api/api.h>
-#include <common/utils.h>
+#include "api.h"
+#include "common/utils.h"
 #include <iostream>
 #include <iterator>
 #include <jwt/jwt.hpp>
-#include <liboauthcpp/src/base64.h>
+#include "base64.h"
 #include <memory>
 #include <mutex>
 #include <utility>
