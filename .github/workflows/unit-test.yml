@@ -3,9 +3,23 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - db/**
+      - api/**
+      - users/**
+      - tasks/**
+      - tasklists/**
+      - test/**
   push:
     branches:
       - main
+    paths:
+      - db/**
+      - api/**
+      - users/**
+      - tasks/**
+      - tasklists/**
+      - test/**
 jobs:
   unit-test-db:
     runs-on: ubuntu-latest
