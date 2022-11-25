@@ -455,6 +455,10 @@ TEST(TestDB, TestGetAccess) {
   EXPECT_EQ(
       db.checkAccess(src_user_pkey, dst_user_pkey, task_list_pkey0, read_write),
       ERR_ACCESS);
+  EXPECT_EQ(
+      db.checkAccess(src_user_pkey, src_user_pkey, task_list_pkey0, read_write),
+      SUCCESS);
+  EXPECT_TRUE(read_write);
 }
 
 TEST(TestDB, TestReviseAccess) {

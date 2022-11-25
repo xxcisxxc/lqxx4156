@@ -891,6 +891,11 @@ returnCode DB::checkAccess(const std::string &src_user_pkey,
                            const std::string &dst_user_pkey,
                            const std::string &task_list_pkey,
                            bool &read_write) {
+  if (src_user_pkey == dst_user_pkey) {
+    read_write = true;
+    return SUCCESS;
+  }
+
   neo4j_connection_t *connection = connectDB();
 
   // Check User node exists - src
