@@ -24,7 +24,7 @@ jobs:
     - name: Build the tests
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: ./test/test_DB
+      run: ls && pwd
   run-test-tasks:
     runs-on: ubuntu-latest
     steps:
