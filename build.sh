@@ -4,13 +4,13 @@ sudo apt install build-essential git cmake libssl-dev autoconf libtool clang-for
 git submodule update --init
 cd external/googletest && mkdir build && cd build && cmake .. && make && sudo make install && cd ../../..
 cd external/libneo4j-client && ./autogen.sh && ./configure --disable-werror && make clean check && sudo make install && cd ../../..
-#if [ -x "$(command -v neo4j-client)" ]; then
-#    echo "Env already set"
-#else
+if neo4j-client --version; then
+    echo "Env already set"
+else
     echo "Set Env"
     echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf
     sudo ldconfig
-#fi
+fi
 if [ -x "$(command -v docker)" ]; then
     echo "Skip install docker"
 else
