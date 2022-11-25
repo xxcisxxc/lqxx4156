@@ -22,14 +22,10 @@ jobs:
           - 7687:7687
           - 7474:7474
     steps:
-    - name: Install GTest manually
-      run: git clone https://github.com/google/googletest.git -b release-1.12.1 && cd googletest && mkdir build && cd build && cmake .. && make && sudo make install
-    - name: Install libneo4j-client
-      run: sudo apt-get install libcypher-parser-dev libedit-dev && git clone https://github.com/majensen/libneo4j-client.git && cd libneo4j-client && ./autogen.sh && ./configure --disable-werror && make clean check && sudo make install
-    - name: Update Library Path
-      run: echo "/usr/local/lib" | sudo tee -a /etc/ld.so.conf && sudo ldconfig
     - uses: actions/checkout@v3
-    - name: Build the DB source
-      run: cd db && mkdir build && cd build && cmake .. && make
+    - name: Install Environment and dependencies
+      run: ./build.sh install
+    - name: Build the tests
+      run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: /home/runner/work/lqxx4156/lqxx4156/db/build/DBTest
+      run: ./test/test_DB
