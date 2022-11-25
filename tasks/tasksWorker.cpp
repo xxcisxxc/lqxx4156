@@ -1,7 +1,7 @@
 #include "tasksWorker.h"
 #include "api/taskContent.h"
-#include <iostream>
 #include "tasklists/tasklistsWorker.h"
+#include <iostream>
 
 TasksWorker::TasksWorker(DB *_db, TaskListsWorker *_taskListsWorker)
     : db(_db), taskListsWorker(_taskListsWorker) {}
