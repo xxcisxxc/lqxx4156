@@ -13,3 +13,6 @@
 [submodule "external/libneo4j-client"]
 	path = external/libneo4j-client
 	url = https://github.com/majensen/libneo4j-client.git
+[submodule "external/cpp-httplib"]
+	path = external/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
