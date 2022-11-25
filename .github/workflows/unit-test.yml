@@ -7,7 +7,7 @@ on:
     branches:
       - main
 jobs:
-  run-test-db:
+  unit-test-db:
     runs-on: ubuntu-latest
     services:
       neo4j:
@@ -25,7 +25,7 @@ jobs:
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
       run: ./build/test/test_DB
-  run-test-tasks:
+  unit-test-tasks:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -35,7 +35,7 @@ jobs:
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
       run: ./build/test/test_tasks
-  run-test-tasklists:
+  unit-test-tasklists:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -45,7 +45,7 @@ jobs:
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
       run: ./build/test/test_tasklists
-  run-test-users:
+  unit-test-users:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -55,7 +55,7 @@ jobs:
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
       run: ./build/test/test_users
-  run-test-api:
+  unit-test-api:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
