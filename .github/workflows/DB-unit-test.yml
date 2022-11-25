@@ -24,7 +24,7 @@ jobs:
     - name: Build the tests
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: ls && pwd
+      run: ./build/test/test_DB
   run-test-tasks:
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +34,7 @@ jobs:
     - name: Build the tests
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: ./test/test_tasks
+      run: ./build/test/test_tasks
   run-test-tasklists:
     runs-on: ubuntu-latest
     steps:
@@ -44,7 +44,7 @@ jobs:
     - name: Build the tests
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: ./test/test_tasklists
+      run: ./build/test/test_tasklists
   run-test-users:
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +54,7 @@ jobs:
     - name: Build the tests
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: ./test/test_users
+      run: ./build/test/test_users
   run-test-api:
     runs-on: ubuntu-latest
     steps:
@@ -64,4 +64,4 @@ jobs:
     - name: Build the tests
       run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
     - name: Run test
-      run: ./test/test_api
+      run: ./build/test/test_api
