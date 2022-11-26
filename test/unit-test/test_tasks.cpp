@@ -709,7 +709,7 @@ TEST_F(TasksWorkerTest, Revise) {
   // Error format for startDate > endDate
   in.startDate = "11/30/2022";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
-  startDate = "10/31/2022";
+  in.startDate = "10/31/2022";
 
   // Error format for priority
   in.priority = (Priority)5;

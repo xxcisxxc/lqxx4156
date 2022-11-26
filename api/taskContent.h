@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include "common/utils.h"
+#include <sstream>
+#include <iostream>
 
 /*
  * @brief This is a structure that uses as either input/output for taskWorker
@@ -105,8 +108,8 @@ struct TaskContent {
     time_t startTime;
     time_t endTime;
 
-    std::istringstream iss(startDate);
-    if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
+    std::istringstream iss1(startDate);
+    if (iss1 >> m >> delimiter1 >> d >> delimiter2 >> y) {
       struct tm t = {0};
       t.tm_mday = d;
       t.tm_mon = m - 1;
@@ -115,8 +118,8 @@ struct TaskContent {
       // make time using time struct tm
       startTime = mktime(&t);
     }
-    iss(endDate);
-    if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
+    std::istringstream iss2(endDate);
+    if (iss2 >> m >> delimiter1 >> d >> delimiter2 >> y) {
       struct tm t = {0};
       t.tm_mday = d;
       t.tm_mon = m - 1;
@@ -146,8 +149,8 @@ struct TaskContent {
     if (priority != NULL_PRIORITY && priority != VERY_URGENT &&
         priority != URGENT && priority != NORMAL)
       return false;
-    // check status format: To do, Doing or Done
-    if (status != "" && status != "To do" && status != "Doing" &&
+    // check status format: To Do, Doing or Done
+    if (status != "" && status != "To Do" && status != "Doing" &&
         status != "Done")
       return false;
     // pass all checks
