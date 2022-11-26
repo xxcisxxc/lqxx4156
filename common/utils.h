@@ -16,9 +16,12 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
+#include <ctime>
 #include <exception>
 #include <initializer_list>
 #include <iterator>
+#include <regex>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <unistd.h>
@@ -215,6 +218,49 @@ inline Float __GetEnv(const std::string &env) noexcept {
  */
 template <typename T> inline T GetEnv(const std::string &env) noexcept {
   return __GetEnv<T>(env);
+}
+
+/**
+ * @brief Check if the input is in date format
+ *
+ * @param str The string to be checked
+ * @return True if string in date format, false otherwise
+ */
+inline bool IsDate(const std::string &str) {
+  std::istringstream iss(str);
+  int d, m, y;
+  char delimiter1;
+  char delimiter2;
+  if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
+    if (delimiter1 != delimiter2)
+      return false;
+    struct tm t = {0};
+    t.tm_mday = d;
+    t.tm_mon = m - 1;
+    t.tm_year = y - 1900;
+
+    // make time using time struct tm
+    time_t time = mktime(&t);
+    // get back time struct from time when
+    const struct tm *norm = localtime(&time);
+
+    return (norm->tm_mday == d && norm->tm_mon == m - 1 &&
+            norm->tm_year == y - 1900);
+  }
+  return false;
+}
+
+/**
+ * @brief Check if the input is in email format
+ *
+ * @param str The string to be checked
+ * @return True if string in email format, false otherwise
+ */
+inline bool IsEmail(const std::string &str) {
+  const std::regex emailPattern(
+      "^\\w+([.-]?\\w+)*@\\w+([.-]?\\w+)*(\\.\\w{2,3})+$");
+
+  return std::regex_match(str, emailPattern);
 }
 
 } // namespace Common
