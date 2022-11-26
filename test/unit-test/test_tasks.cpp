@@ -31,7 +31,8 @@ public:
                std::vector<std::string> &task_info),
               (override));
   MOCK_METHOD(returnCode, checkAccess,
-              (const std::string &src_user_pkey, const std::string &dst_user_pkey,
+              (const std::string &src_user_pkey,
+               const std::string &dst_user_pkey,
                const std::string &task_list_pkey, bool &read_write),
               (override));
   MockedDB() : DB("testhost") {}
@@ -287,8 +288,8 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_EQ(out.startDate, "10/31/2022");
   EXPECT_EQ(out.endDate, "11/29/2022");
   EXPECT_EQ(out.priority, VERY_URGENT);
-  EXPECT_EQ(out.status, "To Do");  
-  
+  EXPECT_EQ(out.status, "To Do");
+
   // query others' tasks failed
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, false))
@@ -299,7 +300,7 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_EQ(out.startDate, "");
   EXPECT_EQ(out.endDate, "");
   EXPECT_EQ(out.priority, NULL_PRIORITY);
-  EXPECT_EQ(out.status, "");  
+  EXPECT_EQ(out.status, "");
   data.other_user_key = "";
   data.tasklist_key = "tasklist0";
 
