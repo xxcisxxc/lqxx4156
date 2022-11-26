@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
 #include "common/utils.h"
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 /*
  * @brief This is a structure that uses as either input/output for taskWorker
