@@ -276,8 +276,9 @@ TEST_F(TasksWorkerTest, Query) {
   // query others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
+  bool permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
   EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key,
                                      data.task_key, task_info))
@@ -291,8 +292,9 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_EQ(out.status, "To Do");
 
   // query others' tasks failed
+  out = TaskContent();
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->Query(data, out), ERR_NO_NODE);
   EXPECT_EQ(out.name, "");
@@ -396,10 +398,10 @@ TEST_F(TasksWorkerTest, Create) {
   // create others' tasks should be sucdessful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
-  bool permission = true;
+  bool permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
-      .WillOnce(DoAll(SetArgReferee<3>(permission), Return(SUCCESS)));
+                                     data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB,
               createTaskNode(data.user_key, data.tasklist_key, task_info))
@@ -409,8 +411,9 @@ TEST_F(TasksWorkerTest, Create) {
   outTaskName = "";
 
   // create others' tasks failed (ERR_NO_NODE)
+  permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_ACCESS);
   EXPECT_EQ(outTaskName, "");
@@ -418,7 +421,7 @@ TEST_F(TasksWorkerTest, Create) {
 
   // create others' tasks failed (permission denied)
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_NO_NODE);
   EXPECT_EQ(outTaskName, "");
@@ -499,10 +502,10 @@ TEST_F(TasksWorkerTest, Delete) {
   // delete others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
-  bool permission = true;
+  bool permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
-      .WillOnce(DoAll(SetArgReferee<3>(permission), Return(SUCCESS)));
+                                     data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB,
               deleteTaskNode(data.user_key, data.tasklist_key, data.task_key))
@@ -510,14 +513,15 @@ TEST_F(TasksWorkerTest, Delete) {
   EXPECT_EQ(tasksWorker->Delete(data), SUCCESS);
 
   // delete others' tasks failed (ERR_NO_NODE)
+  permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->Delete(data), ERR_NO_NODE);
 
   // delete others' tasks failed (permission denied)
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasksWorker->Delete(data), ERR_ACCESS);
   data.other_user_key = "";
@@ -608,10 +612,10 @@ TEST_F(TasksWorkerTest, Revise) {
   // revise others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
-  bool permission = true;
+  bool permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
-      .WillOnce(DoAll(SetArgReferee<3>(permission), Return(SUCCESS)));
+                                     data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, reviseTaskNode(data.user_key, data.tasklist_key,
                                         data.task_key, task_info))
@@ -619,14 +623,15 @@ TEST_F(TasksWorkerTest, Revise) {
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
 
   // revise others' tasks failed (ERR_NO_NODE)
+  permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_NO_NODE);
 
   // revise others' tasks failed (permission denied)
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_ACCESS);
   data.other_user_key = "";
@@ -680,10 +685,11 @@ TEST_F(TasksWorkerTest, GetAllTasksName) {
   // get others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
-  bool permission = true;
+  bool permission = false;
+  task_names.clear();
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
-      .WillOnce(DoAll(SetArgReferee<3>(permission), Return(SUCCESS)));
+                                     data.tasklist_key, permission))
+      .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB,
               getAllTaskNodes(data.user_key, data.tasklist_key, task_names))
@@ -695,18 +701,15 @@ TEST_F(TasksWorkerTest, GetAllTasksName) {
   EXPECT_EQ(task_names.size(), 3);
 
   // get others' tasks failed (ERR_NO_NODE)
+  permission = false;
+  task_names.clear();
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
+                                     data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_NO_NODE);
   EXPECT_EQ(task_names.size(), 0);
-
-  // get others' tasks failed (permission denied)
-  EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
-                                     data.tasklist_key, false))
-      .WillOnce(Return(SUCCESS));
-  EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_ACCESS);
-  EXPECT_EQ(task_names.size(), 0);
+  data.other_user_key = "";
+  data.tasklist_key = "tasklist0";
 
   // should be successful but return empty
   task_names.clear();
