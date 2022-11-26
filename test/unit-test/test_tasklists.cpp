@@ -102,7 +102,7 @@ TEST_F(TaskListTest, QueryOwned) {
   data.user_key = "user0";
   data.tasklist_key = "";
   out = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.date, "");
@@ -111,7 +111,7 @@ TEST_F(TaskListTest, QueryOwned) {
   data.user_key = "";
   data.tasklist_key = "";
   out = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.date, "");
@@ -208,7 +208,7 @@ TEST_F(TaskListTest, Create) {
   data.user_key = "";
   data.tasklist_key = "";
   outName = "";
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_RFIELD);
   EXPECT_EQ(outName, "");
 
   // multiple calls to createTaskListNode if previous name is duplicated
@@ -240,12 +240,12 @@ TEST_F(TaskListTest, Delete) {
   // request tasklist_key is empty
   data.user_key = "user0";
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->Delete(data), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Delete(data), ERR_RFIELD);
 
   // request user_key is empty
   data.user_key = "";
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->Delete(data), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Delete(data), ERR_RFIELD);
 }
 
 TEST_F(TaskListTest, ReviseOwned) {
@@ -255,7 +255,7 @@ TEST_F(TaskListTest, ReviseOwned) {
 
   std::string newName = "tasklist1";
   std::string newContent = "this is tasklist #1";
-  std::string newDate = "16/10/2022";
+  std::string newDate = "12/10/2022";
   std::string newVis = "private";
   in = TasklistContent(newName, newContent, newDate, newVis);
 
@@ -273,12 +273,12 @@ TEST_F(TaskListTest, ReviseOwned) {
 
   // request tasklist_key empty
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
 
   // request user_key empty
   data.user_key = "";
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
 
   // fields are empty
   data.user_key = "user0";
@@ -307,7 +307,7 @@ TEST_F(TaskListTest, ReviseAccess) {
 
   std::string newName = "tasklist1";
   std::string newContent = "this is tasklist #1";
-  std::string newDate = "16/10/2022";
+  std::string newDate = "12/10/2022";
   std::string newVis = "";
   in = TasklistContent(newName, newContent, newDate, newVis);
 
@@ -329,16 +329,13 @@ TEST_F(TaskListTest, ReviseAccess) {
   EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
 
   // revise with access, read-write permission, and try to revise visibility,
-  // should not modify the visibility and be successful
+  // should not be successful
   newVis = "public";
   in = TasklistContent(newName, newContent, newDate, newVis);
   EXPECT_CALL(mockedDB, checkAccess(data.other_user_key, data.user_key,
                                     data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
-  EXPECT_CALL(mockedDB, reviseTaskListNode(data.other_user_key,
-                                           data.tasklist_key, task_list_info))
-      .WillOnce(Return(SUCCESS));
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_REVISE);
   EXPECT_EQ(task_list_info.count("visibility"), 0);
 
   // revise with access and read-only permission, should be unsuccessful
@@ -366,7 +363,7 @@ TEST_F(TaskListTest, GetAllTasklist) {
 
   // request user_key empty
   data.user_key = "";
-  EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_RFIELD);
 }
 
 /*
@@ -401,7 +398,7 @@ TEST_F(TaskListTest, GetAllAccessTaskList) {
   // request user_key empty
   data.user_key = "";
   outList.clear();
-  EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), ERR_KEY);
+  EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), ERR_RFIELD);
   EXPECT_EQ(outList.size(), 0);
 }
 
@@ -479,7 +476,7 @@ TEST_F(TaskListTest, GetAllGrantTaskList) {
   outList.clear();
   data.user_key = "";
   EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
-            ERR_KEY);
+            ERR_RFIELD);
   EXPECT_EQ(outList.size(), 0);
 }
 
