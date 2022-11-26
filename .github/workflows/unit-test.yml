@@ -1,0 +1,81 @@
+name: Unit Testing
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - db/**
+      - api/**
+      - users/**
+      - tasks/**
+      - tasklists/**
+      - test/unit-test/**
+  push:
+    branches:
+      - main
+    paths:
+      - db/**
+      - api/**
+      - users/**
+      - tasks/**
+      - tasklists/**
+      - test/unit-test/**
+jobs:
+  unit-test-db:
+    runs-on: ubuntu-latest
+    services:
+      neo4j:
+        image: neo4j:4.4.9
+        env:
+          NEO4J_AUTH: neo4j/hello4156
+        ports:
+          - 7687:7687
+          - 7474:7474
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Environment and dependencies
+      run: ./build.sh install
+    - name: Build the tests
+      run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
+    - name: Run test
+      run: ./build/test/unit-test/test_DB
+  unit-test-tasks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Environment and dependencies
+      run: ./build.sh install
+    - name: Build the tests
+      run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
+    - name: Run test
+      run: ./build/test/unit-test/test_tasks
+  unit-test-tasklists:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Environment and dependencies
+      run: ./build.sh install
+    - name: Build the tests
+      run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
+    - name: Run test
+      run: ./build/test/unit-test/test_tasklists
+  unit-test-users:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Environment and dependencies
+      run: ./build.sh install
+    - name: Build the tests
+      run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
+    - name: Run test
+      run: ./build/test/unit-test/test_users
+  unit-test-api:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Environment and dependencies
+      run: ./build.sh install
+    - name: Build the tests
+      run: mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make
+    - name: Run test
+      run: ./build/test/unit-test/test_api

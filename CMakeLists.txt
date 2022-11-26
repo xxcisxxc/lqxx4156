@@ -2,35 +2,28 @@ cmake_minimum_required(VERSION 3.5)
 
 project(lqxx)
 
+option(LQXX_TESTS "Configure CMake to build tests (or not)" OFF)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# add submodules
+set(ROOT_DIR ${CMAKE_SOURCE_DIR})
+set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
 
-if (NOT TARGET api)
-    add_subdirectory(api)
-endif()
+find_package(nlohmann_json REQUIRED)
+include_directories(${EXTERNAL_DIR}/cpp-jwt/include)
+include_directories(${EXTERNAL_DIR}/cpp-httplib)
+include_directories(${EXTERNAL_DIR}/liboauthcpp/src)
 
-if (NOT TARGET DB.o)
-    add_subdirectory(db)
-endif()
-
-if (NOT TARGET users)
-    add_subdirectory(users)
-endif()
-
-if (NOT TARGET tasklistsWorker)
-    add_subdirectory(tasklists)
-endif()
-
-if (NOT TARGET tasksWorker)
-    add_subdirectory(tasks)
-endif()
-
-# add neo4j
-if (NOT DEFINED NEO_CLIENT_DIR)
-    set(NEO_CLIENT_DIR /opt/homebrew/Cellar/libneo4j-client/2.2.0)
-endif (NOT DEFINED NEO_CLIENT_DIR)
+add_subdirectory(db)
+add_subdirectory(api)
+add_subdirectory(tasks)
+add_subdirectory(tasklists)
+add_subdirectory(users)
 
 # main executable file
-add_executable(lqxx ${PROJECT_SOURCE_DIR}/main.cpp)
-target_link_libraries(lqxx PRIVATE api DB.o users gtest oauthcpp nlohmann_json cpp-jwt neo4j-client tasklistsWorker tasksWorker)
+add_executable(lqxx lqxx.cpp)
+target_link_libraries(lqxx PUBLIC api DB users tasklistsWorker tasksWorker neo4j-client nlohmann_json pthread ssl crypto)
+
+if(LQXX_TESTS)
+    add_subdirectory(test)
+endif()
