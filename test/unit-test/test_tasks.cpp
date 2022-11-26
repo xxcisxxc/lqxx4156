@@ -508,7 +508,7 @@ TEST_F(TasksWorkerTest, Create) {
   startDate = "10/31/2022";
 
   // Error format for priority
-  priority = (Priority) 5;
+  priority = (Priority)5;
   in = TaskContent(name, content, startDate, endDate, priority, status);
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
@@ -712,7 +712,7 @@ TEST_F(TasksWorkerTest, Revise) {
   startDate = "10/31/2022";
 
   // Error format for priority
-  in.priority = (Priority) 5;
+  in.priority = (Priority)5;
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
   in.priority = VERY_URGENT;
 

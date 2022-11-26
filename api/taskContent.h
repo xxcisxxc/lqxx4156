@@ -98,7 +98,7 @@ struct TaskContent {
    * @brief Compare two time strings
    * @return true if the first time string is earlier than the second one
    */
-  bool CompareTime(const std::string& startDate, const std::string& endDate) {
+  bool CompareTime(const std::string &startDate, const std::string &endDate) {
     int d, m, y;
     char delimiter1;
     char delimiter2;
@@ -124,7 +124,7 @@ struct TaskContent {
 
       // make time using time struct tm
       endTime = mktime(&t);
-    }    
+    }
     double diff = difftime(startTime, endTime);
     return diff <= 0;
   }
