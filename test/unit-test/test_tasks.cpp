@@ -484,6 +484,42 @@ TEST_F(TasksWorkerTest, Create) {
 
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), SUCCESS);
   EXPECT_EQ(outTaskName, "task0(2)");
+  outTaskName = "";
+
+  // Error format for startDate
+  startDate = "2018-01-01";
+  in = TaskContent(name, content, startDate, endDate, priority, status);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
+  EXPECT_EQ(outTaskName, "");
+  startDate = "10/31/2022";
+
+  // Error format for endDate
+  endDate = "2018-01-02";
+  in = TaskContent(name, content, startDate, endDate, priority, status);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
+  EXPECT_EQ(outTaskName, "");
+  endDate = "11/29/2022";
+
+  // Error format for startDate > endDate
+  startDate = "11/30/2022";
+  in = TaskContent(name, content, startDate, endDate, priority, status);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
+  EXPECT_EQ(outTaskName, "");
+  startDate = "10/31/2022";
+
+  // Error format for priority
+  priority = (Priority) 5;
+  in = TaskContent(name, content, startDate, endDate, priority, status);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
+  EXPECT_EQ(outTaskName, "");
+  priority = VERY_URGENT;
+
+  // Error format for status
+  status = "2/3 Done";
+  in = TaskContent(name, content, startDate, endDate, priority, status);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
+  EXPECT_EQ(outTaskName, "");
+  status = "Done";
 }
 
 TEST_F(TasksWorkerTest, Delete) {
@@ -659,6 +695,31 @@ TEST_F(TasksWorkerTest, Revise) {
   // input is empty
   in = TaskContent();
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
+
+  // Error format for startDate
+  in.startDate = "2018-01-01";
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
+  in.startDate = "10/31/2022";
+
+  // Error format for endDate
+  in.endDate = "2018-01-02";
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
+  in.endDate = "11/29/2022";
+
+  // Error format for startDate > endDate
+  in.startDate = "11/30/2022";
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
+  startDate = "10/31/2022";
+
+  // Error format for priority
+  in.priority = (Priority) 5;
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
+  in.priority = VERY_URGENT;
+
+  // Error format for status
+  in.status = "2/3 Done";
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
+  in.status = "Done";
 }
 
 // Create Function

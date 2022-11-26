@@ -63,7 +63,7 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   // request has empty value
   if (data.RequestIsEmpty())
     return ERR_KEY;
-
+  
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -96,6 +96,10 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   // request has empty value
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
+
+  // check if in is valid
+  if (!in.IsValid())
+    return ERR_FORMAT;
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
@@ -171,6 +175,10 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   if (data.RequestIsEmpty())
     return ERR_KEY;
 
+  // check if in is valid
+  if (!in.IsValid())
+    return ERR_FORMAT;
+    
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,

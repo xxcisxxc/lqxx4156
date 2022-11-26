@@ -95,15 +95,52 @@ struct TaskContent {
     status = "";
   }
   /**
-   * @brief Check
+   * @brief Compare two time strings
+   * @return true if the first time string is earlier than the second one
+   */
+  bool CompareTime(const std::string& startDate, const std::string& endDate) {
+    int d, m, y;
+    char delimiter1;
+    char delimiter2;
+    time_t startTime;
+    time_t endTime;
+
+    std::istringstream iss(startDate);
+    if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
+      struct tm t = {0};
+      t.tm_mday = d;
+      t.tm_mon = m - 1;
+      t.tm_year = y - 1900;
+
+      // make time using time struct tm
+      startTime = mktime(&t);
+    }
+    iss(endDate);
+    if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
+      struct tm t = {0};
+      t.tm_mday = d;
+      t.tm_mon = m - 1;
+      t.tm_year = y - 1900;
+
+      // make time using time struct tm
+      endTime = mktime(&t);
+    }    
+    double diff = difftime(startTime, endTime);
+    return diff <= 0;
+  }
+  /**
+   * @brief Check if the task is valid
    * @return true if member variables are valid
    */
-  bool CheckFormat() {
+  bool IsValid() {
     // check startDate format
-    if (startDate != "")
+    if (startDate != "" && !Common::IsDate(startDate))
       return false;
     // check endDate format
-    if (endDate != "")
+    if (endDate != "" && !Common::IsDate(endDate))
+      return false;
+    // check startDate <= endDate
+    if (startDate != "" && endDate != "" && !CompareTime(startDate, endDate))
       return false;
     // check priority format
     if (priority != NULL_PRIORITY && priority != VERY_URGENT &&
