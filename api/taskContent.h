@@ -45,7 +45,7 @@ struct TaskContent {
    */
   Priority priority;
   /*
-   * @brief Task progress: To do, Doing or Done or self-defined
+   * @brief Task progress: To do, Doing or Done
    */
   std::string status;
 
@@ -93,5 +93,21 @@ struct TaskContent {
     endDate = "";
     priority = NULL_PRIORITY;
     status = "";
+  }
+  /**
+   * @brief Check
+   * @return true if member variables are valid
+   */
+  bool CheckFormat() {
+    // check startDate format
+    if(startDate != "") return false;
+    // check endDate format
+    if(endDate != "") return false;
+    // check priority format
+    if(priority != NULL_PRIORITY && priority != VERY_URGENT && priority != URGENT && priority != NORMAL) return false;
+    // check status format: To do, Doing or Done
+    if(status != "" && status != "To do" && status != "Doing" && status != "Done") return false;
+    // pass all checks
+    return true;
   }
 };
