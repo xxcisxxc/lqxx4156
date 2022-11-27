@@ -225,6 +225,16 @@ TEST_F(TaskListTest, Create) {
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist0(2)");
+
+  // visibility incorrect format
+  data.user_key = "user0";
+  data.tasklist_key = "tasklist0";
+  outName = "";
+  task_list_info["visibility"] = "wrong";
+  EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
+      .WillOnce(Return(ERR_FORMAT));
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(outName, "");
 }
 
 TEST_F(TaskListTest, Delete) {
@@ -366,10 +376,7 @@ TEST_F(TaskListTest, GetAllTasklist) {
   EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_RFIELD);
 }
 
-/*
-returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data,
-                                      std::vector<shareInfo>& out_list)
-                                      */
+
 TEST_F(TaskListTest, GetAllAccessTaskList) {
   // setup input
   data.user_key = "user";

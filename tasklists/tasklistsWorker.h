@@ -49,18 +49,6 @@ private:
   void Map2Content(const std::map<std::string, std::string> &task_info,
                    TasklistContent &tasklistContent);
 
-  /**
-   * @brief check permission of accessing other user's list
-   *
-   * @param srcUser the user who share the list
-   * @param dstUser the user who try to access the share
-   * @param tasklist the target tasklist
-   * @return returnCode
-   */
-  returnCode checkPermission(const std::string &srcUser,
-                             const std::string &dstUser,
-                             const std::string &tasklist, bool &permission);
-
 public:
   /**
    * @brief Construct a new Task Lists Worker object
