@@ -93,7 +93,7 @@ TEST_F(UsersTest, Validate) {
   EXPECT_FALSE(users->Validate(UserInfo("alice", "alice@columbia.edu", "")));
 
   // wrong email format
-  EXPECT_FALSE(users->Create(UserInfo("Sam", "Sam@", "123456")));
+  EXPECT_FALSE(users->Validate(UserInfo("Sam", "Sam@", "123456")));
 }
 
 TEST_F(UsersTest, DuplicatedEmail) {
@@ -102,7 +102,7 @@ TEST_F(UsersTest, DuplicatedEmail) {
   EXPECT_TRUE(users->DuplicatedEmail(UserInfo("alice@columbia.edu")));
   EXPECT_FALSE(users->DuplicatedEmail(UserInfo("bob@columbia.edu")));
   // wrong email format
-  EXPECT_FALSE(users->Create(UserInfo("Sam", "Sam@", "123456")));
+  EXPECT_FALSE(users->DuplicatedEmail(UserInfo("Sam", "Sam@", "123456")));
 }
 
 TEST_F(UsersTest, Delete) {
@@ -112,7 +112,7 @@ TEST_F(UsersTest, Delete) {
   EXPECT_FALSE(users->Delete(UserInfo("bob", "bob@columbia.edu", "123456")));
 
   // wrong email format
-  EXPECT_FALSE(users->Create(UserInfo("Sam", "Sam@", "123456")));
+  EXPECT_FALSE(users->Delete(UserInfo("Sam", "Sam@", "123456")));
 }
 
 int main(int argc, char **argv) {
