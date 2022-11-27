@@ -8,8 +8,8 @@
  */
 #pragma once
 
-#include <common/utils.h>
-#include <db/DB.h>
+#include "common/utils.h"
+#include "db/DB.h"
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -51,6 +51,8 @@ public:
   virtual bool Validate(const UserInfo &);
 
   virtual bool DuplicatedEmail(const UserInfo &);
+
+  virtual bool Delete(const UserInfo &);
 
 private:
   std::shared_ptr<DB> db;

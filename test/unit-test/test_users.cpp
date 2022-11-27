@@ -37,6 +37,14 @@ public:
     return returnCode::SUCCESS;
   }
 
+  returnCode deleteUserNode(const std::string &user_pkey) override {
+    if (mocked_data.find(user_pkey) == mocked_data.end()) {
+      return returnCode::ERR_NO_NODE;
+    }
+    mocked_data.erase(user_pkey);
+    return returnCode::SUCCESS;
+  }
+
   void Clear() { mocked_data.clear(); }
 
 private:
@@ -65,6 +73,9 @@ TEST_F(UsersTest, Create) {
       users->Create(UserInfo("alice2", "alice2@columbia.edu", "123456")));
   EXPECT_FALSE(
       users->Create(UserInfo("alice3", "alice@columbia.edu", "123456")));
+
+  // wrong email format
+  EXPECT_FALSE(users->Create(UserInfo("Sam", "Sam@", "123456")));
 }
 
 TEST_F(UsersTest, Validate) {
@@ -80,6 +91,9 @@ TEST_F(UsersTest, Validate) {
       UserInfo("alice", "alice@columbia.edu", "wrong password")));
   EXPECT_FALSE(users->Validate(UserInfo("", "alice@columbia.edu", "")));
   EXPECT_FALSE(users->Validate(UserInfo("alice", "alice@columbia.edu", "")));
+
+  // wrong email format
+  EXPECT_FALSE(users->Validate(UserInfo("Sam", "Sam@", "123456")));
 }
 
 TEST_F(UsersTest, DuplicatedEmail) {
@@ -87,6 +101,18 @@ TEST_F(UsersTest, DuplicatedEmail) {
   EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "123456")));
   EXPECT_TRUE(users->DuplicatedEmail(UserInfo("alice@columbia.edu")));
   EXPECT_FALSE(users->DuplicatedEmail(UserInfo("bob@columbia.edu")));
+  // wrong email format
+  EXPECT_FALSE(users->DuplicatedEmail(UserInfo("Sam", "Sam@", "123456")));
+}
+
+TEST_F(UsersTest, Delete) {
+  mocked_db->Clear();
+  EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "123456")));
+  EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "123456")));
+  EXPECT_FALSE(users->Delete(UserInfo("bob", "bob@columbia.edu", "123456")));
+
+  // wrong email format
+  EXPECT_FALSE(users->Delete(UserInfo("Sam", "Sam@", "123456")));
 }
 
 int main(int argc, char **argv) {

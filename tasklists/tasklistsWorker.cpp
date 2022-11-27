@@ -77,9 +77,10 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
   if (data.RequestUserIsEmpty())
     return ERR_RFIELD;
 
-  if (!in.visibility.empty() && in.visibility != "public" && in.visibility != "shared" && in.visibility != "private")
+  if (!in.visibility.empty() && in.visibility != "public" &&
+      in.visibility != "shared" && in.visibility != "private")
     return ERR_FORMAT;
-  
+
   if (!in.date.empty() && !Common::IsDate(in.date))
     return ERR_FORMAT;
 
@@ -114,7 +115,8 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
 
-  if (!in.visibility.empty() && in.visibility != "public" && in.visibility != "shared" && in.visibility != "private")
+  if (!in.visibility.empty() && in.visibility != "public" &&
+      in.visibility != "shared" && in.visibility != "private")
     return ERR_FORMAT;
 
   if (!in.date.empty() && !Common::IsDate(in.date))

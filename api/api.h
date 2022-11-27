@@ -16,13 +16,13 @@
 
 #pragma once
 
+#include "tasklists/tasklistsWorker.h"
+#include "tasks/tasksWorker.h"
+#include "users/users.h"
 #include <httplib.h>
 #include <memory>
 #include <mutex>
-#include <tasklists/tasklistsWorker.h>
-#include <tasks/tasksWorker.h>
 #include <unordered_set>
-#include <users/users.h>
 
 /* Declare a function that would be called to handle an http request of a
    certain route. The function name should be corresponding to the http

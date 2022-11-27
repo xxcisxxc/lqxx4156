@@ -1,7 +1,7 @@
 #include "tasksWorker.h"
 #include "api/taskContent.h"
+#include "tasklists/tasklistsWorker.h"
 #include <iostream>
-#include <tasklists/tasklistsWorker.h>
 
 TasksWorker::TasksWorker(DB *_db, TaskListsWorker *_taskListsWorker)
     : db(_db), taskListsWorker(_taskListsWorker) {}
@@ -97,6 +97,10 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   if (data.RequestTaskListIsEmpty())
     return ERR_KEY;
 
+  // check if in is valid
+  if (!in.IsValid())
+    return ERR_FORMAT;
+
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -170,6 +174,10 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   // request has empty value
   if (data.RequestIsEmpty())
     return ERR_KEY;
+
+  // check if in is valid
+  if (!in.IsValid())
+    return ERR_FORMAT;
 
   if (!data.other_user_key.empty()) {
     bool permission = false;

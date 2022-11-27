@@ -1,8 +1,8 @@
-name: clang-format Check
+name: Lint Checkings
 on: [push, pull_request]
 jobs:
   formatting-check:
-    name: Formatting Check
+    name: Clang Formatting Check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -10,3 +10,10 @@ jobs:
       uses: jidicula/clang-format-action@v4.9.0
       with:
         clang-format-version: '13'
+  static-check:
+    name: Cppcheck Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: cppcheck-action
+        uses: deep5050/cppcheck-action@v3.0
