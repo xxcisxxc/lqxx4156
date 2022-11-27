@@ -227,12 +227,20 @@ TEST_F(TaskListTest, Create) {
   EXPECT_EQ(outName, "tasklist0(2)");
 
   // visibility incorrect format
-  data.user_key = "user0";
-  data.tasklist_key = "tasklist0";
+  std::string wrongVis = "wrong";
+  in = TasklistContent(name, content, date, wrongVis);
   outName = "";
-  task_list_info["visibility"] = "wrong";
-  EXPECT_CALL(mockedDB, createTaskListNode(data.user_key, task_list_info))
-      .WillOnce(Return(ERR_FORMAT));
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(outName, "");
+
+  // date incorrect format
+  std::string wrongDate = "02/29/2022";
+  in = TasklistContent(name, content, wrongDate, vis);
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(outName, "");
+
+  std::string wrongDate2 = "13/20/2022";
+  in = TasklistContent(name, content, wrongDate, vis);
   EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
   EXPECT_EQ(outName, "");
 }
@@ -307,6 +315,20 @@ TEST_F(TaskListTest, ReviseOwned) {
                                            task_list_info))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
+
+  // visibility incorrect format
+  std::string wrongVis = "wrong";
+  in = TasklistContent(newName, newContent, newDate, wrongVis);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
+
+  // date incorrect format
+  std::string wrongDate = "02/29/2022";
+  in = TasklistContent(newName, newContent, wrongDate, newVis);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
+
+  std::string wrongDate2 = "13/20/2022";
+  in = TasklistContent(newName, newContent, wrongDate, newVis);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
 }
 
 TEST_F(TaskListTest, ReviseAccess) {
