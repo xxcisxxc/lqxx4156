@@ -275,12 +275,11 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
   return ret;
 }
 
-returnCode
-TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
+returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
 
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
-  
+
   returnCode ret;
   std::string visibility;
 
@@ -289,8 +288,9 @@ TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
   ret = GetVisibility(data, visibility);
   if (ret != SUCCESS || visibility != "shared")
     return ERR_ACCESS;
-  
-  ret = db_instance.removeAccess(data.user_key, data.other_user_key, data.tasklist_key);
+
+  ret = db_instance.removeAccess(data.user_key, data.other_user_key,
+                                 data.tasklist_key);
   return ret;
 }
 
