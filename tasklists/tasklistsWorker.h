@@ -157,7 +157,7 @@ public:
    * @return returnCode
    */
   virtual returnCode RemoveGrantTaskList(const RequestData &data);
-  
+
   // for compilation before api revise
   virtual returnCode RemoveGrantTaskList(const RequestData &data,
                                          std::vector<std::string> &in_list,
