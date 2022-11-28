@@ -52,6 +52,23 @@ sleep 60
 ./tasklists/test_tasklists && ./tasks/test_tasks && ./users/test_users && ./api/test_api && ./db/DBTest 
 ```
 
+## System Test
+We make use of comprehensive and detailed system tests to ensure the overall system level performs as expected. During system tests,
+we connect all our components with real database, call our APIs automatically and let the data and control flow run from the top api
+layer to the buttom database level, and check if everything works as expected. All different branches, situations, and corner cases are
+well covered and tested.
+
+To run the system test manually, go to the project root directory, and
+```
+./build.sh build    # to set up the database
+mkdir build && cd build && cmake .. -DLQXX_TESTS=on && make
+./test/sys-test/test_system
+```
+Then the environment including real database and backend services will be automatically set up, and our well designed test cases
+will be running at a system level, as is shown in the following diagram.
+![system-test-1](/documents/system-test-1.png)
+
+
 ## Third-Party
 
 ### Position

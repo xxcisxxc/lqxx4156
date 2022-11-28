@@ -29,6 +29,10 @@ void TasksWorker::TaskStruct2Map(
   if (!taskContent.endDate.empty()) {
     task_info["endDate"] = taskContent.endDate;
   }
+  /* deprecated, only for test purpose */
+  if (!taskContent.date.empty()) {
+    task_info["date"] = taskContent.date;
+  }
   if (taskContent.priority != NULL_PRIORITY) {
     task_info["priority"] = std::to_string((int)taskContent.priority);
   }
@@ -51,6 +55,10 @@ void TasksWorker::Map2TaskStruct(
 
   if (task_info.count("endDate"))
     taskContent.endDate = task_info.at("endDate");
+
+  /* deprecated, only for test purpose */
+  if (task_info.count("date"))
+    taskContent.date = task_info.at("date");
 
   if (task_info.count("priority"))
     taskContent.priority = (Priority)stoi(task_info.at("priority"));
