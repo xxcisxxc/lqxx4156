@@ -77,8 +77,9 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   std::map<std::string, std::string> task_info;
 
   // get all available fields
-  returnCode ret = db->getTaskNode(data.other_user_key.empty() ? data.user_key : data.other_user_key, 
-                                  data.tasklist_key, data.task_key, task_info);
+  returnCode ret = db->getTaskNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, data.task_key, task_info);
 
   // error in tasklist_key or task_key
   if (ret == ERR_KEY || ret == ERR_NO_NODE) {
@@ -123,7 +124,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
       return ERR_ACCESS;
     }
   }
-  
+
   // can access
   std::map<std::string, std::string> task_info;
   TaskStruct2Map(in, task_info);
@@ -135,7 +136,8 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
     // For Create, data.task_key can be "", so we should use task_info["name"]
     outTaskName = Rename(originTaskName, suffix++);
     task_info["name"] = outTaskName;
-    ret = db->createTaskNode(data.other_user_key.empty() ? data.user_key : data.other_user_key,
+    ret = db->createTaskNode(data.other_user_key.empty() ? data.user_key
+                                                         : data.other_user_key,
                              data.tasklist_key, task_info);
   } while (ret == ERR_DUP_NODE);
 
@@ -166,7 +168,9 @@ returnCode TasksWorker::Delete(const RequestData &data) {
   }
 
   // can access
-  returnCode ret = db->deleteTaskNode(data.other_user_key.empty() ? data.user_key : data.other_user_key, data.tasklist_key, data.task_key);
+  returnCode ret = db->deleteTaskNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, data.task_key);
   return ret;
 }
 
@@ -180,7 +184,7 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   // because we do not need to revise content
   if (in.IsEmpty())
     return ERR_RFIELD; // no such input
-  
+
   // check if in is valid
   if (!in.IsValid())
     return ERR_FORMAT;
@@ -207,8 +211,9 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   std::map<std::string, std::string> task_info;
   TaskStruct2Map(in, task_info);
 
-  returnCode ret = db->reviseTaskNode(data.other_user_key.empty() ? data.user_key : data.other_user_key,
-                                      data.tasklist_key, data.task_key, task_info);
+  returnCode ret = db->reviseTaskNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, data.task_key, task_info);
   return ret;
 }
 
@@ -218,7 +223,7 @@ TasksWorker::GetAllTasksName(const RequestData &data,
   // request has empty value
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
-    
+
   // tasklist itself does not exist
   if (!taskListsWorker->Exists(data)) {
     return ERR_NO_NODE;
@@ -234,8 +239,8 @@ TasksWorker::GetAllTasksName(const RequestData &data,
   }
   // can access
 
-
-  returnCode ret = db->getAllTaskNodes(data.other_user_key.empty() ? data.user_key : data.other_user_key,
-                                       data.tasklist_key, outTaskNameList);
+  returnCode ret = db->getAllTaskNodes(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, outTaskNameList);
   return ret;
 }
