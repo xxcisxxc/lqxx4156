@@ -398,7 +398,6 @@ TEST_F(TaskListTest, GetAllTasklist) {
   EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_RFIELD);
 }
 
-
 TEST_F(TaskListTest, GetAllAccessTaskList) {
   // setup input
   data.user_key = "user";
@@ -554,16 +553,14 @@ TEST_F(TaskListTest, RemoveGrantTaskList) {
   data.other_user_key = "other_user";
 
   // normal call, should be successful
-  EXPECT_CALL(mockedDB,
-              removeAccess(data.user_key, data.other_user_key, data.tasklist_key))
+  EXPECT_CALL(mockedDB, removeAccess(data.user_key, data.other_user_key,
+                                     data.tasklist_key))
       .WillOnce(Return(SUCCESS));
-  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data),
-            SUCCESS);
+  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data), SUCCESS);
 
   // no tasklist key
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data),
-            ERR_RFIELD);
+  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data), ERR_RFIELD);
 }
 
 TEST_F(TaskListTest, GetAllPublicTaskList) {

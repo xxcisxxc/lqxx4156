@@ -1196,14 +1196,12 @@ DB::getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list) {
   return SUCCESS;
 }
 
-returnCode
-DB::deleteEverything(void) {
+returnCode DB::deleteEverything(void) {
   neo4j_connection_t *connection = connectDB();
-  std::string query =
-      "MATCH (n) DETACH DELETE n";
+  std::string query = "MATCH (n) DETACH DELETE n";
 
   neo4j_result_stream_t *results = executeQuery(query, connection);
-  
+
   if (neo4j_check_failure(results)) {
     neo4j_close_results(results);
     closeDB(connection);

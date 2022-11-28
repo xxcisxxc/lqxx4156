@@ -241,13 +241,13 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
   return ret;
 }
 
-returnCode
-TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
+returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
 
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
 
-  returnCode ret = db_instance.removeAccess(data.user_key, data.other_user_key, data.tasklist_key);
+  returnCode ret = db_instance.removeAccess(data.user_key, data.other_user_key,
+                                            data.tasklist_key);
   return ret;
 }
 

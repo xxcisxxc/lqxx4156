@@ -306,6 +306,5 @@ public:
 
   /* Delete everything in the database,
      mainly used for cleaning up in integrated tests. */
-  virtual returnCode
-  deleteEverything(void);
+  virtual returnCode deleteEverything(void);
 };
