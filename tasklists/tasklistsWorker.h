@@ -158,11 +158,6 @@ public:
    */
   virtual returnCode RemoveGrantTaskList(const RequestData &data);
 
-  // for compilation before api revise
-  virtual returnCode RemoveGrantTaskList(const RequestData &data,
-                                         std::vector<std::string> &in_list,
-                                         std::string &errUser) {}
-
   /**
    * @brief Get all public tasklists
    *
@@ -179,4 +174,13 @@ public:
    * @return true if the tasklist exists
    */
   virtual bool Exists(const RequestData &data);
+
+  /**
+   * @brief Get a tasklist's visibility
+   *
+   * @param [in] data target tasklist we'd want to check
+   * @return true if the tasklist exists
+   */
+  virtual returnCode GetVisibility(const RequestData &data,
+                                   std::string &visibility);
 };
