@@ -635,17 +635,17 @@ API_DEFINE_HTTP_HANDLER(ShareDelete) {
                  std::back_inserter(user_str_list), [](auto &&x) { return x; });
 
   if (!share_delete_req.other_user_key.empty()) {
-    if(tasklists_worker->RemoveGrantTaskList(share_delete_req) != returnCode::SUCCESS) {
+    if (tasklists_worker->RemoveGrantTaskList(share_delete_req) !=
+        returnCode::SUCCESS) {
       API_RETURN_HTTP_RESP(500, "msg", "failed delete sharing");
     }
-  }
-  else {
-    if (tasklists_worker->RemoveGrantTaskList(share_delete_req, user_str_list,
-                                              err_user) != returnCode::SUCCESS) {
+  } else {
+    if (tasklists_worker->RemoveGrantTaskList(
+            share_delete_req, user_str_list, err_user) != returnCode::SUCCESS) {
       API_RETURN_HTTP_RESP(500, "msg",
-                          err_user.empty()
-                              ? "failed all users"
-                              : "failed last deleted user is " + err_user);
+                           err_user.empty()
+                               ? "failed all users"
+                               : "failed last deleted user is " + err_user);
     }
   }
 

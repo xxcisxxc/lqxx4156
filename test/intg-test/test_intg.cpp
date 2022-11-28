@@ -821,6 +821,9 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
       users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
+/*
+ *  wait for future commit
+ */ 
 TEST_F(IntgTest, TaskLists_GetVisibility) {}
 
 TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
