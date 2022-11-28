@@ -303,4 +303,9 @@ public:
    */
   virtual returnCode
   getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list);
+
+  /* Delete everything in the database,
+     mainly used for cleaning up in integrated tests. */
+  virtual returnCode
+  deleteEverything(void);
 };

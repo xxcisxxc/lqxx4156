@@ -1,4 +1,5 @@
 #include "DB.h"
+#include "common/errorCode.h"
 
 DB::DB(std::string host) {
   this->host_ = host; // hardcode
@@ -1190,6 +1191,25 @@ DB::getAllPublic(std::vector<std::pair<std::string, std::string>> &user_list) {
   }
 
   // Success
+  neo4j_close_results(results);
+  closeDB(connection);
+  return SUCCESS;
+}
+
+returnCode
+DB::deleteEverything(void) {
+  neo4j_connection_t *connection = connectDB();
+  std::string query =
+      "MATCH (n) DETACH DELETE n";
+
+  neo4j_result_stream_t *results = executeQuery(query, connection);
+  
+  if (neo4j_check_failure(results)) {
+    neo4j_close_results(results);
+    closeDB(connection);
+    return ERR_UNKNOWN;
+  }
+
   neo4j_close_results(results);
   closeDB(connection);
   return SUCCESS;
