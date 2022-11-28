@@ -276,34 +276,21 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
 }
 
 returnCode
-TaskListsWorker ::RemoveGrantTaskList(const RequestData &data,
-                                      std::vector<std::string> &in_list,
-                                      std::string &errUser) {
+TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
 
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
-
+  
   returnCode ret;
   std::string visibility;
 
   // we can only grant permission to shared tasklist
+  // also check whether the tasklist exists
   ret = GetVisibility(data, visibility);
   if (ret != SUCCESS || visibility != "shared")
     return ERR_ACCESS;
-
-  for (int i = 0; i < in_list.size(); i++) {
-    // 这里应该要验证 dst_user_key 是否存在
-
-    // ERR_NO_NODE
-
-    // remove grant
-    ret =
-        db_instance.removeAccess(data.user_key, in_list[i], data.tasklist_key);
-    if (ret != SUCCESS) {
-      errUser = in_list[i];
-      return ret;
-    }
-  }
+  
+  ret = db_instance.removeAccess(data.user_key, data.other_user_key, data.tasklist_key);
   return ret;
 }
 

@@ -225,6 +225,24 @@ TEST_F(TaskListTest, Create) {
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist0(2)");
+
+  // visibility incorrect format
+  std::string wrongVis = "wrong";
+  in = TasklistContent(name, content, date, wrongVis);
+  outName = "";
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(outName, "");
+
+  // date incorrect format
+  std::string wrongDate = "02/29/2022";
+  in = TasklistContent(name, content, wrongDate, vis);
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(outName, "");
+
+  std::string wrongDate2 = "13/20/2022";
+  in = TasklistContent(name, content, wrongDate, vis);
+  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(outName, "");
 }
 
 TEST_F(TaskListTest, Delete) {
@@ -307,6 +325,20 @@ TEST_F(TaskListTest, ReviseOwned) {
                                            task_list_info))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
+
+  // visibility incorrect format
+  std::string wrongVis = "wrong";
+  in = TasklistContent(newName, newContent, newDate, wrongVis);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
+
+  // date incorrect format
+  std::string wrongDate = "02/29/2022";
+  in = TasklistContent(newName, newContent, wrongDate, newVis);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
+
+  std::string wrongDate2 = "13/20/2022";
+  in = TasklistContent(newName, newContent, wrongDate, newVis);
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
 }
 
 TEST_F(TaskListTest, ReviseAccess) {
@@ -376,10 +408,7 @@ TEST_F(TaskListTest, GetAllTasklist) {
   EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, outNames), ERR_RFIELD);
 }
 
-/*
-returnCode TaskListsWorker ::GetAllAccessTaskList(const RequestData& data,
-                                      std::vector<shareInfo>& out_list)
-                                      */
+
 TEST_F(TaskListTest, GetAllAccessTaskList) {
   // setup input
   data.user_key = "user";
@@ -532,34 +561,19 @@ TEST_F(TaskListTest, RemoveGrantTaskList) {
   // setup input
   data.user_key = "user";
   data.tasklist_key = "tasklist";
-  std::vector<std::string> in_list;
-  for (int i = 0; i < 20; i++) {
-    in_list.push_back("user" + std::to_string(i));
-  }
-  std::string errUser;
+  data.other_user_key = "other_user";
 
   // normal call, should be successful
-  for (int i = 0; i < in_list.size(); i++) {
-    EXPECT_CALL(mockedDB,
-                removeAccess(data.user_key, in_list[i], data.tasklist_key))
-        .WillOnce(Return(SUCCESS));
-  }
-  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data, in_list, errUser),
-            SUCCESS);
-  EXPECT_EQ(errUser, "");
-
-  // failed on fouth user
-  for (int i = 0; i < 4; i++) {
-    EXPECT_CALL(mockedDB,
-                removeAccess(data.user_key, in_list[i], data.tasklist_key))
-        .WillOnce(Return(SUCCESS));
-  }
   EXPECT_CALL(mockedDB,
-              removeAccess(data.user_key, in_list[4], data.tasklist_key))
-      .WillOnce(Return(ERR_NO_NODE));
-  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data, in_list, errUser),
-            ERR_NO_NODE);
-  EXPECT_EQ(errUser, in_list[4]);
+              removeAccess(data.user_key, data.other_user_key, data.tasklist_key))
+      .WillOnce(Return(SUCCESS));
+  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data),
+            SUCCESS);
+
+  // no tasklist key
+  data.tasklist_key = "";
+  EXPECT_EQ(tasklistsWorker->RemoveGrantTaskList(data),
+            ERR_RFIELD);
 }
 
 TEST_F(TaskListTest, GetAllPublicTaskList) {

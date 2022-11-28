@@ -49,18 +49,6 @@ private:
   void Map2Content(const std::map<std::string, std::string> &task_info,
                    TasklistContent &tasklistContent);
 
-  /**
-   * @brief check permission of accessing other user's list
-   *
-   * @param srcUser the user who share the list
-   * @param dstUser the user who try to access the share
-   * @param tasklist the target tasklist
-   * @return returnCode
-   */
-  returnCode checkPermission(const std::string &srcUser,
-                             const std::string &dstUser,
-                             const std::string &tasklist, bool &permission);
-
 public:
   /**
    * @brief Construct a new Task Lists Worker object
@@ -165,14 +153,15 @@ public:
    * @brief Delete the share for a tasklist. It is guaranteed that
    * all deletions on users before errUser in the in_list are successful
    *
-   * @param [in] data target tasklist that we'd want to delete share status
-   * @param [in] in_list list of users with whom to remove tasklist share
-   * @param [out] errUser the user that causes the err
+   * @param [in] data target tasklists that we'd want to delete share status
    * @return returnCode
    */
+  virtual returnCode RemoveGrantTaskList(const RequestData &data);
+
+  // for compilation before api revise
   virtual returnCode RemoveGrantTaskList(const RequestData &data,
                                          std::vector<std::string> &in_list,
-                                         std::string &errUser);
+                                         std::string &errUser) {}
 
   /**
    * @brief Get all public tasklists
