@@ -823,7 +823,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
 
 /*
  *  wait for future commit
- */ 
+ */
 TEST_F(IntgTest, TaskLists_GetVisibility) {}
 
 TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
