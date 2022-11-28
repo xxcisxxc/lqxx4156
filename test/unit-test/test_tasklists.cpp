@@ -257,10 +257,10 @@ TEST_F(TaskListTest, ReviseOwned) {
   std::string newContent = "this is tasklist #1";
   std::string newDate = "12/10/2022";
   std::string newVis = "private";
-  in = TasklistContent(newName, newContent, newDate, newVis);
+  in = TasklistContent("", newContent, newDate, newVis);
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["name"] = newName;
+  task_list_info["name"] = "";
   task_list_info["content"] = newContent;
   task_list_info["date"] = newDate;
   task_list_info["visibility"] = newVis;
@@ -270,6 +270,16 @@ TEST_F(TaskListTest, ReviseOwned) {
                                            task_list_info))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+
+  // revise name, should be failed
+  in.name = newName;
+  task_list_info["name"] = newName;
+  EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key,
+                                           task_list_info))
+      .WillOnce(Return(ERR_KEY));
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+  in.name = "";
+  task_list_info["name"] = "";
 
   // request tasklist_key empty
   data.tasklist_key = "";
@@ -309,10 +319,10 @@ TEST_F(TaskListTest, ReviseAccess) {
   std::string newContent = "this is tasklist #1";
   std::string newDate = "12/10/2022";
   std::string newVis = "";
-  in = TasklistContent(newName, newContent, newDate, newVis);
+  in = TasklistContent("", newContent, newDate, newVis);
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["name"] = newName;
+  task_list_info["name"] = "";
   task_list_info["content"] = newContent;
   task_list_info["date"] = newDate;
 

@@ -280,7 +280,7 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
-  EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key,
+  EXPECT_CALL(*mockedDB, getTaskNode(data.other_user_key, data.tasklist_key,
                                      data.task_key, task_info))
       .WillOnce(DoAll(SetArgReferee<3>(new_task_info), Return(SUCCESS)));
   EXPECT_EQ(tasksWorker->Query(data, out), SUCCESS);
@@ -309,7 +309,7 @@ TEST_F(TasksWorkerTest, Query) {
   // request is empty
   out = TaskContent();
   data.user_key = "";
-  EXPECT_EQ(tasksWorker->Query(data, out), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.startDate, "");
@@ -319,7 +319,7 @@ TEST_F(TasksWorkerTest, Query) {
   data.user_key = "user0";
 
   data.tasklist_key = "";
-  EXPECT_EQ(tasksWorker->Query(data, out), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.startDate, "");
@@ -329,7 +329,7 @@ TEST_F(TasksWorkerTest, Query) {
   data.tasklist_key = "tasklist0";
 
   data.task_key = "";
-  EXPECT_EQ(tasksWorker->Query(data, out), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.startDate, "");
@@ -395,7 +395,7 @@ TEST_F(TasksWorkerTest, Create) {
   EXPECT_EQ(outTaskName, "task0");
   outTaskName = "";
 
-  // create others' tasks should be sucdessful
+  // create others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
   bool permission = false;
@@ -404,13 +404,13 @@ TEST_F(TasksWorkerTest, Create) {
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB,
-              createTaskNode(data.user_key, data.tasklist_key, task_info))
+              createTaskNode(data.other_user_key, data.tasklist_key, task_info))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), SUCCESS);
   EXPECT_EQ(outTaskName, "task0");
   outTaskName = "";
 
-  // create others' tasks failed (ERR_NO_NODE)
+  // create others' tasks failed (ERR_ACCESS)
   permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
@@ -431,12 +431,12 @@ TEST_F(TasksWorkerTest, Create) {
 
   // request is empty
   data.user_key = "";
-  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_RFIELD);
   EXPECT_EQ(outTaskName, "");
   data.user_key = "user0";
 
   data.tasklist_key = "";
-  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_RFIELD);
   EXPECT_EQ(outTaskName, "");
   data.tasklist_key = "tasklist0";
   // not use data.task_key
@@ -543,8 +543,8 @@ TEST_F(TasksWorkerTest, Delete) {
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
-  EXPECT_CALL(*mockedDB,
-              deleteTaskNode(data.user_key, data.tasklist_key, data.task_key))
+  EXPECT_CALL(*mockedDB, deleteTaskNode(data.other_user_key, data.tasklist_key,
+                                        data.task_key))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasksWorker->Delete(data), SUCCESS);
 
@@ -565,15 +565,15 @@ TEST_F(TasksWorkerTest, Delete) {
 
   // request is empty
   data.user_key = "";
-  EXPECT_EQ(tasksWorker->Delete(data), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Delete(data), ERR_RFIELD);
   data.user_key = "user0";
 
   data.tasklist_key = "";
-  EXPECT_EQ(tasksWorker->Delete(data), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Delete(data), ERR_RFIELD);
   data.tasklist_key = "tasklist0";
 
   data.task_key = "";
-  EXPECT_EQ(tasksWorker->Delete(data), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Delete(data), ERR_RFIELD);
   data.task_key = "task0";
 
   // tasklist does not exist
@@ -653,7 +653,7 @@ TEST_F(TasksWorkerTest, Revise) {
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
-  EXPECT_CALL(*mockedDB, reviseTaskNode(data.user_key, data.tasklist_key,
+  EXPECT_CALL(*mockedDB, reviseTaskNode(data.other_user_key, data.tasklist_key,
                                         data.task_key, task_info))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
@@ -675,15 +675,15 @@ TEST_F(TasksWorkerTest, Revise) {
 
   // request is empty
   data.user_key = "";
-  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_RFIELD);
   data.user_key = "user0";
 
   data.tasklist_key = "";
-  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_RFIELD);
   data.tasklist_key = "tasklist0";
 
   data.task_key = "";
-  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_RFIELD);
   data.task_key = "task0";
 
   // tasklist does not exist
@@ -694,7 +694,7 @@ TEST_F(TasksWorkerTest, Revise) {
 
   // input is empty
   in = TaskContent();
-  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_RFIELD);
 
   // Error format for startDate
   in.startDate = "2018-01-01";
@@ -752,8 +752,8 @@ TEST_F(TasksWorkerTest, GetAllTasksName) {
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
-  EXPECT_CALL(*mockedDB,
-              getAllTaskNodes(data.user_key, data.tasklist_key, task_names))
+  EXPECT_CALL(*mockedDB, getAllTaskNodes(data.other_user_key, data.tasklist_key,
+                                         task_names))
       .WillOnce(DoAll(SetArgReferee<2>(new_task_names), Return(SUCCESS)));
   EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), SUCCESS);
   EXPECT_EQ(task_names[0], "task0");
@@ -784,12 +784,12 @@ TEST_F(TasksWorkerTest, GetAllTasksName) {
 
   // request is empty
   data.user_key = "";
-  EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_KEY);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_RFIELD);
   EXPECT_EQ(task_names.size(), 0);
   data.user_key = "user0";
 
   data.tasklist_key = "";
-  EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_KEY);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, task_names), ERR_RFIELD);
   EXPECT_EQ(task_names.size(), 0);
   data.tasklist_key = "tasklist0";
 

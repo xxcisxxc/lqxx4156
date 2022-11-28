@@ -97,6 +97,7 @@ struct TaskContent {
     priority = NULL_PRIORITY;
     status = "";
   }
+
   /**
    * @brief Compare two time strings
    * @return true if the first time string is earlier than the second one
@@ -131,6 +132,7 @@ struct TaskContent {
     double diff = difftime(startTime, endTime);
     return diff <= 0;
   }
+
   /**
    * @brief Check if the task is valid
    * @return true if member variables are valid
