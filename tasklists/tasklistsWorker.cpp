@@ -77,6 +77,10 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
   if (data.RequestUserIsEmpty())
     return ERR_RFIELD;
 
+  // check if tasklist name is empty
+  if (in.name == "")
+    return ERR_KEY;
+
   if (!in.visibility.empty() && in.visibility != "public" &&
       in.visibility != "shared" && in.visibility != "private")
     return ERR_FORMAT;
