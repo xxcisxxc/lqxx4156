@@ -21,12 +21,18 @@ fi
 fi
 
 if [ "$1" == "build" ]; then
+    mkdir build && cd build && cmake .. && make
+fi
+
+if [ "$1" == "test" ]; then
     docker run -d -p7474:7474 -p7687:7687 -e NEO4J_AUTH=neo4j/hello4156 neo4j:4.4.9
     sleep 10
     mkdir build && cd build && cmake .. && make
+    cd test && ctest
 fi
 
 if [ "$1" == "run" ]; then
     docker run -d -p7474:7474 -p7687:7687 -e NEO4J_AUTH=neo4j/hello4156 neo4j:4.4.9
     sleep 10
+    cd build && ./lqxx
 fi
