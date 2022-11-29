@@ -938,16 +938,6 @@ TEST_F(IntgTest, TaskLists_RemoveGrantTaskList) {
   // alice shares her tasklist1 with sam, with read-write permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "sam", true));
 
-  // alice remove bob's access to tasklist0
-
-  // alice remove bob's access to tasklist1
-
-  // alice remove sam's access to tasklist1
-
-  // alice remove bob's access to tasklist2
-
-  // alice remove bob's access to tasklist3
-
   // delete user
   EXPECT_TRUE(users->Delete(
       UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
