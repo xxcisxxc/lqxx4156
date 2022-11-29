@@ -236,6 +236,8 @@ TasksWorker::GetAllTasksName(const RequestData &data,
     return ERR_RFIELD;
 
   // tasklist itself does not exist
+  // 这块exists判定，已经跑过checkAccess了，所以不需要再判定了
+  // 很烦
   if (!taskListsWorker->Exists(data)) {
     return ERR_NO_NODE;
   }
