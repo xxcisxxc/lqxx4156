@@ -40,6 +40,7 @@ build/
 build
 .cache
 .devcontainer
+client/node_modules
 
 # MacOS
 .DS_Store
