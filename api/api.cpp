@@ -45,16 +45,19 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
   BuildHttpRespBody(js, std::forward<Rest>(rest)...);
 }
 
-#define API_ADD_HTTP_OPTIONS_HANDLER(server, path)                                                                      \
-  do {                                                                                                                  \
-    (server)->Options((path), [this](const httplib::Request &API_REQ(),                                                 \
-                                     httplib::Response &API_RES()) {                                                    \
-      API_RES().set_header("Access-Control-Allow-Origin", "*");                                                               \
-      API_RES().set_header("Allow", "GET, POST, PUT, DELETE, OPTIONS");                                                              \
-      API_RES().set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization");  \
-      API_RES().set_header("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE");                                       \
-    });                                                                                                                 \
-  } while (false)                                                                                                       \
+#define API_ADD_HTTP_OPTIONS_HANDLER(server, path)                             \
+  do {                                                                         \
+    (server)->Options((path), [this](const httplib::Request &API_REQ(),        \
+                                     httplib::Response &API_RES()) {           \
+      API_RES().set_header("Access-Control-Allow-Origin", "*");                \
+      API_RES().set_header("Allow", "GET, POST, PUT, DELETE, OPTIONS");        \
+      API_RES().set_header(                                                    \
+          "Access-Control-Allow-Headers",                                      \
+          "X-Requested-With, Content-Type, Accept, Origin, Authorization");    \
+      API_RES().set_header("Access-Control-Allow-Methods",                     \
+                           "OPTIONS, GET, POST, PUT, DELETE");                 \
+    });                                                                        \
+  } while (false)
 
 #define API_RETURN_HTTP_RESP(code, ...)                                        \
   do {                                                                         \
@@ -62,8 +65,11 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     BuildHttpRespBody(&result, __VA_ARGS__);                                   \
     API_RES().status = (code);                                                 \
     API_RES().set_header("Access-Control-Allow-Origin", "*");                  \
-    API_RES().set_header("Access-Control-Allow-Methods", " GET, POST, PUT, DELETE, OPTIONS");                      \
-    API_RES().set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization");   \
+    API_RES().set_header("Access-Control-Allow-Methods",                       \
+                         " GET, POST, PUT, DELETE, OPTIONS");                  \
+    API_RES().set_header(                                                      \
+        "Access-Control-Allow-Headers",                                        \
+        "X-Requested-With, Content-Type, Accept, Origin, Authorization");      \
     API_RES().set_content(result.dump(), "text/plain");                        \
     return;                                                                    \
   } while (false)
@@ -699,7 +705,7 @@ void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+)/create)", Post, ShareCreate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Delete, ShareDelete);
   API_ADD_HTTP_HANDLER(svr, R"(/health/(\d+))", Get, Health);
-  
+
   API_ADD_HTTP_OPTIONS_HANDLER(svr, R"(/.*)");
   svr->listen(host, port);
 }
