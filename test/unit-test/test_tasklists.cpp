@@ -275,10 +275,10 @@ TEST_F(TaskListTest, ReviseOwned) {
   std::string newContent = "this is tasklist #1";
   std::string newDate = "12/10/2022";
   std::string newVis = "private";
-  in = TasklistContent(newName, newContent, newDate, newVis);
+  std::string blankName = "";
+  in = TasklistContent(blankName, newContent, newDate, newVis);
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["name"] = newName;
   task_list_info["content"] = newContent;
   task_list_info["date"] = newDate;
   task_list_info["visibility"] = newVis;
@@ -288,6 +288,16 @@ TEST_F(TaskListTest, ReviseOwned) {
                                            task_list_info))
       .WillOnce(Return(SUCCESS));
   EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+
+  // revise name, should be failed
+  in.name = newName;
+  task_list_info["name"] = newName;
+  EXPECT_CALL(mockedDB, reviseTaskListNode(data.user_key, data.tasklist_key,
+                                           task_list_info))
+      .WillOnce(Return(ERR_KEY));
+  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+  in.name = "";
+  task_list_info["name"] = "";
 
   // request tasklist_key empty
   data.tasklist_key = "";
@@ -341,10 +351,10 @@ TEST_F(TaskListTest, ReviseAccess) {
   std::string newContent = "this is tasklist #1";
   std::string newDate = "12/10/2022";
   std::string newVis = "";
-  in = TasklistContent(newName, newContent, newDate, newVis);
+  std::string blankName = "";
+  in = TasklistContent(blankName, newContent, newDate, newVis);
 
   std::map<std::string, std::string> task_list_info;
-  task_list_info["name"] = newName;
   task_list_info["content"] = newContent;
   task_list_info["date"] = newDate;
 
@@ -521,7 +531,15 @@ TEST_F(TaskListTest, ReviseGrantTaskList) {
   }
   std::string errUser;
 
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"];
+  std::map<std::string, std::string> new_task_list_info;
+  new_task_list_info["visibility"] = "shared";
+
   // normal call, should be successful
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   for (int i = 0; i < in_list.size(); i++) {
     EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[i].user_name,
                                     data.tasklist_key, in_list[i].permission))
@@ -532,6 +550,10 @@ TEST_F(TaskListTest, ReviseGrantTaskList) {
   EXPECT_EQ(errUser, "");
 
   // failed on third user
+  task_list_info["visibility"] = "";
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   for (int i = 0; i < 3; i++) {
     EXPECT_CALL(mockedDB, addAccess(data.user_key, in_list[i].user_name,
                                     data.tasklist_key, in_list[i].permission))
@@ -552,7 +574,15 @@ TEST_F(TaskListTest, RemoveGrantTaskList) {
   data.tasklist_key = "tasklist";
   data.other_user_key = "other_user";
 
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"];
+  std::map<std::string, std::string> new_task_list_info;
+  new_task_list_info["visibility"] = "shared";
+
   // normal call, should be successful
+  EXPECT_CALL(mockedDB,
+              getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
+      .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
   EXPECT_CALL(mockedDB, removeAccess(data.user_key, data.other_user_key,
                                      data.tasklist_key))
       .WillOnce(Return(SUCCESS));

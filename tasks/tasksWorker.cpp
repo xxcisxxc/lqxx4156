@@ -70,7 +70,7 @@ void TasksWorker::Map2TaskStruct(
 returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   // request has empty value
   if (data.RequestIsEmpty())
-    return ERR_KEY;
+    return ERR_RFIELD;
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
@@ -85,8 +85,9 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   std::map<std::string, std::string> task_info;
 
   // get all available fields
-  returnCode ret = db->getTaskNode(data.user_key, data.tasklist_key,
-                                   data.task_key, task_info);
+  returnCode ret = db->getTaskNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, data.task_key, task_info);
 
   // error in tasklist_key or task_key
   if (ret == ERR_KEY || ret == ERR_NO_NODE) {
@@ -103,11 +104,21 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
                                std::string &outTaskName) {
   // request has empty value
   if (data.RequestTaskListIsEmpty())
+    return ERR_RFIELD;
+
+  // input value does not have a key
+  if (in.LoseKey())
     return ERR_KEY;
 
   // check if in is valid
   if (!in.IsValid())
     return ERR_FORMAT;
+
+  // tasklist itself does not exist
+  if (!taskListsWorker->Exists(data)) {
+    // maybe create taskList first
+    return ERR_NO_NODE;
+  }
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
@@ -123,16 +134,6 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   }
 
   // can access
-  // input value does not have a key
-  if (in.LoseKey())
-    return ERR_KEY;
-
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    // maybe create taskList first
-    return ERR_NO_NODE;
-  }
-
   std::map<std::string, std::string> task_info;
   TaskStruct2Map(in, task_info);
 
@@ -143,16 +144,26 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
     // For Create, data.task_key can be "", so we should use task_info["name"]
     outTaskName = Rename(originTaskName, suffix++);
     task_info["name"] = outTaskName;
-    ret = db->createTaskNode(data.user_key, data.tasklist_key, task_info);
+    ret = db->createTaskNode(data.other_user_key.empty() ? data.user_key
+                                                         : data.other_user_key,
+                             data.tasklist_key, task_info);
   } while (ret == ERR_DUP_NODE);
 
+  if (ret != SUCCESS) {
+    outTaskName = "";
+  }
   return ret;
 }
 
 returnCode TasksWorker::Delete(const RequestData &data) {
   // request has empty value
   if (data.RequestIsEmpty())
-    return ERR_KEY;
+    return ERR_RFIELD;
+
+  // tasklist itself does not exist
+  if (!taskListsWorker->Exists(data)) {
+    return ERR_NO_NODE;
+  }
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
@@ -168,24 +179,31 @@ returnCode TasksWorker::Delete(const RequestData &data) {
   }
 
   // can access
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    return ERR_NO_NODE;
-  }
-
-  returnCode ret =
-      db->deleteTaskNode(data.user_key, data.tasklist_key, data.task_key);
+  returnCode ret = db->deleteTaskNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, data.task_key);
   return ret;
 }
 
 returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   // request has empty value
   if (data.RequestIsEmpty())
-    return ERR_KEY;
+    return ERR_RFIELD;
+
+  // if revise, then struct "in" is the value that we would like to revise
+  // eg. revise name, then in->name = "revisedName", but in->content = ""
+  // because we do not need to revise content
+  if (in.IsEmpty())
+    return ERR_RFIELD; // no such input
 
   // check if in is valid
   if (!in.IsValid())
     return ERR_FORMAT;
+
+  // tasklist itself does not exist
+  if (!taskListsWorker->Exists(data)) {
+    return ERR_NO_NODE;
+  }
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
@@ -199,24 +217,14 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
       return ERR_ACCESS;
     }
   }
+
   // can access
-
-  // if revise, then struct "in" is the value that we would like to revise
-  // eg. revise name, then in->name = "revisedName", but in->content = ""
-  // because we do not need to revise content
-  if (in.IsEmpty())
-    return ERR_KEY; // no such input
-
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    return ERR_NO_NODE;
-  }
-
   std::map<std::string, std::string> task_info;
   TaskStruct2Map(in, task_info);
 
-  returnCode ret = db->reviseTaskNode(data.user_key, data.tasklist_key,
-                                      data.task_key, task_info);
+  returnCode ret = db->reviseTaskNode(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, data.task_key, task_info);
   return ret;
 }
 
@@ -225,7 +233,14 @@ TasksWorker::GetAllTasksName(const RequestData &data,
                              std::vector<std::string> &outTaskNameList) {
   // request has empty value
   if (data.RequestTaskListIsEmpty())
-    return ERR_KEY;
+    return ERR_RFIELD;
+
+  // tasklist itself does not exist
+  // 这块exists判定，已经跑过checkAccess了，所以不需要再判定了
+  // 很烦
+  if (!taskListsWorker->Exists(data)) {
+    return ERR_NO_NODE;
+  }
 
   if (!data.other_user_key.empty()) {
     bool permission = false;
@@ -237,12 +252,8 @@ TasksWorker::GetAllTasksName(const RequestData &data,
   }
   // can access
 
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    return ERR_NO_NODE;
-  }
-
-  returnCode ret =
-      db->getAllTaskNodes(data.user_key, data.tasklist_key, outTaskNameList);
+  returnCode ret = db->getAllTaskNodes(
+      data.other_user_key.empty() ? data.user_key : data.other_user_key,
+      data.tasklist_key, outTaskNameList);
   return ret;
 }

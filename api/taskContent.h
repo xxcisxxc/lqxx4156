@@ -64,11 +64,16 @@ struct TaskContent {
    * @param _content Task content
    * @param _date Task due date
    */
-  TaskContent(std::string &_name, std::string &_content,
-              std::string &_startDate, std::string &_endDate,
-              Priority &_priority, std::string &_status)
-      : name(_name), content(_content), startDate(_startDate),
-        endDate(_endDate), priority(_priority), status(_status) {}
+  template <typename Name, typename Content, typename StartDate,
+            typename EndDate, typename PriorityType, typename Status>
+  TaskContent(Name &&_name, Content &&_content, StartDate &&_startDate,
+              EndDate &&_endDate, PriorityType &&_priority, Status &&_status)
+      : name(std::forward<Name>(_name)),
+        content(std::forward<Content>(_content)),
+        startDate(std::forward<StartDate>(_startDate)),
+        endDate(std::forward<EndDate>(_endDate)),
+        priority(std::forward<PriorityType>(_priority)),
+        status(std::forward<Status>(_status)) {}
 
   /*
    * @brief Check if the task has a name
@@ -83,7 +88,6 @@ struct TaskContent {
   bool IsEmpty() {
     return name == "" && content == "" && startDate == "" && endDate == "" &&
            priority == NULL_PRIORITY && status == "";
-    ;
   }
 
   /*
@@ -97,6 +101,7 @@ struct TaskContent {
     priority = NULL_PRIORITY;
     status = "";
   }
+
   /**
    * @brief Compare two time strings
    * @return true if the first time string is earlier than the second one
@@ -131,6 +136,7 @@ struct TaskContent {
     double diff = difftime(startTime, endTime);
     return diff <= 0;
   }
+
   /**
    * @brief Check if the task is valid
    * @return true if member variables are valid

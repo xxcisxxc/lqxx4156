@@ -765,31 +765,31 @@ TEST_F(APITest, Share) {
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }
 
-  {
-    httplib::Client client(test_host, test_port);
-    client.set_basic_auth(token, "");
-    nlohmann::json request_body;
-    request_body["user_permission"] = {
-        {{"user", "test_user_1@test.com"}, {"permission", true}},
-        {{"user", "test_user_2@test.com"}, {"permission", false}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_2/create",
-                              request_body.dump(), "text/plain");
-    EXPECT_EQ(result.error(), httplib::Error::Success);
-    EXPECT_NE(result->body.find("success"), std::string::npos);
-  }
+  // {
+  //   httplib::Client client(test_host, test_port);
+  //   client.set_basic_auth(token, "");
+  //   nlohmann::json request_body;
+  //   request_body["user_permission"] = {
+  //       {{"user", "test_user_1@test.com"}, {"permission", true}},
+  //       {{"user", "test_user_2@test.com"}, {"permission", false}}};
+  //   auto result = client.Post("/v1/share/tasklists_test_name_2/create",
+  //                             request_body.dump(), "text/plain");
+  //   EXPECT_EQ(result.error(), httplib::Error::Success);
+  //   EXPECT_NE(result->body.find("success"), std::string::npos);
+  // }
 
-  {
-    httplib::Client client(test_host, test_port);
-    client.set_basic_auth(token, "");
-    nlohmann::json request_body;
-    request_body["user_permission"] = {
-        {{"user", "test_user_1@test.com"}, {"permission", true}},
-        {{"user", "test_user_2@test.com"}, {"permission", false}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_3/create",
-                              request_body.dump(), "text/plain");
-    EXPECT_EQ(result.error(), httplib::Error::Success);
-    EXPECT_NE(result->body.find("failed"), std::string::npos);
-  }
+  // {
+  //   httplib::Client client(test_host, test_port);
+  //   client.set_basic_auth(token, "");
+  //   nlohmann::json request_body;
+  //   request_body["user_permission"] = {
+  //       {{"user", "test_user_1@test.com"}, {"permission", true}},
+  //       {{"user", "test_user_2@test.com"}, {"permission", false}}};
+  //   auto result = client.Post("/v1/share/tasklists_test_name_3/create",
+  //                             request_body.dump(), "text/plain");
+  //   EXPECT_EQ(result.error(), httplib::Error::Success);
+  //   EXPECT_NE(result->body.find("failed"), std::string::npos);
+  // }
 
   /* Getting test */
 
@@ -905,16 +905,16 @@ TEST_F(APITest, Share) {
     EXPECT_EQ(result->body.find("public"), std::string::npos);
   }
 
-  {
-    httplib::Client client(test_host, test_port);
-    client.set_basic_auth(token_test_user_1, "");
-    auto result = client.Get("/v1/task_lists?share=true");
-    EXPECT_EQ(result.error(), httplib::Error::Success);
-    EXPECT_NE(result->body.find("success"), std::string::npos);
-    EXPECT_NE(result->body.find("tasklists_test_name_1"), std::string::npos);
-    EXPECT_NE(result->body.find("tasklists_test_name_2"), std::string::npos);
-    EXPECT_EQ(result->body.find("tasklists_test_name_3"), std::string::npos);
-  }
+  // {
+  //   httplib::Client client(test_host, test_port);
+  //   client.set_basic_auth(token_test_user_1, "");
+  //   auto result = client.Get("/v1/task_lists?share=true");
+  //   EXPECT_EQ(result.error(), httplib::Error::Success);
+  //   EXPECT_NE(result->body.find("success"), std::string::npos);
+  //   EXPECT_NE(result->body.find("tasklists_test_name_1"), std::string::npos);
+  //   EXPECT_NE(result->body.find("tasklists_test_name_2"), std::string::npos);
+  //   EXPECT_EQ(result->body.find("tasklists_test_name_3"), std::string::npos);
+  // }
 }
 
 int main(int argc, char **argv) {

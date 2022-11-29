@@ -34,6 +34,17 @@ struct RequestData {
    */
   RequestData() {}
   /*
+   * @brief RequestData constructor
+   *
+   * @param _user_key user id
+   * @param _tasklist_key task list id
+   * @param _task_key task id
+   */
+  RequestData(const std::string &_user_key, const std::string &_tasklist_key,
+              const std::string &_task_key, const std::string &_other_user_key)
+      : user_key(_user_key), tasklist_key(_tasklist_key), task_key(_task_key),
+        other_user_key(_other_user_key) {}
+  /*
    * @brief RequestData decomposed constructor
    */
   virtual ~RequestData() {}

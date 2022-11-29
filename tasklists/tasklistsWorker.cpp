@@ -77,6 +77,10 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
   if (data.RequestUserIsEmpty())
     return ERR_RFIELD;
 
+  // check if tasklist name is empty
+  if (in.name == "")
+    return ERR_KEY;
+
   if (!in.visibility.empty() && in.visibility != "public" &&
       in.visibility != "shared" && in.visibility != "private")
     return ERR_FORMAT;
@@ -95,6 +99,9 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
     task_list_info["name"] = outTasklistName;
     ret = db_instance.createTaskListNode(data.user_key, task_list_info);
   } while (ret == ERR_DUP_NODE);
+
+  if (ret != SUCCESS)
+    outTasklistName = "";
 
   return ret;
 }
@@ -181,6 +188,27 @@ TaskListsWorker ::GetAllAccessTaskList(const RequestData &data,
   return ret;
 }
 
+returnCode TaskListsWorker ::GetVisibility(const RequestData &data,
+                                           std::string &visibility) {
+  // request has empty value
+  if (data.RequestTaskListIsEmpty())
+    return ERR_RFIELD;
+
+  // get only visibility field
+  std::map<std::string, std::string> task_list_info;
+  task_list_info["visibility"];
+  returnCode ret = db_instance.getTaskListNode(data.user_key, data.tasklist_key,
+                                               task_list_info);
+
+  if (ret != SUCCESS)
+    return ret;
+
+  if (task_list_info.count("visibility")) {
+    visibility = task_list_info.at("visibility");
+  }
+  return ret;
+}
+
 returnCode TaskListsWorker ::GetAllGrantTaskList(
     const RequestData &data, std::vector<shareInfo> &out_list, bool &isPublic) {
   // request has empty value
@@ -189,16 +217,16 @@ returnCode TaskListsWorker ::GetAllGrantTaskList(
 
   returnCode ret;
   // if the tasklist is public, don't call allGrant
-  std::map<std::string, std::string> task_list_info;
-  task_list_info["visibility"];
-  ret = db_instance.getTaskListNode(data.user_key, data.tasklist_key,
-                                    task_list_info);
+  std::string visibility;
+  ret = GetVisibility(data, visibility);
+
   if (ret != SUCCESS) {
+    isPublic = false;
     return ret;
-  } else if (task_list_info["visibility"] == "public") {
+  } else if (visibility == "public") {
     isPublic = true;
     return SUCCESS;
-  } else if (task_list_info["visibility"] == "private") {
+  } else if (visibility == "private" || visibility == "") {
     isPublic = false;
     return ERR_ACCESS;
   } else {
@@ -229,7 +257,22 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
     return ERR_RFIELD;
 
   returnCode ret;
+  std::string visibility;
+
+  // we can only grant permission to shared tasklist
+  // also check whether the tasklist exists
+  ret = GetVisibility(data, visibility);
+  if (ret != SUCCESS || visibility != "shared") {
+    // errUser = in_list[i].user_name;
+    return ERR_ACCESS;
+  }
+
   for (int i = 0; i < in_list.size(); i++) {
+    // 这里应该要验证 dst_user_key 是否存在
+
+    // ERR_NO_NODE
+
+    // add grant
     ret = db_instance.addAccess(data.user_key, in_list[i].user_name,
                                 data.tasklist_key, in_list[i].permission);
     if (ret != SUCCESS) {
@@ -246,8 +289,17 @@ returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
 
-  returnCode ret = db_instance.removeAccess(data.user_key, data.other_user_key,
-                                            data.tasklist_key);
+  returnCode ret;
+  std::string visibility;
+
+  // we can only grant permission to shared tasklist
+  // also check whether the tasklist exists
+  ret = GetVisibility(data, visibility);
+  if (ret != SUCCESS || visibility != "shared")
+    return ERR_ACCESS;
+
+  ret = db_instance.removeAccess(data.user_key, data.other_user_key,
+                                 data.tasklist_key);
   return ret;
 }
 
@@ -260,8 +312,8 @@ returnCode TaskListsWorker ::GetAllPublicTaskList(
 bool TaskListsWorker ::Exists(const RequestData &data) {
   TasklistContent out;
   returnCode ret = Query(data, out);
-  if (ret == ERR_RFIELD || ret == ERR_NO_NODE) {
-    return false;
+  if (ret == SUCCESS) {
+    return true;
   }
-  return true;
+  return false;
 }
