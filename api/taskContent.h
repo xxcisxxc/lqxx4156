@@ -64,14 +64,17 @@ struct TaskContent {
    * @param _content Task content
    * @param _date Task due date
    */
-  template <typename Name, typename Content, typename StartDate, typename EndDate, typename PriorityType, typename Status>
-  TaskContent(Name &&_name, Content &&_content,
-              StartDate &&_startDate, EndDate &&_endDate,
-              PriorityType &&_priority, Status &&_status)
-      : name(std::forward<Name>(_name)), content(std::forward<Content>(_content)), 
-        startDate(std::forward<StartDate>(_startDate)), endDate(std::forward<EndDate>(_endDate)), 
-        priority(std::forward<PriorityType>(_priority)), status(std::forward<Status>(_status)) {}
-      
+  template <typename Name, typename Content, typename StartDate,
+            typename EndDate, typename PriorityType, typename Status>
+  TaskContent(Name &&_name, Content &&_content, StartDate &&_startDate,
+              EndDate &&_endDate, PriorityType &&_priority, Status &&_status)
+      : name(std::forward<Name>(_name)),
+        content(std::forward<Content>(_content)),
+        startDate(std::forward<StartDate>(_startDate)),
+        endDate(std::forward<EndDate>(_endDate)),
+        priority(std::forward<PriorityType>(_priority)),
+        status(std::forward<Status>(_status)) {}
+
   /*
    * @brief Check if the task has a name
    * @return true if the task has a name

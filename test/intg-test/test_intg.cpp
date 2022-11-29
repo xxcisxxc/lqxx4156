@@ -18,7 +18,8 @@ protected:
     db->deleteEverything();
 
     taskListsWorker = std::make_shared<TaskListsWorker>(*db);
-    tasksWorker = std::make_shared<TasksWorker>(db.get(), (TaskListsWorker *)(taskListsWorker.get()));
+    tasksWorker = std::make_shared<TasksWorker>(
+        db.get(), (TaskListsWorker *)(taskListsWorker.get()));
     users = std::make_shared<Users>(db);
   }
 
@@ -215,8 +216,7 @@ TEST_F(IntgTest, Users_Create) {
 
 TEST_F(IntgTest, Users_Delete) {
   // no such user, but still return true
-  EXPECT_TRUE(
-      users->Delete(UserInfo("alice", "alice@columbia.edu", "123456")));
+  EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "123456")));
 
   // create user first
   EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "123456")));
@@ -228,8 +228,7 @@ TEST_F(IntgTest, Users_Delete) {
   EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "123456")));
 
   // Deduplication
-  EXPECT_TRUE(
-      users->Delete(UserInfo("alice", "alice@columbia.edu", "123456")));
+  EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "123456")));
 
   // no such user
   EXPECT_FALSE(users->Delete(UserInfo("bob", "bob@", "123456")));
@@ -635,7 +634,8 @@ TEST_F(IntgTest, TaskLists_ReviseOthers) {
 
   // revise non-exist tasklist, should fail
   data.tasklist_key = "unknown_tasklist";
-  in = TasklistContent(blank, "unknown tasklist description", "12/30/2022", blank);
+  in = TasklistContent(blank, "unknown tasklist description", "12/30/2022",
+                       blank);
   EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_NO_NODE);
 
   // delete user
@@ -665,12 +665,12 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   EXPECT_EQ(outName, "tasklist0");
 
   in = TasklistContent("tasklist1", "tasklist1 description", "12/30/2022",
-                     "shared");
+                       "shared");
   EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist1");
 
   in = TasklistContent("tasklist2", "tasklist2 description", "1/30/2023",
-                     "public");
+                       "public");
   EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist2");
 
@@ -781,9 +781,8 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   outList = {};
   EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             SUCCESS);
-  sort(outList.begin(), outList.end(), [](shareInfo a, shareInfo b) {
-    return a.user_name < b.user_name;
-  });
+  sort(outList.begin(), outList.end(),
+       [](shareInfo a, shareInfo b) { return a.user_name < b.user_name; });
   EXPECT_EQ(outList.size(), 2);
   EXPECT_EQ(outList[0].user_name, "bob@columbia.edu");
   EXPECT_EQ(outList[0].task_list_name, "");
@@ -1593,7 +1592,8 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
 
   // alice tries to revise task in tasklist1
-  in = TaskContent(blank, blank, "12/31/2022", "01/29/2023", NULL_PRIORITY, blank);
+  in = TaskContent(blank, blank, "12/31/2022", "01/29/2023", NULL_PRIORITY,
+                   blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
@@ -1605,7 +1605,8 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
 
   // errro format
-  in = TaskContent(blank, blank, "12/32/2022", "01/29/2023", NULL_PRIORITY, blank);
+  in = TaskContent(blank, blank, "12/32/2022", "01/29/2023", NULL_PRIORITY,
+                   blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
@@ -1673,20 +1674,23 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   data.other_user_key = name2Email["alice"];
 
   // bob tries to revise task in tasklist0, which is not allowed
-  TaskContent in(blank, blank, "11/30/2022", "12/29/2022", NULL_PRIORITY, blank);
+  TaskContent in(blank, blank, "11/30/2022", "12/29/2022", NULL_PRIORITY,
+                 blank);
   data.tasklist_key = "tasklist0";
   data.task_key = "task0";
   // 这里有待 !taskListsWorker->Exists(data) 调整
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_NO_NODE);
 
   // bob tries to revise task in tasklist1, but he has read-only permission
-  in = TaskContent(blank, blank, "12/30/2022", "01/29/2023", NULL_PRIORITY, blank);
+  in = TaskContent(blank, blank, "12/30/2022", "01/29/2023", NULL_PRIORITY,
+                   blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_ACCESS);
 
   // bob tries to revise task in tasklist2, which is public
-  in = TaskContent(blank, blank, "01/30/2023", "02/25/2023", NULL_PRIORITY, blank);
+  in = TaskContent(blank, blank, "01/30/2023", "02/25/2023", NULL_PRIORITY,
+                   blank);
   data.tasklist_key = "tasklist2";
   data.task_key = "task2";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
@@ -1696,7 +1700,8 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   data.other_user_key = name2Email["alice"];
 
   // sam tries to revise task in tasklist1, he has read-write permission
-  in = TaskContent(blank, blank, "12/30/2022", "01/29/2023", NULL_PRIORITY, blank);
+  in = TaskContent(blank, blank, "12/30/2022", "01/29/2023", NULL_PRIORITY,
+                   blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);

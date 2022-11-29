@@ -149,7 +149,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
                              data.tasklist_key, task_info);
   } while (ret == ERR_DUP_NODE);
 
-  if(ret != SUCCESS) {
+  if (ret != SUCCESS) {
     outTaskName = "";
   }
   return ret;

@@ -100,7 +100,7 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
     ret = db_instance.createTaskListNode(data.user_key, task_list_info);
   } while (ret == ERR_DUP_NODE);
 
-  if(ret != SUCCESS)
+  if (ret != SUCCESS)
     outTasklistName = "";
 
   return ret;
@@ -266,7 +266,7 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
     // errUser = in_list[i].user_name;
     return ERR_ACCESS;
   }
-    
+
   for (int i = 0; i < in_list.size(); i++) {
     // 这里应该要验证 dst_user_key 是否存在
 
