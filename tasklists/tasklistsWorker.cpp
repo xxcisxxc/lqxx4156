@@ -100,6 +100,9 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
     ret = db_instance.createTaskListNode(data.user_key, task_list_info);
   } while (ret == ERR_DUP_NODE);
 
+  if(ret != SUCCESS)
+    outTasklistName = "";
+
   return ret;
 }
 
@@ -259,9 +262,11 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
   // we can only grant permission to shared tasklist
   // also check whether the tasklist exists
   ret = GetVisibility(data, visibility);
-  if (ret != SUCCESS || visibility != "shared")
+  if (ret != SUCCESS || visibility != "shared") {
+    std::cout << (int)ret << " " << visibility << std::endl;
     return ERR_ACCESS;
-
+  }
+    
   for (int i = 0; i < in_list.size(); i++) {
     // 这里应该要验证 dst_user_key 是否存在
 

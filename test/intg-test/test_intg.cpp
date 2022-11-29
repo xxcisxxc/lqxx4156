@@ -387,8 +387,8 @@ TEST_F(IntgTest, TaskLists_QueryOwned) {
   EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist3");
   EXPECT_EQ(out.content, "");
-  EXPECT_EQ(out.date, "private");
-  EXPECT_EQ(out.visibility, "");
+  EXPECT_EQ(out.date, "");
+  EXPECT_EQ(out.visibility, "private");
 
   // query no such tasklist
   out = TasklistContent();
@@ -569,7 +569,9 @@ TEST_F(IntgTest, TaskLists_ReviseOwned) {
 
   // tasklist key not exist, fail
   data.tasklist_key = "unknown_tasklist";
+  in.content = "unknown tasklist description";
   EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_NO_NODE);
+  in.content = "";
   data.tasklist_key = "tasklist0";
 
   // no user key, fail
@@ -681,6 +683,7 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   out = {};
   EXPECT_EQ(taskListsWorker->GetAllTasklist(data, out), SUCCESS);
   EXPECT_EQ(out.size(), 4);
+  sort(out.begin(), out.end());
   EXPECT_EQ(out[0], "tasklist0");
   EXPECT_EQ(out[1], "tasklist1");
   EXPECT_EQ(out[2], "tasklist2");
