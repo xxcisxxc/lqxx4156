@@ -85,9 +85,21 @@ function Main() {
             };
 
             fetch("http://173.199.114.233:3001/v1/task_lists/" + tasklistName, requestOptions)
-            .then((response) => response.json())
-            .then((data) => afterCreateSuccessful(data))
-            .catch((error) => onCreateError(error));
+            .then((response) => {
+                if (response.status == 200) {
+                    var rows = document.getElementById("tasklistsTable").rows;
+                    for ( var i = 0; i < rows.length; i++ ) {
+                        console.log(rows[i])
+                        var fullname = rows[i].getElementsByTagName("td");
+                        fullname = fullname[0].innerHTML;
+                        if (fullname == tasklistName) {
+                            document.getElementById("tasklistsTable").deleteRow(i);
+                            return;
+                        }
+                    }
+                }
+            })
+            .catch((error) => {console.log(error)});
         }
     }
 

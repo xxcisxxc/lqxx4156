@@ -52,7 +52,7 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
       API_RES().set_header("Access-Control-Allow-Origin", "*");                                                               \
       API_RES().set_header("Allow", "GET, POST, PUT, DELETE, OPTIONS");                                                              \
       API_RES().set_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization");  \
-      API_RES().set_header("Access-Control-Allow-Methods", "OPTIONS, GET, POST, HEAD");                                       \
+      API_RES().set_header("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE");                                       \
     });                                                                                                                 \
   } while (false)                                                                                                       \
 
