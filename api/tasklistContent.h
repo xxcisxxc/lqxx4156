@@ -54,9 +54,11 @@ struct TasklistContent {
    * @param _date value for tasklist date
    * @param _vis value for tasklist visibility
    */
-  TasklistContent(std::string &_name, std::string &_content, std::string &_date,
-                  std::string &_vis)
-      : name(_name), content(_content), date(_date), visibility(_vis) {}
+  template <typename Name, typename Content, typename Date, typename Visibility>
+  TasklistContent(Name &&_name, Content &&_content, Date &&_date,
+                  Visibility &&_vis)
+      : name(std::forward<Name>(_name)), content(std::forward<Content>(_content)), 
+        date(std::forward<Date>(_date)), visibility(std::forward<Visibility>(_vis)) {}
 
   /**
    * @brief check if the key -- name is missing

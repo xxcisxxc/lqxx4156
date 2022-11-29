@@ -13,17 +13,20 @@ using namespace ::testing;
 class IntgTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    db = std::make_shared<DB>();
+    const std::string db_host = "neo4j://neo4j:hello4156@localhost:7687";
+    db = std::make_shared<DB>(db_host);
+    db->deleteEverything();
+
     taskListsWorker = std::make_shared<TaskListsWorker>(*db);
-    tasksWorker = std::make_shared<TasksWorker>(db, taskListsWorker);
+    tasksWorker = std::make_shared<TasksWorker>(db.get(), (TaskListsWorker *)(taskListsWorker.get()));
     users = std::make_shared<Users>(db);
   }
 
   void TearDown() override {
-    delete (db);
-    delete (taskListsWorker);
-    delete (tasksWorker);
-    delete (users);
+    // delete (db);
+    // delete (taskListsWorker);
+    // delete (tasksWorker);
+    // delete (users);
   }
 
   bool SetUpAlice();
@@ -34,17 +37,18 @@ protected:
   std::unordered_map<std::string, std::string> name2Email;
   std::unordered_map<std::string, std::string> name2Passwd;
 
-  std::shared_ptr<DB> *db;
-  std::shared_ptr<TaskListsWorker> *taskListsWorker;
-  std::shared_ptr<TasksWorker> *tasksWorker;
-  std::shared_ptr<Users> *users;
+  std::shared_ptr<DB> db;
+  std::shared_ptr<TaskListsWorker> taskListsWorker;
+  std::shared_ptr<TasksWorker> tasksWorker;
+  std::shared_ptr<Users> users;
 };
 
 bool IntgTest::SetUpAlice() {
   // setup environment
   // create user first
   users->Create(UserInfo("alice", "alice@columbia.edu", "012345"));
-  RequestData data("alice@columbia.edu", "", "", "");
+  std::string blank = "";
+  RequestData data("alice@columbia.edu", blank, blank, blank);
   name2Email["alice"] = "alice@columbia.edu";
   name2Passwd["alice"] = "012345";
 
@@ -74,7 +78,7 @@ bool IntgTest::SetUpAlice() {
     return false;
   }
 
-  in = TasklistContent("tasklist3", "", "", "");
+  in = TasklistContent("tasklist3", blank, blank, blank);
   ret = taskListsWorker->Create(data, in, outName);
   if (ret != SUCCESS || outName != "tasklist3") {
     std::cout << "alice creates tasklist3 failed" << std::endl;
@@ -87,7 +91,8 @@ bool IntgTest::SetUpAlice() {
 bool IntgTest::SetUpBob() {
   // create user first
   users->Create(UserInfo("bob", "bob@columbia.edu", "678901"));
-  RequestData data("bob@columbia.edu", "", "", "");
+  std::string blank = "";
+  RequestData data("bob@columbia.edu", blank, blank, blank);
   name2Email["bob"] = "bob@columbia.edu";
   name2Passwd["bob"] = "678901";
 
@@ -123,7 +128,8 @@ bool IntgTest::SetUpBob() {
 bool IntgTest::SetUpSam() {
   // create user first
   users->Create(UserInfo("sam", "sam@columbia.edu", "234567"));
-  RequestData data("sam@columbia.edu", "", "", "");
+  std::string blank = "";
+  RequestData data("sam@columbia.edu", blank, blank, blank);
   name2Email["sam"] = "sam@columbia.edu";
   name2Passwd["sam"] = "234567";
 
@@ -170,7 +176,7 @@ bool IntgTest::ShareTaskList(std::string src, std::string dst,
   in_list.push_back(info);
 
   std::string errUser;
-  returnCode ret = tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser);
+  returnCode ret = taskListsWorker->ReviseGrantTaskList(data, in_list, errUser);
 
   if (ret != SUCCESS || errUser != "") {
     std::cout << "share tasklist failed" << std::endl;
@@ -281,8 +287,8 @@ TEST_F(IntgTest, Users_DuplicatedEmail) {
 TEST_F(IntgTest, TaskLists_Create) {
   // setup environment
   EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "012345")));
-
-  RequestData data("alice@columbia.edu", "", "", "");
+  std::string blank = "";
+  RequestData data("alice@columbia.edu", blank, blank, blank);
   TasklistContent in("tasklist0", "tasklist0 description", "11/30/2022",
                      "private");
   std::string outName;
@@ -292,49 +298,49 @@ TEST_F(IntgTest, TaskLists_Create) {
   EXPECT_EQ(outName, "tasklist0");
 
   // Duplicate tasklist name but should be successful
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist0(1)");
 
   // Duplicate tasklist name but should be successful
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist0(2)");
 
   // only one field: tasklist name
-  in = TasklistContent("tasklist1", "", "", "");
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), SUCCESS);
+  in = TasklistContent("tasklist1", blank, blank, blank);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist1");
 
   // real db check
 
   // request user_key is empty
   data.user_key = "";
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), ERR_RFIELD);
   EXPECT_EQ(outName, "");
   data.user_key = "alice@columbia.edu";
 
   // no such user
   data.user_key = "bob@columbia.edu";
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_NO_NODE);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), ERR_NO_NODE);
   EXPECT_EQ(outName, "");
   data.user_key = "alice@columbia.edu";
 
   // tasklist name is empty
   in.name = "";
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_KEY);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), ERR_KEY);
   EXPECT_EQ(outName, "");
   in.name = "tasklist0";
 
   // error visibility format
   in.visibility = "wrong visibility";
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), ERR_FORMAT);
   EXPECT_EQ(outName, "");
   in.visibility = "private";
 
   // error date format
-  in.due_date = "wrong date";
-  EXPECT_EQ(tasklistsWorker->Create(data, in, outName), ERR_FORMAT);
+  in.date = "wrong date";
+  EXPECT_EQ(taskListsWorker->Create(data, in, outName), ERR_FORMAT);
   EXPECT_EQ(outName, "");
-  in.due_date = "11/30/2022";
+  in.date = "11/30/2022";
 
   // delete user
   EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "012345")));
@@ -343,60 +349,61 @@ TEST_F(IntgTest, TaskLists_Create) {
 TEST_F(IntgTest, TaskLists_QueryOwned) {
   // setup environment
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // query private tasklists
   data.tasklist_key = "tasklist0";
   TasklistContent out;
-  EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist0");
-  EXPECT_EQ(out.description, "tasklist0 description");
-  EXPECT_EQ(out.due_date, "11/30/2022");
+  EXPECT_EQ(out.content, "tasklist0 description");
+  EXPECT_EQ(out.date, "11/30/2022");
   EXPECT_EQ(out.visibility, "private");
 
   // query shared tasklists
   out = TasklistContent();
   data.tasklist_key = "tasklist1";
-  EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist1");
-  EXPECT_EQ(out.description, "tasklist1 description");
-  EXPECT_EQ(out.due_date, "12/30/2022");
+  EXPECT_EQ(out.content, "tasklist1 description");
+  EXPECT_EQ(out.date, "12/30/2022");
   EXPECT_EQ(out.visibility, "shared");
 
   // query public tasklists
   out = TasklistContent();
   data.tasklist_key = "tasklist2";
-  EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist2");
-  EXPECT_EQ(out.description, "tasklist2 description");
-  EXPECT_EQ(out.due_date, "1/30/2023");
+  EXPECT_EQ(out.content, "tasklist2 description");
+  EXPECT_EQ(out.date, "1/30/2023");
   EXPECT_EQ(out.visibility, "public");
 
   // query tasklists with no description
   out = TasklistContent();
   data.tasklist_key = "tasklist3";
-  EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist3");
-  EXPECT_EQ(out.description, "");
-  EXPECT_EQ(out.due_date, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.date, "");
   EXPECT_EQ(out.visibility, "");
 
   // query no such tasklist
   out = TasklistContent();
   data.tasklist_key = "unknown_tasklist";
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_NO_NODE);
+  EXPECT_EQ(taskListsWorker->Query(data, out), ERR_NO_NODE);
   EXPECT_EQ(out.name, "");
-  EXPECT_EQ(out.description, "");
-  EXPECT_EQ(out.due_date, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.date, "");
   EXPECT_EQ(out.visibility, "");
 
   // tasklist_key is empty
   out = TasklistContent();
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
-  EXPECT_EQ(out.description, "");
-  EXPECT_EQ(out.due_date, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.date, "");
   EXPECT_EQ(out.visibility, "");
 
   // delete user
@@ -408,24 +415,25 @@ TEST_F(IntgTest, TaskLists_QueryOthers) {
   // setup environment
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
-  RequestData data(name2Email["bob"], "", "", name2Email["alice"]);
+  std::string blank = "";
+  RequestData data(name2Email["bob"], blank, blank, name2Email["alice"]);
 
   // bob query alice's private tasklists, should fail
   data.tasklist_key = "tasklist0";
   TasklistContent out;
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_ACCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), ERR_ACCESS);
   EXPECT_EQ(out.name, "");
-  EXPECT_EQ(out.description, "");
-  EXPECT_EQ(out.due_date, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.date, "");
   EXPECT_EQ(out.visibility, "");
 
   // bob query alice's shared tasklists, but no access now
   data.tasklist_key = "tasklist1";
   out = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_ACCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), ERR_ACCESS);
   EXPECT_EQ(out.name, "");
-  EXPECT_EQ(out.description, "");
-  EXPECT_EQ(out.due_date, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.date, "");
   EXPECT_EQ(out.visibility, "");
 
   // alice shares her tasklist1 with bob
@@ -434,28 +442,28 @@ TEST_F(IntgTest, TaskLists_QueryOthers) {
   // bob query alice's shared tasklists, now he has access
   data.tasklist_key = "tasklist1";
   out = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist1");
-  EXPECT_EQ(out.description, "tasklist1 description");
-  EXPECT_EQ(out.due_date, "12/30/2022");
+  EXPECT_EQ(out.content, "tasklist1 description");
+  EXPECT_EQ(out.date, "12/30/2022");
   EXPECT_EQ(out.visibility, "shared");
 
   // bob query alice's public tasklists, result tasklist2
   data.tasklist_key = "tasklist2";
   out = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), SUCCESS);
   EXPECT_EQ(out.name, "tasklist2");
-  EXPECT_EQ(out.description, "tasklist2 description");
-  EXPECT_EQ(out.due_date, "1/30/2023");
+  EXPECT_EQ(out.content, "tasklist2 description");
+  EXPECT_EQ(out.date, "1/30/2023");
   EXPECT_EQ(out.visibility, "public");
 
   // bob query alice's "empty" tasklists, private in default
   data.tasklist_key = "tasklist3";
   out = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Query(data, out), ERR_ACCESS);
+  EXPECT_EQ(taskListsWorker->Query(data, out), ERR_ACCESS);
   EXPECT_EQ(out.name, "tasklist3");
-  EXPECT_EQ(out.description, "");
-  EXPECT_EQ(out.due_date, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.date, "");
   EXPECT_EQ(out.visibility, "");
 
   // delete user
@@ -468,7 +476,8 @@ TEST_F(IntgTest, TaskLists_QueryOthers) {
 TEST_F(IntgTest, TaskLists_Delete) {
   // setup environment
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // delete tasklist0
   data.tasklist_key = "tasklist0";
@@ -503,7 +512,8 @@ TEST_F(IntgTest, TaskLists_ReviseOwned) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "012345")));
-  RequestData data("alice@columbia.edu", "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // create tasklists
   std::string outName;
@@ -516,58 +526,58 @@ TEST_F(IntgTest, TaskLists_ReviseOwned) {
   data.tasklist_key = "tasklist0";
   in = TasklistContent();
   in.content = "new tasklist0 description";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
   in.content = "";
 
   // revise tasklist date, success
   in.date = "11/30/2023";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
   in.date = "";
 
   // revise tasklist visibility, success
   in.visibility = "public";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
   in.visibility = "";
 
   // revise multiple fields, success
   in.content = "new new tasklist0 description";
   in.date = "11/30/2024";
   in.visibility = "shared";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
   in = TasklistContent();
 
   // revise tasklist key, fail
   in.name = "tasklist0";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_KEY);
   in.name = "";
 
   // error date format
-  in.data = "11/31/2022";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
-  in.data = "";
+  in.date = "11/31/2022";
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_FORMAT);
+  in.date = "";
 
   // error visibility
   in.visibility = "unknown_visibility";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_FORMAT);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_FORMAT);
   in.visibility = "";
 
   // no tasklist key, fail
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_RFIELD);
 
   // tasklist key not exist, fail
   data.tasklist_key = "unknown_tasklist";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_NO_NODE);
   data.tasklist_key = "tasklist0";
 
   // no user key, fail
   data.user_key = "";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_RFIELD);
   data.user_key = "alice@columbia.edu";
 
   // no revise fields, fail
   in = TasklistContent();
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_RFIELD);
 
   // delete user
   EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "012345")));
@@ -577,20 +587,21 @@ TEST_F(IntgTest, TaskLists_ReviseOthers) {
   // setup environment
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
-  RequestData data(name2Email["bob"], "", "", name2Email["alice"]);
+  std::string blank = "";
+  RequestData data(name2Email["bob"], blank, blank, name2Email["alice"]);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
 
   // no access
   data.tasklist_key = "tasklist0";
-  TasklistContent in("", "new tasklist0 description", "", "");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_ACCESS);
+  TasklistContent in(blank, "new tasklist0 description", blank, blank);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_ACCESS);
 
   // shared tasklist, but no permission
   data.tasklist_key = "tasklist1";
   in.content = "new tasklist1 description";
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_ACCESS);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_ACCESS);
 
   // set permission to true
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", true));
@@ -598,31 +609,31 @@ TEST_F(IntgTest, TaskLists_ReviseOthers) {
   // normal revise with access, read-write permission, and does not try to
   // revise visibility, should be successful
   data.tasklist_key = "tasklist1";
-  in = TasklistContent("", "new tasklist1 description", "1/30/2023", "");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  in = TasklistContent(blank, "new tasklist1 description", "1/30/2023", blank);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
 
   // revise visibility, should fail
-  in = TasklistContent("", "", "", "public");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_REVISE);
+  in = TasklistContent(blank, blank, blank, "public");
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_REVISE);
 
   // revise public tasklist, should be successful
   data.tasklist_key = "tasklist2";
-  in = TasklistContent("", "new tasklist2 description", "2/25/2023", "");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), SUCCESS);
+  in = TasklistContent(blank, "new tasklist2 description", "2/25/2023", blank);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
 
   // revise visibility, should fail
-  in = TasklistContent("", "", "", "private");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_REVISE);
+  in = TasklistContent(blank, blank, blank, "private");
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_REVISE);
 
   // revise tasklist key, should fail
   data.tasklist_key = "tasklist3";
-  in = TasklistContent("tasklist5", "", "", "");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_KEY);
+  in = TasklistContent("tasklist5", blank, blank, blank);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_KEY);
 
   // revise non-exist tasklist, should fail
   data.tasklist_key = "unknown_tasklist";
-  in = TasklistContent("", "unknown tasklist description", "12/30/2022", "");
-  EXPECT_EQ(tasklistsWorker->Revise(data, in), ERR_NO_NODE);
+  in = TasklistContent(blank, "unknown tasklist description", "12/30/2022", blank);
+  EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_NO_NODE);
 
   // delete user
   EXPECT_TRUE(users->Delete(
@@ -635,11 +646,12 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(users->Create(UserInfo("alice", "alice@columbia.edu", "012345")));
-  RequestData data("alice@columbia.edu", "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // should be successful, but no tasklist
   std::vector<std::string> out;
-  EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->GetAllTasklist(data, out), SUCCESS);
   EXPECT_EQ(out.size(), 0);
 
   // create four different tasklists
@@ -649,23 +661,23 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist0");
 
-  TasklistContent in("tasklist1", "tasklist1 description", "12/30/2022",
+  in = TasklistContent("tasklist1", "tasklist1 description", "12/30/2022",
                      "shared");
   EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist1");
 
-  TasklistContent in("tasklist2", "tasklist2 description", "1/30/2023",
+  in = TasklistContent("tasklist2", "tasklist2 description", "1/30/2023",
                      "public");
   EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist2");
 
-  TasklistContent in("tasklist3", "", "", "");
+  in = TasklistContent("tasklist3", blank, blank, blank);
   EXPECT_EQ(taskListsWorker->Create(data, in, outName), SUCCESS);
   EXPECT_EQ(outName, "tasklist3");
 
   // should be successful and get all four tasklists
   out = {};
-  EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, out), SUCCESS);
+  EXPECT_EQ(taskListsWorker->GetAllTasklist(data, out), SUCCESS);
   EXPECT_EQ(out.size(), 4);
   EXPECT_EQ(out[0], "tasklist0");
   EXPECT_EQ(out[1], "tasklist1");
@@ -675,13 +687,13 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   // empty user key
   data.user_key = "";
   out = {};
-  EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, out), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->GetAllTasklist(data, out), ERR_RFIELD);
   EXPECT_EQ(out.size(), 0);
 
   // no such user
   data.user_key = "unknown@columbia.edu";
   out = {};
-  EXPECT_EQ(tasklistsWorker->GetAllTasklist(data, out), ERR_NO_NODE);
+  EXPECT_EQ(taskListsWorker->GetAllTasklist(data, out), ERR_NO_NODE);
   EXPECT_EQ(out.size(), 0);
 
   // delete user
@@ -692,7 +704,8 @@ TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
   // setup environment
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
-  RequestData data(name2Email["bob"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["bob"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -702,7 +715,7 @@ TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
 
   // check tasklists that bob can access
   std::vector<shareInfo> outList;
-  EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
+  EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
   EXPECT_EQ(outList.size(), 2);
   EXPECT_EQ(outList[0].user_name, "alice@columbia.edu");
   EXPECT_EQ(outList[0].task_list_name, "tasklist1");
@@ -715,7 +728,7 @@ TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
   // check tasklists that alice can access
   data.user_key = "alice@columbia.edu";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
+  EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
   EXPECT_EQ(outList.size(), 2);
   EXPECT_EQ(outList[0].user_name, "bob@columbia.edu");
   EXPECT_EQ(outList[0].task_list_name, "tasklist5");
@@ -726,14 +739,15 @@ TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
   EXPECT_EQ(outList[0].permission, true);
 
   // no such user
-  data.user_key = "unknown@columbia.edu" outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), ERR_NO_NODE);
+  data.user_key = "unknown@columbia.edu";
+  outList = {};
+  EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), ERR_NO_NODE);
   EXPECT_EQ(outList.size(), 0);
 
   // empty user key
   data.user_key = "";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllAccessTaskList(data, outList), ERR_RFIELD);
+  EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), ERR_RFIELD);
   EXPECT_EQ(outList.size(), 0);
 
   // delete user
@@ -748,7 +762,8 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -760,7 +775,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   data.tasklist_key = "tasklist0";
   std::vector<shareInfo> outList;
   bool isPublic;
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+  EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             ERR_ACCESS);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
@@ -768,7 +783,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   // alice check who can access her tasklist1, bob and sam
   data.tasklist_key = "tasklist1";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+  EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             SUCCESS);
   EXPECT_EQ(outList.size(), 2);
   EXPECT_EQ(outList[0].user_name, "bob@columbia.edu");
@@ -783,7 +798,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   // alice check who can access her tasklist2, public
   data.tasklist_key = "tasklist2";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+  EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             SUCCESS);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, true);
@@ -791,7 +806,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   // alice check who can access her tasklist3, private
   data.tasklist_key = "tasklist3";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+  EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             ERR_ACCESS);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
@@ -799,7 +814,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   // no such tasklist
   data.tasklist_key = "unknown_tasklist";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+  EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             ERR_NO_NODE);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
@@ -807,7 +822,7 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
   // empty tasklist key
   data.tasklist_key = "";
   outList = {};
-  EXPECT_EQ(tasklistsWorker->GetAllGrantTaskList(data, outList, isPublic),
+  EXPECT_EQ(taskListsWorker->GetAllGrantTaskList(data, outList, isPublic),
             ERR_RFIELD);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
@@ -831,7 +846,8 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist0 with bob, which is private
   data.tasklist_key = "tasklist0";
@@ -843,7 +859,7 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   in_list.push_back(info);
 
   std::string errUser;
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_ACCESS);
   EXPECT_EQ(errUser, "");
 
@@ -853,7 +869,7 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   in_list[0].permission = false;
 
   errUser = "";
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             SUCCESS);
   EXPECT_EQ(errUser, "");
 
@@ -862,7 +878,7 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   in_list[0].permission = true;
 
   errUser = "";
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             SUCCESS);
   EXPECT_EQ(errUser, "");
 
@@ -873,7 +889,7 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   in_list[0].permission = false;
 
   errUser = "";
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_ACCESS);
   EXPECT_EQ(errUser, "");
 
@@ -881,7 +897,7 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   in_list[0].user_name = "unknown@columbia.edu";
   in_list[0].permission = true;
 
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_NO_NODE);
   EXPECT_EQ(errUser, "unknown@columbia.edu");
 
@@ -890,13 +906,13 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   in_list[0].user_name = "bob@columbia.edu";
   in_list[0].permission = false;
 
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_ACCESS);
   EXPECT_EQ(errUser, "");
 
   // ERR_RFIELD
   data.tasklist_key = "";
-  EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
+  EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_RFIELD);
 
   // delete user
@@ -913,7 +929,8 @@ TEST_F(IntgTest, TaskLists_RemoveGrantTaskList) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -942,7 +959,7 @@ TEST_F(IntgTest, TaskLists_RemoveGrantTaskList) {
 
 TEST_F(IntgTest, TaskLists_GetAllPublicTaskList) {
   // none public tasklist
-  std::vector<std::pair<std::string, std::string>> &out_list;
+  std::vector<std::pair<std::string, std::string>> out_list;
   EXPECT_EQ(taskListsWorker->GetAllPublicTaskList(out_list), SUCCESS);
   EXPECT_EQ(out_list.size(), 0);
 
@@ -996,7 +1013,8 @@ TEST_F(IntgTest, TaskLists_Exists) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -1031,8 +1049,8 @@ TEST_F(IntgTest, TaskLists_Exists) {
 
   // bob check if tasklist1 exists
   data.tasklist_key = "tasklist1";
-  data.other_user_key =
-      name2Email["alice"]'' EXPECT_TRUE(taskListsWorker->Exists(data));
+  data.other_user_key = name2Email["alice"];
+  EXPECT_TRUE(taskListsWorker->Exists(data));
 
   // bob check if tasklist2 exists, public
   data.tasklist_key = "tasklist2";
@@ -1065,7 +1083,8 @@ TEST_F(IntgTest, Tasks_QueryOwned) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // create tasks
   TaskContent task0("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
@@ -1141,7 +1160,7 @@ TEST_F(IntgTest, Tasks_QueryOwned) {
   data.tasklist_key = "";
   data.task_key = "";
   out = TaskContent();
-  EXPECT_EQ(tasksWorker->Query(data, out), ERR_BAD_REQUEST);
+  EXPECT_EQ(tasksWorker->Query(data, out), ERR_RFIELD);
   EXPECT_EQ(out.name, "");
   EXPECT_EQ(out.content, "");
   EXPECT_EQ(out.startDate, "");
@@ -1159,7 +1178,8 @@ TEST_F(IntgTest, Tasks_QueryOthers) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -1282,7 +1302,8 @@ TEST_F(IntgTest, Tasks_CreateOwned) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // create tasks
   TaskContent task0("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
@@ -1343,7 +1364,8 @@ TEST_F(IntgTest, Tasks_CreateOthers) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -1402,7 +1424,8 @@ TEST_F(IntgTest, Tasks_DeleteOwned) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // create tasks
   TaskContent task0("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
@@ -1464,7 +1487,8 @@ TEST_F(IntgTest, Tasks_DeleteOthers) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -1536,7 +1560,8 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // create tasks
   TaskContent task0("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
@@ -1545,7 +1570,7 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
                     URGENT, "Doing");
   TaskContent task2("task2", "4156 Iteration-4", "12/31/2022", "01/29/2023",
                     NORMAL, "Done");
-  TaskContent in("", "new task0 description", "", "", NORMAL, "");
+  TaskContent in(blank, "new task0 description", blank, blank, NORMAL, blank);
 
   // add tasks to tasklists
   std::string outTaskName;
@@ -1567,19 +1592,19 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
 
   // alice tries to revise task in tasklist1
-  in = TaskContent("", "", "12/31/2022", "01/29/2023", NULL_PRIORITY, "");
+  in = TaskContent(blank, blank, "12/31/2022", "01/29/2023", NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
 
   // alice tries to revise task_name in tasklist1, which is not allowed
-  in = TaskContent("task3", "", "", "", NULL_PRIORITY, "");
+  in = TaskContent("task3", blank, blank, blank, NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_KEY);
 
   // errro format
-  in = TaskContent("", "", "12/32/2022", "01/29/2023", NULL_PRIORITY, "");
+  in = TaskContent(blank, blank, "12/32/2022", "01/29/2023", NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_FORMAT);
@@ -1591,7 +1616,7 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_RFIELD);
 
   // request is empty
-  in = TaskContent("", "", "", "", NULL_PRIORITY, "To Do");
+  in = TaskContent(blank, blank, blank, blank, NULL_PRIORITY, "To Do");
   data.tasklist_key = "tasklist1";
   data.task_key = "";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_RFIELD);
@@ -1611,7 +1636,8 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -1646,19 +1672,19 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   data.other_user_key = name2Email["alice"];
 
   // bob tries to revise task in tasklist0, which is not allowed
-  in = TaskContent("", "", "11/30/2022", "12/29/2022", NULL_PRIORITY, "");
+  TaskContent in(blank, blank, "11/30/2022", "12/29/2022", NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist0";
   data.task_key = "task0";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_ACCESS);
 
   // bob tries to revise task in tasklist1, but he has read-only permission
-  in = TaskContent("", "", "12/30/2022", "01/29/2023", NULL_PRIORITY, "");
+  in = TaskContent(blank, blank, "12/30/2022", "01/29/2023", NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_ACCESS);
 
   // bob tries to revise task in tasklist2, which is public
-  in = TaskContent("", "", "01/30/2023", "02/25/2023", NULL_PRIORITY, "");
+  in = TaskContent(blank, blank, "01/30/2023", "02/25/2023", NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist2";
   data.task_key = "task2";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
@@ -1668,7 +1694,7 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   data.other_user_key = name2Email["alice"];
 
   // sam tries to revise task in tasklist1, he has read-write permission
-  in = TaskContent("", "", "12/30/2022", "01/29/2023", NULL_PRIORITY, "");
+  in = TaskContent(blank, blank, "12/30/2022", "01/29/2023", NULL_PRIORITY, blank);
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
@@ -1686,7 +1712,8 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOwned) {
   // setup environment
   // crreate user first
   EXPECT_TRUE(SetUpAlice());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // create tasks
   TaskContent task0("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
@@ -1695,7 +1722,7 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOwned) {
                     URGENT, "Doing");
   TaskContent task2("task2", "4156 Iteration-4", "12/31/2022", "01/29/2023",
                     NORMAL, "Done");
-  TaskContent in("", "new task0 description", "", "", NORMAL, "");
+  TaskContent in(blank, "new task0 description", blank, blank, NORMAL, blank);
 
   // add tasks to tasklists
   std::string outTaskName;
@@ -1714,40 +1741,40 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOwned) {
   // get all tasks name owned by alice in tasklist0
   std::vector<std::string> outTaskNames;
   data.tasklist_key = "tasklist0";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOwned(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task0");
 
   // get all tasks name owned by alice in tasklist1
   outTaskNames.clear();
   data.tasklist_key = "tasklist1";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOwned(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task1");
 
   // get all tasks name owned by alice in tasklist2
   outTaskNames.clear();
   data.tasklist_key = "tasklist2";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOwned(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task2");
 
   // get all tasks name owned by alice in tasklist3
   outTaskNames.clear();
   data.tasklist_key = "tasklist3";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOwned(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 0);
 
   // non-exist tasklist
   outTaskNames.clear();
   data.tasklist_key = "unknown_tasklist";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOwned(data, outTaskNames), ERR_NO_NODE);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), ERR_NO_NODE);
   EXPECT_EQ(outTaskNames.size(), 0);
 
   // request data is empty
   outTaskNames.clear();
   data.tasklist_key = "";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOwned(data, outTaskNames), ERR_RFIELD);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), ERR_RFIELD);
   EXPECT_EQ(outTaskNames.size(), 0);
 
   // delete user
@@ -1760,7 +1787,8 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOthers) {
   EXPECT_TRUE(SetUpAlice());
   EXPECT_TRUE(SetUpBob());
   EXPECT_TRUE(SetUpSam());
-  RequestData data(name2Email["alice"], "", "", "");
+  std::string blank = "";
+  RequestData data(name2Email["alice"], blank, blank, blank);
 
   // alice shares her tasklist1 with bob, with read-only permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "bob", false));
@@ -1797,21 +1825,21 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOthers) {
   // get all tasks name owned by alice in tasklist0, bob has no permission
   std::vector<std::string> outTaskNames;
   data.tasklist_key = "tasklist0";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOthers(data, outTaskNames), ERR_ACCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), ERR_ACCESS);
   EXPECT_EQ(outTaskNames.size(), 0);
 
   // get all tasks name owned by alice in tasklist1, bob has read-only
   // permission
   outTaskNames.clear();
   data.tasklist_key = "tasklist1";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOthers(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task1");
 
   // get all tasks name owned by alice in tasklist2, which is public
   outTaskNames.clear();
   data.tasklist_key = "tasklist2";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOthers(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task2");
 
@@ -1823,7 +1851,7 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOthers) {
   // permission
   outTaskNames.clear();
   data.tasklist_key = "tasklist1";
-  EXPECT_EQ(tasksWorker->GetAllTasksNameOthers(data, outTaskNames), SUCCESS);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task1");
 
