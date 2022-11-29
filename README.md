@@ -21,35 +21,24 @@ Github: https://github.com/xxcisxxc/lqxx4156
 
 ![format-check](/documents/format-check.png)
 
+## Install Environment
+
+```
+./build install
+```
+
 ## Compile & Run
-Pull lastest version of code, ensure docker and docker-compose is properly installed,
-go to project root directory.
 
 ```
-cd deploy
-
-# to run the main backend service
-docker-compose run backend
-
-# to run the tests
-# modify the commands of the test service in 'docker-compose.yml' to run your own unit test
-docker-compose run backend_test
-
-# to create an interactive bash environment
-# by doing so you can run whatever commands you want in the docker container
-docker-compose run bash
-
-# after run clean-ups
-# by doing so you can remove stopped containers and used resources
-docker-compose down
+./build build
+./build run
 ```
+
 ## Test
 
 ```
-mkdir build && cd build && cmake .. && make
-docker run -d -p7474:7474 -p7687:7687 -e NEO4J_AUTH=neo4j/hello4156 neo4j
-sleep 60
-./tasklists/test_tasklists && ./tasks/test_tasks && ./users/test_users && ./api/test_api && ./db/DBTest 
+./build install
+./build test
 ```
 
 ## System Test
@@ -68,6 +57,13 @@ Then the environment including real database and backend services will be automa
 will be running at a system level, as is shown in the following diagram.
 ![system-test-1](/documents/system-test-1.png)
 
+## Format checking and Static Analysis
+
+We use clang-format for format checking and cppcheck for static analysis. For the result, please see the lint-checking badge.
+
+## Coverage
+
+We use gcov for coverage. Please see the report in Coverage in github actions.
 
 ## Third-Party
 
@@ -93,6 +89,10 @@ https://github.com/majensen/libneo4j-client
 ```
 
 ## RESTful API definition
+
+### Swagger
+
+https://app.swaggerhub.com/apis/lqxx4156/Task-Management/1.0.0
 
 ### Http returned status code definition
 - 200 for all successful requests
