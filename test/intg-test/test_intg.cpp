@@ -629,7 +629,7 @@ TEST_F(IntgTest, TaskLists_ReviseOthers) {
   EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_REVISE);
 
   // revise tasklist key, should fail
-  data.tasklist_key = "tasklist3";
+  data.tasklist_key = "tasklist2";
   in = TasklistContent("tasklist5", blank, blank, blank);
   EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_KEY);
 
@@ -720,26 +720,18 @@ TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
   // check tasklists that bob can access
   std::vector<shareInfo> outList;
   EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
-  EXPECT_EQ(outList.size(), 2);
+  EXPECT_EQ(outList.size(), 1);
   EXPECT_EQ(outList[0].user_name, "alice@columbia.edu");
   EXPECT_EQ(outList[0].task_list_name, "tasklist1");
   EXPECT_EQ(outList[0].permission, false);
-
-  EXPECT_EQ(outList[0].user_name, "alice@columbia.edu");
-  EXPECT_EQ(outList[0].task_list_name, "tasklist2");
-  EXPECT_EQ(outList[0].permission, true);
 
   // check tasklists that alice can access
   data.user_key = "alice@columbia.edu";
   outList = {};
   EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), SUCCESS);
-  EXPECT_EQ(outList.size(), 2);
+  EXPECT_EQ(outList.size(), 1);
   EXPECT_EQ(outList[0].user_name, "bob@columbia.edu");
   EXPECT_EQ(outList[0].task_list_name, "tasklist5");
-  EXPECT_EQ(outList[0].permission, true);
-
-  EXPECT_EQ(outList[0].user_name, "bob@columbia.edu");
-  EXPECT_EQ(outList[0].task_list_name, "tasklist6");
   EXPECT_EQ(outList[0].permission, true);
 
   // no such user
@@ -898,6 +890,7 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   EXPECT_EQ(errUser, "");
 
   // alice adds access to a unknown user
+  data.tasklist_key = "tasklist1";
   in_list[0].user_name = "unknown@columbia.edu";
   in_list[0].permission = true;
 
@@ -1040,7 +1033,7 @@ TEST_F(IntgTest, TaskLists_Exists) {
 
   // alice check if tasklist3 exists
   data.tasklist_key = "tasklist3";
-  EXPECT_FALSE(taskListsWorker->Exists(data));
+  EXPECT_TRUE(taskListsWorker->Exists(data));
 
   // alice check empty tasklist name
   data.tasklist_key = "";
@@ -1340,11 +1333,7 @@ TEST_F(IntgTest, Tasks_CreateOwned) {
   data.tasklist_key = "tasklist2";
   EXPECT_EQ(tasksWorker->Create(data, task2, outTaskName), SUCCESS);
   EXPECT_EQ(outTaskName, "task2(2)");
-
-  // missing task key
-  data.tasklist_key = "tasklist2";
-  EXPECT_EQ(tasksWorker->Create(data, task3, outTaskName), ERR_KEY);
-  EXPECT_EQ(outTaskName, "");
+  outTaskName = "";
 
   // request is empty
   data.tasklist_key = "";
@@ -1404,7 +1393,7 @@ TEST_F(IntgTest, Tasks_CreateOthers) {
   // bob tries to create task in alice's tasklist2
   data.tasklist_key = "tasklist2";
   EXPECT_EQ(tasksWorker->Create(data, task2, outTaskName), SUCCESS);
-  EXPECT_EQ(outTaskName, "");
+  EXPECT_EQ(outTaskName, "task2");
 
   // change user to sam
   data.user_key = name2Email["sam"];
@@ -1466,10 +1455,10 @@ TEST_F(IntgTest, Tasks_DeleteOwned) {
   data.task_key = "task2";
   EXPECT_EQ(tasksWorker->Delete(data), SUCCESS);
 
-  // delete tasks again, should be failed
+  // delete tasks again, but still success since they are already deleted
   data.tasklist_key = "tasklist0";
   data.task_key = "task0";
-  EXPECT_EQ(tasksWorker->Delete(data), ERR_NO_NODE);
+  EXPECT_EQ(tasksWorker->Delete(data), SUCCESS);
 
   // tasklist does not exist
   data.tasklist_key = "unknown_tasklist";

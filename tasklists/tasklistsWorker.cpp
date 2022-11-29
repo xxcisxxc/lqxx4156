@@ -263,8 +263,7 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
   // also check whether the tasklist exists
   ret = GetVisibility(data, visibility);
   if (ret != SUCCESS || visibility != "shared") {
-    // std::cout << (int)ret << " " << visibility << std::endl;
-    // std::cout << data.user_key << " " << data.tasklist_key << " " << data.other_user_key << std::endl;
+    // errUser = in_list[i].user_name;
     return ERR_ACCESS;
   }
     
