@@ -162,8 +162,8 @@ bool IntgTest::SetUpSam() {
   return true;
 }
 
-bool IntgTest::ShareTaskList(std::string src, std::string dst,
-                             std::string tasklist_name, bool permission) {
+bool IntgTest::ShareTaskList(std::string src, std::string tasklist_name,
+                             std::string dst, bool permission) {
   RequestData data;
   data.user_key = name2Email[src];
   data.tasklist_key = tasklist_name;
@@ -177,7 +177,6 @@ bool IntgTest::ShareTaskList(std::string src, std::string dst,
 
   std::string errUser;
   returnCode ret = taskListsWorker->ReviseGrantTaskList(data, in_list, errUser);
-  std::cout << (int)ret << std::endl;
 
   if (ret != SUCCESS || errUser != "") {
     std::cout << "share tasklist failed" << std::endl;
