@@ -1,5 +1,6 @@
 [![Lint Checkings (clang-format & cppcheck)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/lint-check.yml/badge.svg)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/lint-check.yml)
 [![Unit Testing](https://github.com/xxcisxxc/lqxx4156/actions/workflows/unit-test.yml/badge.svg)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/unit-test.yml)
+[![System Testing](https://github.com/xxcisxxc/lqxx4156/actions/workflows/system-test.yml/badge.svg)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/system-test.yml)
 # lqxx4156
 project for coms w4156
 
