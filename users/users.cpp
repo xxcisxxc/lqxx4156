@@ -1,4 +1,5 @@
 #include "users/users.h"
+#include "common/utils.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -40,6 +41,11 @@ Users::Users(std::shared_ptr<DB> _db) : db(_db) {
 Users::~Users() {}
 
 bool Users::Create(const UserInfo &user_info) {
+  // check email format
+  if (!Common::IsEmail(user_info.email)) {
+    return false;
+  }
+
   if (db->createUserNode(UserInfo2DbType(user_info)) != returnCode::SUCCESS) {
     return false;
   }
@@ -47,6 +53,11 @@ bool Users::Create(const UserInfo &user_info) {
 };
 
 bool Users::Validate(const UserInfo &user_info) {
+  // check email format
+  if (!Common::IsEmail(user_info.email)) {
+    return false;
+  }
+
   if (user_info.passwd.empty()) {
     return false;
   }
@@ -71,9 +82,26 @@ bool Users::Validate(const UserInfo &user_info) {
 };
 
 bool Users::DuplicatedEmail(const UserInfo &user_info) {
+  // check email format
+  if (!Common::IsEmail(user_info.email)) {
+    return false;
+  }
+
   UserInfoDbType user_info_db;
   if (db->getUserNode(user_info.email, user_info_db) == returnCode::SUCCESS) {
     return true;
   }
   return false;
+}
+
+bool Users::Delete(const UserInfo &user_info) {
+  // check email format
+  if (!Common::IsEmail(user_info.email)) {
+    return false;
+  }
+
+  if (db->deleteUserNode(user_info.email) != returnCode::SUCCESS) {
+    return false;
+  }
+  return true;
 }

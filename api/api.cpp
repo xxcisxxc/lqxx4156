@@ -543,7 +543,7 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
 
   if (tasks_worker->Create(task_req, task_content, out_task_name) !=
       returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed create tasklist");
+    API_RETURN_HTTP_RESP(500, "msg", "failed create task");
   }
 
   API_RETURN_HTTP_RESP(200, "msg", "success", "name", out_task_name);
@@ -629,16 +629,24 @@ API_DEFINE_HTTP_HANDLER(ShareDelete) {
   share_delete_req.tasklist_key = API_REQ().matches[1];
   json_body = API_PARSE_REQ_BODY();
   API_GET_JSON_REQUIRED(json_body, user_json_list, user_list);
+  API_GET_PARAM_OPTIONAL(share_delete_req.other_user_key, other);
 
   std::transform(user_json_list.cbegin(), user_json_list.cend(),
                  std::back_inserter(user_str_list), [](auto &&x) { return x; });
 
-  if (tasklists_worker->RemoveGrantTaskList(share_delete_req, user_str_list,
-                                            err_user) != returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg",
-                         err_user.empty()
-                             ? "failed all users"
-                             : "failed last deleted user is " + err_user);
+  if (!share_delete_req.other_user_key.empty()) {
+    if (tasklists_worker->RemoveGrantTaskList(share_delete_req) !=
+        returnCode::SUCCESS) {
+      API_RETURN_HTTP_RESP(500, "msg", "failed delete sharing");
+    }
+  } else {
+    if (tasklists_worker->RemoveGrantTaskList(
+            share_delete_req, user_str_list, err_user) != returnCode::SUCCESS) {
+      API_RETURN_HTTP_RESP(500, "msg",
+                           err_user.empty()
+                               ? "failed all users"
+                               : "failed last deleted user is " + err_user);
+    }
   }
 
   API_RETURN_HTTP_RESP(200, "msg", "success");

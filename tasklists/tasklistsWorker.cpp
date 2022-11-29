@@ -241,23 +241,13 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
   return ret;
 }
 
-returnCode
-TaskListsWorker ::RemoveGrantTaskList(const RequestData &data,
-                                      std::vector<std::string> &in_list,
-                                      std::string &errUser) {
+returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
 
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
 
-  returnCode ret;
-  for (int i = 0; i < in_list.size(); i++) {
-    ret =
-        db_instance.removeAccess(data.user_key, in_list[i], data.tasklist_key);
-    if (ret != SUCCESS) {
-      errUser = in_list[i];
-      return ret;
-    }
-  }
+  returnCode ret = db_instance.removeAccess(data.user_key, data.other_user_key,
+                                            data.tasklist_key);
   return ret;
 }
 

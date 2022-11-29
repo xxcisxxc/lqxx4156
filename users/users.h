@@ -52,6 +52,8 @@ public:
 
   virtual bool DuplicatedEmail(const UserInfo &);
 
+  virtual bool Delete(const UserInfo &);
+
 private:
   std::shared_ptr<DB> db;
 };
