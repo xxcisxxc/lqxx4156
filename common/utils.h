@@ -263,4 +263,17 @@ inline bool IsEmail(const std::string &str) {
   return std::regex_match(str, emailPattern);
 }
 
+/**
+ * @brief rename the tasklist or task if the given name existed
+ *
+ * @param [in] name given name of tasklists or task
+ * @param [in] suffix suffix to be added
+ * @return string of revised name
+ */
+inline std::string Rename(const std::string &name, int suffix) {
+  if (suffix == 0)
+    return name;
+  return name + "(" + std::to_string(suffix) + ")";
+}
+
 } // namespace Common

@@ -1,18 +1,10 @@
 #include "tasksWorker.h"
-#include "api/taskContent.h"
-#include "tasklists/tasklistsWorker.h"
 #include <iostream>
 
-TasksWorker::TasksWorker(DB *_db, TaskListsWorker *_taskListsWorker)
+TasksWorker::TasksWorker(std::shared_ptr<DB> _db, std::shared_ptr<TaskListsWorker> _taskListsWorker)
     : db(_db), taskListsWorker(_taskListsWorker) {}
 
 TasksWorker::~TasksWorker() {}
-
-std::string TasksWorker::Rename(const std::string &name, int suffix) {
-  if (suffix <= 0)
-    return name;
-  return name + "(" + std::to_string(suffix) + ")";
-}
 
 void TasksWorker::TaskStruct2Map(
     const TaskContent &taskContent,
@@ -72,6 +64,10 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   if (data.RequestIsEmpty())
     return ERR_RFIELD;
 
+  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
+  // checkAccess also ensures that tasklist exists
+  // but if other_user_key is empty, we need to check the tasklist exists
+  // so we use "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -79,6 +75,12 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
     if (ret != SUCCESS)
       // no permission
       return ret;
+  } else {
+    // tasklist itself does not exist
+    if (!taskListsWorker->Exists(data)) {
+      // maybe create taskList first
+      return ERR_NO_NODE;
+    }
   }
 
   // can access
@@ -89,8 +91,8 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
       data.other_user_key.empty() ? data.user_key : data.other_user_key,
       data.tasklist_key, data.task_key, task_info);
 
-  // error in tasklist_key or task_key
-  if (ret == ERR_KEY || ret == ERR_NO_NODE) {
+  // there is no such task
+  if (ret != SUCCESS) {
     return ret;
   }
 
@@ -114,12 +116,10 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   if (!in.IsValid())
     return ERR_FORMAT;
 
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    // maybe create taskList first
-    return ERR_NO_NODE;
-  }
-
+  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
+  // checkAccess also ensures that tasklist exists
+  // but if other_user_key is empty, we need to check the tasklist exists
+  // so we use "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -131,6 +131,12 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
       // read only permission cannot create
       return ERR_ACCESS;
     }
+  } else {
+    // tasklist itself does not exist
+    if (!taskListsWorker->Exists(data)) {
+      // maybe create taskList first
+      return ERR_NO_NODE;
+    }    
   }
 
   // can access
@@ -142,7 +148,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   std::string originTaskName = task_info["name"];
   do {
     // For Create, data.task_key can be "", so we should use task_info["name"]
-    outTaskName = Rename(originTaskName, suffix++);
+    outTaskName = Common::Rename(originTaskName, suffix++);
     task_info["name"] = outTaskName;
     ret = db->createTaskNode(data.other_user_key.empty() ? data.user_key
                                                          : data.other_user_key,
@@ -160,11 +166,10 @@ returnCode TasksWorker::Delete(const RequestData &data) {
   if (data.RequestIsEmpty())
     return ERR_RFIELD;
 
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    return ERR_NO_NODE;
-  }
-
+  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
+  // checkAccess also ensures that tasklist exists
+  // but if other_user_key is empty, we need to check the tasklist exists
+  // so we use "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -175,6 +180,11 @@ returnCode TasksWorker::Delete(const RequestData &data) {
     if (!permission) {
       // read only permission cannot delete
       return ERR_ACCESS;
+    }
+  } else {
+    // tasklist itself does not exist
+    if (!taskListsWorker->Exists(data)) {
+      return ERR_NO_NODE;
     }
   }
 
@@ -200,11 +210,12 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   if (!in.IsValid())
     return ERR_FORMAT;
 
-  // tasklist itself does not exist
-  if (!taskListsWorker->Exists(data)) {
-    return ERR_NO_NODE;
-  }
 
+
+  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
+  // checkAccess also ensures that tasklist exists
+  // but if other_user_key is empty, we need to check the tasklist exists
+  // so we use "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -215,6 +226,11 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
     if (!permission) {
       // read only permission cannot revise
       return ERR_ACCESS;
+    }
+  } else {
+    // tasklist itself does not exist
+    if (!taskListsWorker->Exists(data)) {
+      return ERR_NO_NODE;
     }
   }
 
@@ -235,13 +251,10 @@ TasksWorker::GetAllTasksName(const RequestData &data,
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
 
-  // tasklist itself does not exist
-  // 这块exists判定，已经跑过checkAccess了，所以不需要再判定了
-  // 很烦
-  if (!taskListsWorker->Exists(data)) {
-    return ERR_NO_NODE;
-  }
-
+  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
+  // checkAccess also ensures that tasklist exists
+  // but if other_user_key is empty, we need to check the tasklist exists
+  // so we use "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -249,6 +262,11 @@ TasksWorker::GetAllTasksName(const RequestData &data,
     if (ret != SUCCESS)
       // no permission
       return ret;
+  } else {
+    // tasklist itself does not exist
+    if (!taskListsWorker->Exists(data)) {
+      return ERR_NO_NODE;
+    }    
   }
   // can access
 

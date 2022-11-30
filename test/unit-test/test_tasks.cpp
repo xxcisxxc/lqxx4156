@@ -48,18 +48,16 @@ public:
 class TasksWorkerTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    mockedDB = new MockedDB();
-    mockedTaskLists = new MockedTaskLists(*mockedDB);
+    mockedDB = std::make_shared<MockedDB>();
+    mockedTaskLists = std::make_shared<MockedTaskLists> (*mockedDB);
     tasksWorker = std::make_shared<TasksWorker>(mockedDB, mockedTaskLists);
   }
 
   void TearDown() override {
-    delete (mockedDB);
-    delete (mockedTaskLists);
   }
 
-  MockedDB *mockedDB;
-  MockedTaskLists *mockedTaskLists;
+  std::shared_ptr<MockedDB> mockedDB;
+  std::shared_ptr<MockedTaskLists> mockedTaskLists;
   std::shared_ptr<TasksWorker> tasksWorker;
 
   RequestData data;
@@ -70,13 +68,7 @@ protected:
 using namespace ::testing;
 
 TEST_F(TasksWorkerTest, TaskStruct2Map) {
-  TaskContent task;
-  task.name = "test_name";
-  task.content = "test_content";
-  task.startDate = "test_startDate";
-  task.endDate = "test_endDate";
-  task.priority = VERY_URGENT;
-  task.status = "test_status";
+  TaskContent task("test_name", "test_content", "test_startDate", "test_endDate", VERY_URGENT, "test_status");
   std::map<std::string, std::string> mp;
 
   tasksWorker->TaskStruct2Map(task, mp);

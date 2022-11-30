@@ -79,7 +79,7 @@ struct TaskContent {
    * @brief Check if the task has a name
    * @return true if the task has a name
    */
-  bool LoseKey() { return name == ""; }
+  bool MissingKey() { return name == ""; }
 
   /*
    * @brief Check if the TaskContent object is empty
@@ -103,36 +103,35 @@ struct TaskContent {
   }
 
   /**
+   * @brief get time_t object from date string
+   * @return none
+   */
+  void GetTimeObject(const std::string &date, time_t &time) {
+    int d, m, y;
+    char delimiter1;
+    char delimiter2;    
+    std::istringstream iss(date);
+    if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
+      struct tm t = {0};
+      t.tm_mday = d;
+      t.tm_mon = m - 1;
+      t.tm_year = y - 1900;
+
+      // make time using time struct tm
+      time = mktime(&t);
+    }
+  }
+  /**
    * @brief Compare two time strings
    * @return true if the first time string is earlier than the second one
    */
   bool CompareTime(const std::string &startDate, const std::string &endDate) {
-    int d, m, y;
-    char delimiter1;
-    char delimiter2;
-    time_t startTime;
-    time_t endTime;
+    // get time_t object from date string
+    time_t startTime, endTime;
+    GetTimeObject(startDate, startTime);
+    GetTimeObject(endDate, endTime);
 
-    std::istringstream iss1(startDate);
-    if (iss1 >> m >> delimiter1 >> d >> delimiter2 >> y) {
-      struct tm t = {0};
-      t.tm_mday = d;
-      t.tm_mon = m - 1;
-      t.tm_year = y - 1900;
-
-      // make time using time struct tm
-      startTime = mktime(&t);
-    }
-    std::istringstream iss2(endDate);
-    if (iss2 >> m >> delimiter1 >> d >> delimiter2 >> y) {
-      struct tm t = {0};
-      t.tm_mday = d;
-      t.tm_mon = m - 1;
-      t.tm_year = y - 1900;
-
-      // make time using time struct tm
-      endTime = mktime(&t);
-    }
+    // compare start date and end date
     double diff = difftime(startTime, endTime);
     return diff <= 0;
   }
@@ -143,20 +142,25 @@ struct TaskContent {
    */
   bool IsValid() {
     // check startDate format
-    if (startDate != "" && !Common::IsDate(startDate))
+    if (!startDate.empty() && !Common::IsDate(startDate))
       return false;
     // check endDate format
-    if (endDate != "" && !Common::IsDate(endDate))
+    if (!endDate.empty() && !Common::IsDate(endDate))
+      return false;
+    // check whether startDate and endDate exist at the same time
+    if (startDate.empty() && !endDate.empty())
+      return false;
+    else if (!startDate.empty() && endDate.empty())
       return false;
     // check startDate <= endDate
-    if (startDate != "" && endDate != "" && !CompareTime(startDate, endDate))
+    if (!startDate.empty() && !endDate.empty() && !CompareTime(startDate, endDate))
       return false;
     // check priority format
     if (priority != NULL_PRIORITY && priority != VERY_URGENT &&
         priority != URGENT && priority != NORMAL)
       return false;
     // check status format: To Do, Doing or Done
-    if (status != "" && status != "To Do" && status != "Doing" &&
+    if (!status.empty() && status != "To Do" && status != "Doing" &&
         status != "Done")
       return false;
     // pass all checks

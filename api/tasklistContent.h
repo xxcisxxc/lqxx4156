@@ -1,6 +1,6 @@
 #pragma once
 
-#include "api/taskContent.h"
+#include "common/utils.h"
 #include <string>
 #include <vector>
 
@@ -34,7 +34,7 @@ struct TasklistContent {
 
   /**
    * @brief visibility of the tasklist: true for public, false for private
-   *
+   * by default, it is private
    */
   std::string visibility;
 
@@ -42,9 +42,9 @@ struct TasklistContent {
 
   /**
    * @brief Construct a new Tasklist Content object
-   *
+   * by default, it is private
    */
-  TasklistContent() {}
+  TasklistContent(): visibility("private") {}
 
   /**
    * @brief Construct a new Tasklist Content object
@@ -60,14 +60,19 @@ struct TasklistContent {
       : name(std::forward<Name>(_name)),
         content(std::forward<Content>(_content)),
         date(std::forward<Date>(_date)),
-        visibility(std::forward<Visibility>(_vis)) {}
+        visibility(std::forward<Visibility>(_vis)) {
+          // by default, it is private
+          if(visibility.empty()) {
+            visibility = "false";
+          }
+      }
 
   /**
    * @brief check if the key -- name is missing
    *
    * @return true if name is missing
    */
-  bool LoseKey() { return name == ""; }
+  bool MissingKey() { return name == ""; }
 
   /**
    * @brief check if the content is empty
@@ -75,6 +80,21 @@ struct TasklistContent {
    * @return true if content is empty
    */
   bool IsEmpty() { return name == "" && content == "" && date == ""; }
+
+  /**
+   * @brief check if tasklist object is valid
+   *
+   * @return true if it is valid
+   */
+  bool IsValid() { 
+    if(!date.empty() && !Common::IsDate(date)) 
+      return false;
+    if (!visibility.empty() && visibility != "public" &&
+      visibility != "shared" && visibility != "private")
+      return false;
+    // pass all checks
+    return true;
+  }
 };
 
 /**
@@ -96,12 +116,13 @@ struct shareInfo {
 
   /**
    * @brief permission of tasklist
+   * by default, it is read-only permission, which is "false"
    */
   bool permission;
 
   /**
    * @brief Construct a new shareInfo object
-   *
+   * 
    */
   shareInfo() {}
 
@@ -109,11 +130,17 @@ struct shareInfo {
    * @brief Construct a new shareInfo object
    *
    * @param _name value for tasklist name
-   * @param _content value for tasklist content
-   * @param _date value for tasklist date
+   * @param _tasklist_name value for tasklist name
+   * @param _permission value for tasklist permission
    */
-  shareInfo(std::string &_user_name, std::string &_task_list_name,
-            bool _permission)
-      : user_name(_user_name), task_list_name(_task_list_name),
-        permission(_permission) {}
+  template <typename Name, typename TasklistName, typename Permission>
+  shareInfo(Name &&_name, TasklistName &&_tasklist_name, Permission &&_permission)
+      : user_name(std::forward<Name>(_name)),
+        task_list_name(std::forward<TasklistName>(_tasklist_name)),
+        permission(std::forward<Permission>(_permission)) {}
+  /**
+   * @brief check if the user_name is empty
+   * @return true if it has user_name
+   */
+  bool MissingKey() { return user_name.empty(); }
 };
