@@ -5,6 +5,7 @@
 #include <memory>
 #include <tasklists/tasklistsWorker.h>
 #include <tasks/tasksWorker.h>
+#include <users/users.h>
 
 class MockedDB : public DB {
 public:
@@ -42,21 +43,28 @@ class MockedTaskLists : public TaskListsWorker {
 public:
   MOCK_METHOD(bool, Exists, (const RequestData &data), (override));
 
-  MockedTaskLists(DB &_db_instance) : TaskListsWorker(_db_instance) {}
+  MockedTaskLists(std::shared_ptr<DB> _db, std::shared_ptr<Users> _users)
+      : TaskListsWorker(_db, _users) {}
+};
+
+class MockedUsers : public Users {
+public:
+  MockedUsers(std::shared_ptr<DB> _db) : Users(_db) {}
 };
 
 class TasksWorkerTest : public ::testing::Test {
 protected:
   void SetUp() override {
     mockedDB = std::make_shared<MockedDB>();
-    mockedTaskLists = std::make_shared<MockedTaskLists> (*mockedDB);
+    mockedUsers = std::make_shared<MockedUsers>(mockedDB);
+    mockedTaskLists = std::make_shared<MockedTaskLists>(mockedDB, mockedUsers);
     tasksWorker = std::make_shared<TasksWorker>(mockedDB, mockedTaskLists);
   }
 
-  void TearDown() override {
-  }
+  void TearDown() override {}
 
   std::shared_ptr<MockedDB> mockedDB;
+  std::shared_ptr<MockedUsers> mockedUsers;
   std::shared_ptr<MockedTaskLists> mockedTaskLists;
   std::shared_ptr<TasksWorker> tasksWorker;
 
@@ -68,7 +76,8 @@ protected:
 using namespace ::testing;
 
 TEST_F(TasksWorkerTest, TaskStruct2Map) {
-  TaskContent task("test_name", "test_content", "test_startDate", "test_endDate", VERY_URGENT, "test_status");
+  TaskContent task("test_name", "test_content", "test_startDate",
+                   "test_endDate", VERY_URGENT, "test_status");
   std::map<std::string, std::string> mp;
 
   tasksWorker->TaskStruct2Map(task, mp);
@@ -241,9 +250,8 @@ TEST_F(TasksWorkerTest, Map2TaskStruct) {
 // Query Function
 TEST_F(TasksWorkerTest, Query) {
   // setup input
-  data.user_key = "user0";
-  data.tasklist_key = "tasklist0";
-  data.task_key = "task0";
+  data = RequestData("user0", "tasklist0", "task0", "");
+
   std::map<std::string, std::string> task_info;
   std::map<std::string, std::string> new_task_info;
   new_task_info["name"] = "task0";
@@ -254,6 +262,7 @@ TEST_F(TasksWorkerTest, Query) {
   new_task_info["status"] = "To Do";
 
   // should be successful
+  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key,
                                      data.task_key, task_info))
       .WillOnce(DoAll(SetArgReferee<3>(new_task_info), Return(SUCCESS)));
@@ -331,6 +340,7 @@ TEST_F(TasksWorkerTest, Query) {
   data.task_key = "task0";
 
   // key error
+  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key,
                                      data.task_key, task_info))
       .WillOnce(Return(ERR_KEY));
@@ -343,6 +353,17 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_EQ(out.status, "");
 
   // task or tasklist itself does not exist
+  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(false));
+  EXPECT_EQ(tasksWorker->Query(data, out), ERR_NO_NODE);
+  EXPECT_EQ(out.name, "");
+  EXPECT_EQ(out.content, "");
+  EXPECT_EQ(out.startDate, "");
+  EXPECT_EQ(out.endDate, "");
+  EXPECT_EQ(out.priority, NULL_PRIORITY);
+  EXPECT_EQ(out.status, "");
+
+  // task itself does not exist
+  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key,
                                      data.task_key, task_info))
       .WillOnce(Return(ERR_NO_NODE));
@@ -357,16 +378,9 @@ TEST_F(TasksWorkerTest, Query) {
 
 TEST_F(TasksWorkerTest, Create) {
   // setup input
-  data.user_key = "user0";
-  data.tasklist_key = "tasklist0";
-
-  std::string name = "task0";
-  std::string content = "4156 Iteration-2";
-  std::string startDate = "10/31/2022";
-  std::string endDate = "11/29/2022";
-  Priority priority = VERY_URGENT;
-  std::string status = "To Do";
-  in = TaskContent(name, content, startDate, endDate, priority, status);
+  data = RequestData("user0", "tasklist0", "", "");
+  in = TaskContent("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
+                   VERY_URGENT, "To Do");
 
   std::map<std::string, std::string> task_info;
   task_info["name"] = in.name;
@@ -391,7 +405,6 @@ TEST_F(TasksWorkerTest, Create) {
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
   bool permission = false;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
@@ -404,7 +417,6 @@ TEST_F(TasksWorkerTest, Create) {
 
   // create others' tasks failed (ERR_ACCESS)
   permission = false;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
@@ -413,7 +425,6 @@ TEST_F(TasksWorkerTest, Create) {
   outTaskName = "";
 
   // create others' tasks failed (permission denied)
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
@@ -481,46 +492,39 @@ TEST_F(TasksWorkerTest, Create) {
   outTaskName = "";
 
   // Error format for startDate
-  startDate = "2018-01-01";
-  in = TaskContent(name, content, startDate, endDate, priority, status);
+  in = TaskContent("task0", "4156 Iteration-2", "2018-01-01", "11/29/2022",
+                   VERY_URGENT, "To Do");
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
-  startDate = "10/31/2022";
 
   // Error format for endDate
-  endDate = "2018-01-02";
-  in = TaskContent(name, content, startDate, endDate, priority, status);
+  in = TaskContent("task0", "4156 Iteration-2", "10/31/2022", "2018-01-02",
+                   VERY_URGENT, "To Do");
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
-  endDate = "11/29/2022";
 
   // Error format for startDate > endDate
-  startDate = "11/30/2022";
-  in = TaskContent(name, content, startDate, endDate, priority, status);
+  in = TaskContent("task0", "4156 Iteration-2", "11/30/2022", "11/29/2022",
+                   VERY_URGENT, "To Do");
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
-  startDate = "10/31/2022";
 
   // Error format for priority
-  priority = (Priority)5;
-  in = TaskContent(name, content, startDate, endDate, priority, status);
+  in = TaskContent("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
+                   (Priority)5, "To Do");
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
-  priority = VERY_URGENT;
 
   // Error format for status
-  status = "2/3 Done";
-  in = TaskContent(name, content, startDate, endDate, priority, status);
+  in = TaskContent("task0", "4156 Iteration-2", "10/31/2022", "11/29/2022",
+                   VERY_URGENT, "2/3 Done");
   EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
-  status = "Done";
 }
 
 TEST_F(TasksWorkerTest, Delete) {
   // setup input
-  data.user_key = "user0";
-  data.tasklist_key = "tasklist0";
-  data.task_key = "task0";
+  data = RequestData("user0", "tasklist0", "task0", "");
 
   // should be successful
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
@@ -533,7 +537,6 @@ TEST_F(TasksWorkerTest, Delete) {
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
   bool permission = false;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
@@ -544,14 +547,12 @@ TEST_F(TasksWorkerTest, Delete) {
 
   // delete others' tasks failed (ERR_NO_NODE)
   permission = false;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->Delete(data), ERR_NO_NODE);
 
   // delete others' tasks failed (permission denied)
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
@@ -589,9 +590,7 @@ TEST_F(TasksWorkerTest, Delete) {
 
 TEST_F(TasksWorkerTest, Revise) {
   // setup input
-  data.user_key = "user0";
-  data.tasklist_key = "tasklist0";
-  data.task_key = "task0";
+  data = RequestData("user0", "tasklist0", "task0", "");
 
   in = TaskContent();
   std::map<std::string, std::string> task_info;
@@ -606,17 +605,9 @@ TEST_F(TasksWorkerTest, Revise) {
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
 
   // should be successful
-  in.startDate = "10/31/2022";
-  task_info["startDate"] = in.startDate;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
-  EXPECT_CALL(*mockedDB, reviseTaskNode(data.user_key, data.tasklist_key,
-                                        data.task_key, task_info))
-      .WillOnce(Return(SUCCESS));
-  EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
-
-  // should be successful
-  in.endDate = "11/29/2022";
-  task_info["endDate"] = in.endDate;
+  in.startDate = "10/31/2022", in.endDate = "11/29/2022";
+  ;
+  task_info["startDate"] = in.startDate, task_info["endDate"] = in.endDate;
   EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, reviseTaskNode(data.user_key, data.tasklist_key,
                                         data.task_key, task_info))
@@ -645,7 +636,6 @@ TEST_F(TasksWorkerTest, Revise) {
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
   bool permission = false;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
@@ -656,14 +646,12 @@ TEST_F(TasksWorkerTest, Revise) {
 
   // revise others' tasks failed (ERR_NO_NODE)
   permission = false;
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_NO_NODE);
 
   // revise others' tasks failed (permission denied)
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
@@ -746,7 +734,6 @@ TEST_F(TasksWorkerTest, GetAllTasksName) {
   data.tasklist_key = "tasklist1";
   bool permission = false;
   task_names.clear();
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(DoAll(SetArgReferee<3>(true), Return(SUCCESS)));
@@ -762,7 +749,6 @@ TEST_F(TasksWorkerTest, GetAllTasksName) {
   // get others' tasks failed (ERR_NO_NODE)
   permission = false;
   task_names.clear();
-  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(ERR_NO_NODE));

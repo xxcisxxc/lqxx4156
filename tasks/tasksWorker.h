@@ -3,8 +3,8 @@
 #include "api/requestData.h"
 #include "api/taskContent.h"
 #include "common/utils.h"
-#include "tasklists/tasklistsWorker.h"
 #include "db/DB.h"
+#include "tasklists/tasklistsWorker.h"
 #include <map>
 #include <string>
 
@@ -36,7 +36,7 @@ public:
    * @param _db
    * @param _taskListWorker
    */
-  TasksWorker(std::shared_ptr<DB> _db = nullptr, 
+  TasksWorker(std::shared_ptr<DB> _db = nullptr,
               std::shared_ptr<TaskListsWorker> _taskListWorker = nullptr);
   /**
    * @brief Destroy the Tasks Worker object

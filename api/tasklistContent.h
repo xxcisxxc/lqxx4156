@@ -42,9 +42,9 @@ struct TasklistContent {
 
   /**
    * @brief Construct a new Tasklist Content object
-   * by default, it is private
+   *
    */
-  TasklistContent(): visibility("private") {}
+  TasklistContent() {}
 
   /**
    * @brief Construct a new Tasklist Content object
@@ -60,12 +60,7 @@ struct TasklistContent {
       : name(std::forward<Name>(_name)),
         content(std::forward<Content>(_content)),
         date(std::forward<Date>(_date)),
-        visibility(std::forward<Visibility>(_vis)) {
-          // by default, it is private
-          if(visibility.empty()) {
-            visibility = "false";
-          }
-      }
+        visibility(std::forward<Visibility>(_vis)) {}
 
   /**
    * @brief check if the key -- name is missing
@@ -86,11 +81,11 @@ struct TasklistContent {
    *
    * @return true if it is valid
    */
-  bool IsValid() { 
-    if(!date.empty() && !Common::IsDate(date)) 
+  bool IsValid() {
+    if (!date.empty() && !Common::IsDate(date))
       return false;
     if (!visibility.empty() && visibility != "public" &&
-      visibility != "shared" && visibility != "private")
+        visibility != "shared" && visibility != "private")
       return false;
     // pass all checks
     return true;
@@ -122,7 +117,7 @@ struct shareInfo {
 
   /**
    * @brief Construct a new shareInfo object
-   * 
+   *
    */
   shareInfo() {}
 
@@ -134,7 +129,8 @@ struct shareInfo {
    * @param _permission value for tasklist permission
    */
   template <typename Name, typename TasklistName, typename Permission>
-  shareInfo(Name &&_name, TasklistName &&_tasklist_name, Permission &&_permission)
+  shareInfo(Name &&_name, TasklistName &&_tasklist_name,
+            Permission &&_permission)
       : user_name(std::forward<Name>(_name)),
         task_list_name(std::forward<TasklistName>(_tasklist_name)),
         permission(std::forward<Permission>(_permission)) {}

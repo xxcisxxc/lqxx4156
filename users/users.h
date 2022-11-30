@@ -30,6 +30,11 @@ public:
       : name(std::forward<Name>(_name)), email(std::forward<Email>(_email)),
         passwd(std::forward<Password>(_password)) {}
 
+  bool operator==(const UserInfo &info) const {
+    return this->name == info.name && this->email == info.email &&
+           this->passwd == info.passwd;
+  }
+
 public:
   std::string name;
   std::string email;

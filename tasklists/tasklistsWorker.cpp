@@ -65,8 +65,10 @@ returnCode TaskListsWorker ::Query(const RequestData &data,
       data.tasklist_key, task_list_info);
 
   // no such tasklist when other_user_key is empty
-  // if other_user_key is empty, we do not use checkAccess to ensure that tasklists exists
-  if (ret != SUCCESS) return ret;
+  // if other_user_key is empty, we do not use checkAccess to ensure that
+  // tasklists exists
+  if (ret != SUCCESS)
+    return ret;
 
   Map2Content(task_list_info, out);
 
@@ -85,7 +87,7 @@ returnCode TaskListsWorker ::Create(const RequestData &data,
     return ERR_KEY;
 
   // check "in" is valid
-  if(!in.IsValid())
+  if (!in.IsValid())
     return ERR_FORMAT;
 
   std::map<std::string, std::string> task_list_info;
@@ -125,9 +127,14 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
   // because we do not allow user to change the name of tasklist
   if (in.MissingKey() == false)
     return ERR_KEY;
-  
+
+  // do not let user edit the visibility of another user's tasklist
+  if (!data.other_user_key.empty() && !in.visibility.empty()) {
+    return ERR_REVISE;
+  }
+
   // check "in" is valid
-  if(!in.IsValid())
+  if (!in.IsValid())
     return ERR_FORMAT;
 
   if (!data.other_user_key.empty()) {
@@ -142,14 +149,10 @@ returnCode TaskListsWorker ::Revise(const RequestData &data,
       return ERR_ACCESS;
     }
   }
-
   // can access
+
   std::map<std::string, std::string> task_list_info;
   Content2Map(in, task_list_info);
-  if (!data.other_user_key.empty() && task_list_info.count("visibility")) {
-    // do not let user edit the visibility of another user's tasklist
-    return ERR_REVISE;
-  }
 
   // revise tasklist
   returnCode ret = db->reviseTaskListNode(
@@ -270,7 +273,7 @@ TaskListsWorker ::ReviseGrantTaskList(const RequestData &data,
 
   for (int i = 0; i < in_list.size(); i++) {
     // shareInfo should check whether the user_name is empty
-    if(in_list[i].MissingKey()) {
+    if (in_list[i].MissingKey()) {
       return ERR_RFIELD;
     }
 
@@ -305,7 +308,8 @@ returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
   // DuplicatedEmail is the function that just check whether the eamil exists
   // Validate will check both email and password
   // here we just have the email key, so we use DuplicatedEmail
-  users->DuplicatedEmail(data.other_user_key);
+  if (!users->DuplicatedEmail(UserInfo(data.other_user_key)))
+    return ERR_NO_NODE;
 
   // remove grant
   ret = db->removeAccess(data.user_key, data.other_user_key, data.tasklist_key);

@@ -42,7 +42,8 @@ class MockedTasklistsWorker : public TaskListsWorker {
   friend MockedTasksWorker;
 
 public:
-  MockedTasklistsWorker(DB &_db) : TaskListsWorker(_db) {}
+  MockedTasklistsWorker(std::shared_ptr<DB> _db, std::shared_ptr<Users> _users)
+      : TaskListsWorker(_db, _users) {}
 
   ~MockedTasklistsWorker() {}
 
@@ -269,7 +270,8 @@ private:
 
 class MockedTasksWorker : public TasksWorker {
 public:
-  MockedTasksWorker(DB *_db, TaskListsWorker *_taskListWorker)
+  MockedTasksWorker(std::shared_ptr<DB> _db,
+                    std::shared_ptr<TaskListsWorker> _taskListWorker)
       : TasksWorker(_db, _taskListWorker) {}
 
   ~MockedTasksWorker() {}
@@ -389,8 +391,8 @@ public:
 
   bool CheckWritePerm(const std::string &user, const std::string &other_user,
                       const std::string &tasklist) {
-    MockedTasklistsWorker *mocked_tasklists_worker =
-        dynamic_cast<MockedTasklistsWorker *>(taskListsWorker);
+    std::shared_ptr<MockedTasklistsWorker> mocked_tasklists_worker =
+        std::dynamic_pointer_cast<MockedTasklistsWorker>(taskListsWorker);
     if (!mocked_tasklists_worker) {
       return false;
     }
@@ -427,9 +429,9 @@ protected:
     mocked_users = std::make_shared<MockedUsers>();
     mocked_db = std::make_shared<DB>();
     mocked_tasklists_worker =
-        std::make_shared<MockedTasklistsWorker>(*mocked_db);
-    mocked_tasks_worker = std::make_shared<MockedTasksWorker>(
-        mocked_db.get(), (TaskListsWorker *)(mocked_tasklists_worker.get()));
+        std::make_shared<MockedTasklistsWorker>(mocked_db, mocked_users);
+    mocked_tasks_worker =
+        std::make_shared<MockedTasksWorker>(mocked_db, mocked_tasklists_worker);
 
     api = std::make_shared<Api>(mocked_users, mocked_tasklists_worker,
                                 mocked_tasks_worker, mocked_db);

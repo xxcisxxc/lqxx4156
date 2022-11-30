@@ -53,9 +53,9 @@ public:
    *
    * @param _db_instance value for DB
    */
-  TaskListsWorker(std::shared_ptr<DB> _db = nullptr, 
+  TaskListsWorker(std::shared_ptr<DB> _db = nullptr,
                   std::shared_ptr<Users> _users = nullptr);
-  
+
   /**
    * @brief Destroy the Task Lists Worker object
    *

@@ -16,7 +16,7 @@ protected:
     // db model
     const std::string db_host = "neo4j://neo4j:hello4156@localhost:7687";
     db = std::make_shared<DB>(db_host);
-    db->deleteEverything();  // clear db
+    db->deleteEverything(); // clear db
 
     // users controller
     users = std::make_shared<Users>(db);
@@ -26,7 +26,6 @@ protected:
 
     // tasks controller
     tasksWorker = std::make_shared<TasksWorker>(db, taskListsWorker);
-    
   }
 
   void TearDown() override {
@@ -700,7 +699,8 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   EXPECT_EQ(out.size(), 0);
 
   // // delete user
-  // EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu", "012345")));
+  // EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu",
+  // "012345")));
 };
 
 TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {

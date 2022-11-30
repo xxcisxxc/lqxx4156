@@ -1,7 +1,8 @@
 #include "tasksWorker.h"
 #include <iostream>
 
-TasksWorker::TasksWorker(std::shared_ptr<DB> _db, std::shared_ptr<TaskListsWorker> _taskListsWorker)
+TasksWorker::TasksWorker(std::shared_ptr<DB> _db,
+                         std::shared_ptr<TaskListsWorker> _taskListsWorker)
     : db(_db), taskListsWorker(_taskListsWorker) {}
 
 TasksWorker::~TasksWorker() {}
@@ -64,10 +65,10 @@ returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
   if (data.RequestIsEmpty())
     return ERR_RFIELD;
 
-  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
-  // checkAccess also ensures that tasklist exists
-  // but if other_user_key is empty, we need to check the tasklist exists
-  // so we use "Exists" to check
+  // if other_user_key is not empty, "chekcAccess" has already checked the src
+  // and dst user checkAccess also ensures that tasklist exists but if
+  // other_user_key is empty, we need to check the tasklist exists so we use
+  // "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -109,17 +110,17 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
     return ERR_RFIELD;
 
   // input value does not have a key
-  if (in.LoseKey())
+  if (in.MissingKey())
     return ERR_KEY;
 
   // check if in is valid
   if (!in.IsValid())
     return ERR_FORMAT;
 
-  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
-  // checkAccess also ensures that tasklist exists
-  // but if other_user_key is empty, we need to check the tasklist exists
-  // so we use "Exists" to check
+  // if other_user_key is not empty, "chekcAccess" has already checked the src
+  // and dst user checkAccess also ensures that tasklist exists but if
+  // other_user_key is empty, we need to check the tasklist exists so we use
+  // "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -136,7 +137,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
     if (!taskListsWorker->Exists(data)) {
       // maybe create taskList first
       return ERR_NO_NODE;
-    }    
+    }
   }
 
   // can access
@@ -166,10 +167,10 @@ returnCode TasksWorker::Delete(const RequestData &data) {
   if (data.RequestIsEmpty())
     return ERR_RFIELD;
 
-  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
-  // checkAccess also ensures that tasklist exists
-  // but if other_user_key is empty, we need to check the tasklist exists
-  // so we use "Exists" to check
+  // if other_user_key is not empty, "chekcAccess" has already checked the src
+  // and dst user checkAccess also ensures that tasklist exists but if
+  // other_user_key is empty, we need to check the tasklist exists so we use
+  // "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -210,12 +211,10 @@ returnCode TasksWorker::Revise(const RequestData &data, TaskContent &in) {
   if (!in.IsValid())
     return ERR_FORMAT;
 
-
-
-  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
-  // checkAccess also ensures that tasklist exists
-  // but if other_user_key is empty, we need to check the tasklist exists
-  // so we use "Exists" to check
+  // if other_user_key is not empty, "chekcAccess" has already checked the src
+  // and dst user checkAccess also ensures that tasklist exists but if
+  // other_user_key is empty, we need to check the tasklist exists so we use
+  // "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -251,10 +250,10 @@ TasksWorker::GetAllTasksName(const RequestData &data,
   if (data.RequestTaskListIsEmpty())
     return ERR_RFIELD;
 
-  // if other_user_key is not empty, "chekcAccess" has already checked the src and dst user
-  // checkAccess also ensures that tasklist exists
-  // but if other_user_key is empty, we need to check the tasklist exists
-  // so we use "Exists" to check
+  // if other_user_key is not empty, "chekcAccess" has already checked the src
+  // and dst user checkAccess also ensures that tasklist exists but if
+  // other_user_key is empty, we need to check the tasklist exists so we use
+  // "Exists" to check
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -266,7 +265,7 @@ TasksWorker::GetAllTasksName(const RequestData &data,
     // tasklist itself does not exist
     if (!taskListsWorker->Exists(data)) {
       return ERR_NO_NODE;
-    }    
+    }
   }
   // can access
 

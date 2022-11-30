@@ -40,7 +40,7 @@ inline void BuildHttpRespBody(nlohmann::json *js) { return; }
 
 template <typename FirstValue, typename... Rest>
 inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
-                              FirstValue &&value, Rest &&...rest) {
+                              FirstValue &&value, Rest &&... rest) {
   (*js)[field] = std::forward<FirstValue>(value);
   BuildHttpRespBody(js, std::forward<Rest>(rest)...);
 }
@@ -208,13 +208,12 @@ Api::Api(std::shared_ptr<Users> _users,
   }
 
   if (!tasklists_worker) {
-    tasklists_worker = std::make_shared<TaskListsWorker>(*db);
+    tasklists_worker = std::make_shared<TaskListsWorker>(db);
   }
 
   if (!tasks_worker) {
     /* Dangerous, modify later */
-    tasks_worker =
-        std::make_shared<TasksWorker>(db.get(), tasklists_worker.get());
+    tasks_worker = std::make_shared<TasksWorker>(db, tasklists_worker);
   }
 
   if (!svr) {
