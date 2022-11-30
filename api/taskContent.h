@@ -109,7 +109,7 @@ struct TaskContent {
   void GetTimeObject(const std::string &date, time_t &time) {
     int d, m, y;
     char delimiter1;
-    char delimiter2;    
+    char delimiter2;
     std::istringstream iss(date);
     if (iss >> m >> delimiter1 >> d >> delimiter2 >> y) {
       struct tm t = {0};
@@ -153,7 +153,8 @@ struct TaskContent {
     else if (!startDate.empty() && endDate.empty())
       return false;
     // check startDate <= endDate
-    if (!startDate.empty() && !endDate.empty() && !CompareTime(startDate, endDate))
+    if (!startDate.empty() && !endDate.empty() &&
+        !CompareTime(startDate, endDate))
       return false;
     // check priority format
     if (priority != NULL_PRIORITY && priority != VERY_URGENT &&
