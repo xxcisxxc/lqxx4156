@@ -636,12 +636,6 @@ TEST_F(IntgTest, TaskLists_ReviseOthers) {
   data.tasklist_key = "unknown_tasklist";
   in = TasklistContent("", "unknown tasklist description", "12/30/2022", "");
   EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_NO_NODE);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
 }
 
 TEST_F(IntgTest, TaskLists_GetAllTasklist) {
@@ -697,10 +691,6 @@ TEST_F(IntgTest, TaskLists_GetAllTasklist) {
   out = {};
   EXPECT_EQ(taskListsWorker->GetAllTasklist(data, out), ERR_NO_NODE);
   EXPECT_EQ(out.size(), 0);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(UserInfo("alice", "alice@columbia.edu",
-  // "012345")));
 };
 
 TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
@@ -743,12 +733,6 @@ TEST_F(IntgTest, TaskLists_GetAllAccessTaskList) {
   outList = {};
   EXPECT_EQ(taskListsWorker->GetAllAccessTaskList(data, outList), ERR_RFIELD);
   EXPECT_EQ(outList.size(), 0);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
 };
 
 TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
@@ -821,14 +805,6 @@ TEST_F(IntgTest, TaskLists_GetAllGrantTaskList) {
             ERR_RFIELD);
   EXPECT_EQ(outList.size(), 0);
   EXPECT_EQ(isPublic, false);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 /*
@@ -910,14 +886,6 @@ TEST_F(IntgTest, TaskLists_ReviseGrantTaskList) {
   data.tasklist_key = "";
   EXPECT_EQ(taskListsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_RFIELD);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, TaskLists_RemoveGrantTaskList) {
@@ -932,14 +900,6 @@ TEST_F(IntgTest, TaskLists_RemoveGrantTaskList) {
 
   // alice shares her tasklist1 with sam, with read-write permission
   EXPECT_TRUE(ShareTaskList("alice", "tasklist1", "sam", true));
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, TaskLists_GetAllPublicTaskList) {
@@ -985,14 +945,6 @@ TEST_F(IntgTest, TaskLists_GetAllPublicTaskList) {
   EXPECT_EQ(out_list[1].second, "tasklist6");
   EXPECT_EQ(out_list[2].first, name2Email["sam"]);
   EXPECT_EQ(out_list[2].second, "tasklist9");
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, TaskLists_Exists) {
@@ -1051,14 +1003,6 @@ TEST_F(IntgTest, TaskLists_Exists) {
   data.tasklist_key = "tasklist1";
   data.other_user_key = name2Email["alice"];
   EXPECT_TRUE(taskListsWorker->Exists(data));
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 /*
@@ -1134,10 +1078,6 @@ TEST_F(IntgTest, Tasks_QueryOwned) {
   EXPECT_EQ(out.endDate, "");
   EXPECT_EQ(out.priority, NULL_PRIORITY);
   EXPECT_EQ(out.status, "");
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
 };
 
 TEST_F(IntgTest, Tasks_QueryOthers) {
@@ -1236,14 +1176,6 @@ TEST_F(IntgTest, Tasks_QueryOthers) {
   EXPECT_EQ(out.endDate, "01/29/2023");
   EXPECT_EQ(out.priority, NORMAL);
   EXPECT_EQ(out.status, "Done");
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, Tasks_CreateOwned) {
@@ -1296,10 +1228,6 @@ TEST_F(IntgTest, Tasks_CreateOwned) {
   EXPECT_EQ(tasksWorker->Create(data, task2, outTaskName), ERR_FORMAT);
   EXPECT_EQ(outTaskName, "");
   task2.status = "Done";
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
 };
 
 TEST_F(IntgTest, Tasks_CreateOthers) {
@@ -1330,8 +1258,7 @@ TEST_F(IntgTest, Tasks_CreateOthers) {
   // bob tries to create task in alice's tasklist0
   data.tasklist_key = "tasklist0";
   std::string outTaskName;
-  // 这里有待 !taskListsWorker->Exists(data) 调整
-  EXPECT_EQ(tasksWorker->Create(data, task0, outTaskName), ERR_NO_NODE);
+  EXPECT_EQ(tasksWorker->Create(data, task0, outTaskName), ERR_ACCESS);
   EXPECT_EQ(outTaskName, "");
 
   // bob tries to create task in alice's tasklist1, but he has read-only
@@ -1354,14 +1281,6 @@ TEST_F(IntgTest, Tasks_CreateOthers) {
   data.tasklist_key = "tasklist1";
   EXPECT_EQ(tasksWorker->Create(data, task1, outTaskName), SUCCESS);
   EXPECT_EQ(outTaskName, "task1");
-
-  // // delete users
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, Tasks_DeleteOwned) {
@@ -1401,10 +1320,6 @@ TEST_F(IntgTest, Tasks_DeleteOwned) {
   data.tasklist_key = "";
   data.task_key = "";
   EXPECT_EQ(tasksWorker->Delete(data), ERR_RFIELD);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
 };
 
 TEST_F(IntgTest, Tasks_DeleteOthers) {
@@ -1431,8 +1346,7 @@ TEST_F(IntgTest, Tasks_DeleteOthers) {
   // bob tries to delete task in alice's tasklist0, but he has no permission
   data.tasklist_key = "tasklist0";
   data.task_key = "task0";
-  // 这里有待 !taskListsWorker->Exists(data) 调整
-  EXPECT_EQ(tasksWorker->Delete(data), ERR_NO_NODE);
+  EXPECT_EQ(tasksWorker->Delete(data), ERR_ACCESS);
 
   // bob tries to delete task in alice's tasklist1, but he has read-only
   // permission
@@ -1453,14 +1367,6 @@ TEST_F(IntgTest, Tasks_DeleteOthers) {
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Delete(data), SUCCESS);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, Tasks_ReviseOwned) {
@@ -1531,10 +1437,6 @@ TEST_F(IntgTest, Tasks_ReviseOwned) {
   data.tasklist_key = "tasklist1";
   data.task_key = "task3";
   EXPECT_EQ(tasksWorker->Revise(data, in), ERR_NO_NODE);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
 };
 
 TEST_F(IntgTest, Tasks_ReviseOthers) {
@@ -1562,8 +1464,7 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   TaskContent in("", "", "11/30/2022", "12/29/2022", NULL_PRIORITY, "");
   data.tasklist_key = "tasklist0";
   data.task_key = "task0";
-  // 这里有待 !taskListsWorker->Exists(data) 调整
-  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_NO_NODE);
+  EXPECT_EQ(tasksWorker->Revise(data, in), ERR_ACCESS);
 
   // bob tries to revise task in tasklist1, but he has read-only permission
   in = TaskContent("", "", "12/30/2022", "01/29/2023", NULL_PRIORITY, "");
@@ -1586,14 +1487,6 @@ TEST_F(IntgTest, Tasks_ReviseOthers) {
   data.tasklist_key = "tasklist1";
   data.task_key = "task1";
   EXPECT_EQ(tasksWorker->Revise(data, in), SUCCESS);
-
-  // // delete users
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 TEST_F(IntgTest, Tasks_GetAllTasksNameOwned) {
@@ -1663,10 +1556,6 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOwned) {
   data.tasklist_key = "";
   EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), ERR_RFIELD);
   EXPECT_EQ(outTaskNames.size(), 0);
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
 };
 
 TEST_F(IntgTest, Tasks_GetAllTasksNameOthers) {
@@ -1693,8 +1582,7 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOthers) {
   // get all tasks name owned by alice in tasklist0, bob has no permission
   std::vector<std::string> outTaskNames;
   data.tasklist_key = "tasklist0";
-  // 这里有待 !taskListsWorker->Exists(data) 调整
-  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), ERR_NO_NODE);
+  EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), ERR_ACCESS);
   EXPECT_EQ(outTaskNames.size(), 0);
 
   // get all tasks name owned by alice in tasklist1, bob has read-only
@@ -1723,14 +1611,6 @@ TEST_F(IntgTest, Tasks_GetAllTasksNameOthers) {
   EXPECT_EQ(tasksWorker->GetAllTasksName(data, outTaskNames), SUCCESS);
   EXPECT_EQ(outTaskNames.size(), 1);
   EXPECT_EQ(outTaskNames[0], "task1");
-
-  // // delete user
-  // EXPECT_TRUE(users->Delete(
-  //     UserInfo("alice", name2Email["alice"], name2Passwd["alice"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("bob", name2Email["bob"], name2Passwd["bob"])));
-  // EXPECT_TRUE(
-  //     users->Delete(UserInfo("sam", name2Email["sam"], name2Passwd["sam"])));
 };
 
 int main(int argc, char **argv) {
