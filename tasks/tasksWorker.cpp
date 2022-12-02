@@ -10,38 +10,37 @@ TasksWorker::~TasksWorker() {}
 void TasksWorker::TaskStruct2Map(
     const TaskContent &taskContent,
     std::map<std::string, std::string> &task_info) {
-  if (!taskContent.name.empty()) 
+  if (!taskContent.name.empty())
     task_info["name"] = taskContent.name;
-  
-  if (!taskContent.content.empty()) 
+
+  if (!taskContent.content.empty())
     task_info["content"] = taskContent.content;
-  
-  if (!taskContent.startDate.empty()) 
+
+  if (!taskContent.startDate.empty())
     task_info.insert(std::pair<std::string, std::string>(
         "startDate", taskContent.startDate));
-    // task_info["startDate"] = taskContent.startDate;
-  
-  if (!taskContent.endDate.empty()) 
+  // task_info["startDate"] = taskContent.startDate;
+
+  if (!taskContent.endDate.empty())
     task_info.insert(
         std::pair<std::string, std::string>("endDate", taskContent.endDate));
-    // task_info["endDate"] = taskContent.endDate;
-  
+  // task_info["endDate"] = taskContent.endDate;
+
   /* deprecated, only for test purpose */
-  if (!taskContent.date.empty()) 
+  if (!taskContent.date.empty())
     task_info.insert(
         std::pair<std::string, std::string>("date", taskContent.date));
-    // task_info["date"] = taskContent.date;
-  
-  if (taskContent.priority != NULL_PRIORITY) 
+  // task_info["date"] = taskContent.date;
+
+  if (taskContent.priority != NULL_PRIORITY)
     task_info.insert(std::pair<std::string, std::string>(
         "priority", std::to_string((int)taskContent.priority)));
-    // task_info["priority"] = std::to_string((int)taskContent.priority);
-  
-  if (!taskContent.status.empty()) 
+  // task_info["priority"] = std::to_string((int)taskContent.priority);
+
+  if (!taskContent.status.empty())
     task_info.insert(
         std::pair<std::string, std::string>("status", taskContent.status));
-    // task_info["status"] = taskContent.status;
-  
+  // task_info["status"] = taskContent.status;
 }
 
 void TasksWorker::Map2TaskStruct(
