@@ -63,7 +63,7 @@ async function getMyLists() {
         var name = row.insertCell(0);
         var actions = row.insertCell(1);
         name.innerHTML = element;
-        actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this, 'task.html', '')">look</button> `
+        actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this, 'task.html', '')">show</button> `
           + `<button type="button" name=${element} onclick="showInfo(this, false)">revise</button> `
           + `<button type="button" name=${element} onclick="delMyList(this)">delete</button> `
           + `<button type="button" name=${element} onclick="gotoNext(this, 'share.html', '')">share</button>`;
@@ -102,7 +102,7 @@ async function getOtherLists() {
         user.innerHTML = element.user;
         perm.innerHTML = element.permission;
         actions.innerHTML
-          = `<button type="button" name=${element.list} onclick="gotoNext(this, 'task.html', '${element.user}')">look</button> `;
+          = `<button type="button" name=${element.list} onclick="gotoNext(this, 'task.html', '${element.user}', '${element.permission}')">show</button> `;
         if (element.permission == "write") {
           actions.innerHTML += `<button type="button" name=${JSON.stringify(element)} onclick="showInfo(this, true)">revise</button>`;
         }
@@ -116,9 +116,10 @@ async function getOtherLists() {
 
 getOtherLists();
 
-function gotoNext(button, page, other) {
+function gotoNext(button, page, other, permission) {
   window.localStorage.setItem('other', other);
   window.localStorage.setItem("list", button.name);
+  window.localStorage.setItem('permission', permission);
   window.location.href = page;
 }
 </script>
