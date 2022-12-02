@@ -288,7 +288,7 @@ TEST_F(TasksWorkerTest, Query) {
   // query others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
-  permission = false;
+  bool permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
