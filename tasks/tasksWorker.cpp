@@ -17,20 +17,30 @@ void TasksWorker::TaskStruct2Map(
     task_info["content"] = taskContent.content;
   }
   if (!taskContent.startDate.empty()) {
-    task_info["startDate"] = taskContent.startDate;
+    task_info.insert(std::pair<std::string, std::string>(
+        "startDate", taskContent.startDate));
+    // task_info["startDate"] = taskContent.startDate;
   }
   if (!taskContent.endDate.empty()) {
-    task_info["endDate"] = taskContent.endDate;
+    task_info.insert(
+        std::pair<std::string, std::string>("endDate", taskContent.endDate));
+    // task_info["endDate"] = taskContent.endDate;
   }
   /* deprecated, only for test purpose */
   if (!taskContent.date.empty()) {
-    task_info["date"] = taskContent.date;
+    task_info.insert(
+        std::pair<std::string, std::string>("date", taskContent.date));
+    // task_info["date"] = taskContent.date;
   }
   if (taskContent.priority != NULL_PRIORITY) {
-    task_info["priority"] = std::to_string((int)taskContent.priority);
+    task_info.insert(std::pair<std::string, std::string>(
+        "priority", std::to_string((int)taskContent.priority)));
+    // task_info["priority"] = std::to_string((int)taskContent.priority);
   }
   if (!taskContent.status.empty()) {
-    task_info["status"] = taskContent.status;
+    task_info.insert(
+        std::pair<std::string, std::string>("status", taskContent.status));
+    // task_info["status"] = taskContent.status;
   }
 }
 
