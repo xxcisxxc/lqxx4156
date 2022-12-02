@@ -285,10 +285,27 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_EQ(out.priority, VERY_URGENT);
   EXPECT_EQ(out.status, "To Do");
 
+  // should be successful
+  data.other_user_key = "user0";
+  bool permission = false;
+  EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
+                                     data.tasklist_key, permission))
+      .WillOnce(Return(SUCCESS));
+  EXPECT_CALL(*mockedDB, getTaskNode(data.user_key, data.tasklist_key,
+                                     data.task_key, task_info))
+      .WillOnce(DoAll(SetArgReferee<3>(new_task_info), Return(SUCCESS)));
+  EXPECT_EQ(tasksWorker->Query(data, out), SUCCESS);
+  EXPECT_EQ(out.name, "task0");
+  EXPECT_EQ(out.content, "4156 Iteration-2");
+  EXPECT_EQ(out.startDate, "10/31/2022");
+  EXPECT_EQ(out.endDate, "11/29/2022");
+  EXPECT_EQ(out.priority, VERY_URGENT);
+  EXPECT_EQ(out.status, "To Do");
+
   // query others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
-  bool permission = false;
+  permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
                                      data.tasklist_key, permission))
       .WillOnce(Return(SUCCESS));
