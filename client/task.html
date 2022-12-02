@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2 id="task">Tasks in Tasklist </h2>
+<script>
+document.getElementById("task").innerHTML += window.localStorage.getItem("list");
+var other = window.localStorage.getItem("other");
+if (other != '') {
+	document.getElementById("task").innerHTML += " of Owner " + other;
+}
+</script>
+<p id="err-msg" style="color:red;font-size:80%;"></p>
+
+</body>
+</html>

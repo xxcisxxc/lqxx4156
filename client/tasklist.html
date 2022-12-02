@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tasklist</title>
+</head>
+<body>
+
+<style>
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    width: 50%;
+    height: 50%;
+    background-color: rgba(0,0,0,0.4);
+  }
+</style>
+
+<h2 id="user">Hello, </h2>
+<script>
+document.getElementById("user").innerHTML += window.localStorage.getItem("user");
+</script>
+<p id="err-msg" style="color:red;font-size:80%;"></p>
+
+<button type="button" name="" onclick="showInfo(this, false)">create</button>  
+<button type="button" onclick="getMyLists();document.getElementById('err-msg').innerHTML = ''">refresh</button>
+<br>
+<h3>Own Task Lists</h3>
+<table id="MyTaskListTable">
+</table>
+<br><br>
+<button type="button" onclick="getOtherLists();document.getElementById('err-msg').innerHTML = ''">refresh</button>
+<h3>Other's Task Lists</h3>
+<table id="OtherTaskListTable">
+</table>
+<p></p>
+<br><br><br>
+<button type="button" onclick="logOut('err-msg')">Logout</button>
+
+<script type="text/javascript" src="common.js"></script>
+<script>
+async function getMyLists() {
+  var table = document.getElementById("MyTaskListTable");
+  table.innerHTML = "<tr><th>TaskList Name</th><th>Actions</th></tr>";
+  const requestOptions = {
+    method: "GET",
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+    }
+  };
+  const response = await fetch("http://173.199.114.233:3001/v1/task_lists", requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    const arr = data.data;
+    if (arr !== null) {
+      arr.forEach(element => {
+        var row = table.insertRow(-1);
+        var name = row.insertCell(0);
+        var actions = row.insertCell(1);
+        name.innerHTML = element;
+        actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this, 'task.html', '')">look</button> `
+          + `<button type="button" name=${element} onclick="showInfo(this, false)">revise</button> `
+          + `<button type="button" name=${element} onclick="delMyList(this)">delete</button> `
+          + `<button type="button" name=${element} onclick="gotoNext(this, 'share.html', '')">share</button>`;
+      });
+    }
+  } else {
+    document.getElementById("err-msg").style.color = "red";
+    document.getElementById("err-msg").innerHTML = "Error: " + JSON.stringify(data);
+  }
+}
+
+getMyLists();
+
+async function getOtherLists() {
+  var table = document.getElementById("OtherTaskListTable");
+  table.innerHTML = "<tr><th>TaskList Name</th><th>Owned User</th><th>Permission</th><th>Actions</th></tr>";
+  const requestOptions = {
+    method: "GET",
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+    }
+  };
+  const response = await fetch("http://173.199.114.233:3001/v1/task_lists?share=true", requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    const arr = data.data;
+    if (arr !== null) {
+      arr.forEach(element => {
+        var row = table.insertRow(-1);
+        var name = row.insertCell(0);
+        var user = row.insertCell(1);
+        var perm = row.insertCell(2);
+        var actions = row.insertCell(3);
+        name.innerHTML = element.list;
+        user.innerHTML = element.user;
+        perm.innerHTML = element.permission;
+        actions.innerHTML
+          = `<button type="button" name=${element.list} onclick="gotoNext(this, 'task.html', '${element.user}')">look</button> `;
+        if (element.permission == "write") {
+          actions.innerHTML += `<button type="button" name=${JSON.stringify(element)} onclick="showInfo(this, true)">revise</button>`;
+        }
+      });
+    }
+  } else {
+    document.getElementById("err-msg").style.color = "red";
+    document.getElementById("err-msg").innerHTML = "Error: " + JSON.stringify(data);
+  }
+}
+
+getOtherLists();
+
+function gotoNext(button, page, other) {
+  window.localStorage.setItem('other', other);
+  window.localStorage.setItem("list", button.name);
+  window.location.href = page;
+}
+</script>
+
+<script>
+async function showInfo(button, other) {
+  var form = document.getElementById("listform");
+  if (other) {
+    var dbutton = JSON.parse(button.name);
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      }
+    };
+    const response = await fetch("http://173.199.114.233:3001/v1/task_lists/" + dbutton.list + "?share=true&other=" + dbutton.user, requestOptions);
+    if (response.status != 200) {
+      getOtherLists();
+      return;
+    }
+    const data_total = await response.json();
+    const data = data_total.data;
+    form.innerHTML = `<input type="hidden" name="rlname" value="${dbutton.list}" readonly>`
+      + `<input type="hidden" name="runame" value="${dbutton.user}" readonly>`
+      + `<label for="content">Content:</label><br>`
+      + `<input type="text" name="content" value="${data.content}">`;
+  } else {
+    if (button.name != "") { // Modify Button
+      const requestOptions = {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        }
+      };
+      const response = await fetch("http://173.199.114.233:3001/v1/task_lists/" + button.name, requestOptions);
+      if (response.status != 200) {
+        getMyLists();
+        return;
+      }
+      const data_total = await response.json();
+      const data = data_total.data;
+      form.innerHTML = `<input type="hidden" name="rlname" value="${button.name}" readonly>`
+        + `<label for="visible">Visibility:</label><br>`
+        + `<input type="radio" name="visible" value="private" ${data.visibility == "private" ? "checked" : ""}><label for="private">private</label>  `
+        + `<input type="radio" name="visible" value="shared" ${data.visibility == "shared" ? "checked" : ""}><label for="shared">shared</label>  `
+        + `<input type="radio" name="visible" value="public" ${data.visibility == "public" ? "checked" : ""}><label for="public">public</label><br>`
+        + `<label for="content">Content:</label><br>`
+        + `<input type="text" name="content" value="${data.content}">`;
+    } else { // Create Button
+      form.innerHTML = `<label for="lname">List:</label><br>`
+        + `<input type="text" name="lname" required><br>`
+        + `<label for="visible">Visibility:</label><br>`
+        + `<input type="radio" name="visible" value="private"><label for="private">private</label>  `
+        + `<input type="radio" name="visible" value="shared"><label for="shared">shared</label>  `
+        + `<input type="radio" name="visible" value="public"><label for="public">public</label><br>`
+        + `<label for="content">Content:</label><br>`
+        + `<input type="text" name="content">`;
+    }
+  }
+  document.getElementById("listinfo").style.display="block";
+}
+
+async function createOrReviseList(form) {
+  var body = new Object();
+  body["content"] = form.content.value;
+  if (form.runame != undefined) { // revise share
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      },
+      body: JSON.stringify(body)
+    };
+    const response = await fetch("http://173.199.114.233:3001/v1/task_lists/" + form.rlname.value + "?other=" + form.runame.value, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("info-msg").style.color = "black";
+    } else {
+      document.getElementById("info-msg").style.color = "red";
+    }
+    document.getElementById("info-msg").innerHTML = JSON.stringify(data);
+    return;
+  }
+  var visible = document.querySelector('input[name="visible"]:checked');
+  if (visible != null) {
+    body["visibility"] = visible.value;
+  }
+  if (form.lname == undefined) { // Modify 
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      },
+      body: JSON.stringify(body)
+    };
+    const response = await fetch("http://173.199.114.233:3001/v1/task_lists/" + form.rlname.value, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("info-msg").style.color = "black";
+    } else {
+      document.getElementById("info-msg").style.color = "red";
+    }
+    document.getElementById("info-msg").innerHTML = JSON.stringify(data);
+  } else { // Create
+    body["name"] = form.lname.value;
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      },
+      body: JSON.stringify(body)
+    };
+    const response = await fetch("http://173.199.114.233:3001/v1/task_lists/create", requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("info-msg").style.color = "black";
+      getMyLists();
+    } else {
+      document.getElementById("info-msg").style.color = "red";
+    }
+    document.getElementById("info-msg").innerHTML = JSON.stringify(data);
+  }
+}
+
+async function delMyList(button) {
+  const requestOptions = {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      }
+    };
+    const response = await fetch("http://173.199.114.233:3001/v1/task_lists/" + button.name, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("err-msg").style.color = "black";
+      getMyLists();
+    } else {
+      document.getElementById("err-msg").style.color = "red";
+    }
+    document.getElementById("err-msg").innerHTML = JSON.stringify(data);
+}
+</script>
+
+<div id="listinfo" class="modal">
+<p id="info-msg" style="background-color:wheat; color:red"></p>
+<form id="listform" style="background-color:wheat;">
+</form>
+<button type="button" form="listform" onclick="createOrReviseList(this.form)">submit</button>
+<button type="button" onclick="document.getElementById('listinfo').style.display='none';document.getElementById('info-msg').innerHTML = ''">cancel</button>
+</div>
+
+<script>
+var modal = document.getElementById('listinfo');
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+</script>
+
+</body>
+</html>
