@@ -227,6 +227,17 @@ TEST_F(TasksWorkerTest, Map2TaskStruct) {
   EXPECT_EQ(task.priority, NULL_PRIORITY);
   EXPECT_EQ(task.status, "");
 
+  // other situation for returnCode enum
+  mp["priority"] = "12";
+  task.Clear();
+  tasksWorker->Map2TaskStruct(mp, task);
+  EXPECT_EQ(task.name, "");
+  EXPECT_EQ(task.content, "");
+  EXPECT_EQ(task.startDate, "");
+  EXPECT_EQ(task.endDate, "");
+  EXPECT_EQ(task.priority, 12);
+  EXPECT_EQ(task.status, "");
+
   // no error is just ok
   mp.erase("status");
   tasksWorker->Map2TaskStruct(mp, task);

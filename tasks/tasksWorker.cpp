@@ -54,20 +54,20 @@ void TasksWorker::Map2TaskStruct(
     taskContent.content = task_info.at("content");
 
   if (task_info.count("startDate"))
-    taskContent.startDate = task_info.find("startDate")->second;
+    taskContent.startDate = task_info.at("startDate");
 
   if (task_info.count("endDate"))
-    taskContent.endDate = task_info.find("endDate")->second;
+    taskContent.endDate = task_info.at("endDate");
 
   /* deprecated, only for test purpose */
   if (task_info.count("date"))
-    taskContent.date = task_info.find("date")->second;
+    taskContent.date = task_info.at("date");
 
   if (task_info.count("priority"))
-    taskContent.priority = (Priority)stoi(task_info.find("priority")->second);
+    taskContent.priority = (Priority)stoi(task_info.at("priority"));
 
   if (task_info.count("status"))
-    taskContent.status = task_info.find("status")->second;
+    taskContent.status = task_info.at("status");
 }
 
 returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
@@ -165,7 +165,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
                                                          : data.other_user_key,
                              data.tasklist_key, task_info);
   } while (ret == ERR_DUP_NODE);
-  
+
   return ret;
 }
 
