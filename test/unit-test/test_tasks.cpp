@@ -285,7 +285,7 @@ TEST_F(TasksWorkerTest, Query) {
   EXPECT_EQ(out.priority, VERY_URGENT);
   EXPECT_EQ(out.status, "To Do");
 
-  // should be successful
+  // should be successful with other_user_key is himself
   data.other_user_key = "user0";
   bool permission = false;
   EXPECT_CALL(*mockedDB, checkAccess(data.other_user_key, data.user_key,
