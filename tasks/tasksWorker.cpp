@@ -10,38 +10,38 @@ TasksWorker::~TasksWorker() {}
 void TasksWorker::TaskStruct2Map(
     const TaskContent &taskContent,
     std::map<std::string, std::string> &task_info) {
-  if (!taskContent.name.empty()) {
+  if (!taskContent.name.empty()) 
     task_info["name"] = taskContent.name;
-  }
-  if (!taskContent.content.empty()) {
+  
+  if (!taskContent.content.empty()) 
     task_info["content"] = taskContent.content;
-  }
-  if (!taskContent.startDate.empty()) {
+  
+  if (!taskContent.startDate.empty()) 
     task_info.insert(std::pair<std::string, std::string>(
         "startDate", taskContent.startDate));
     // task_info["startDate"] = taskContent.startDate;
-  }
-  if (!taskContent.endDate.empty()) {
+  
+  if (!taskContent.endDate.empty()) 
     task_info.insert(
         std::pair<std::string, std::string>("endDate", taskContent.endDate));
     // task_info["endDate"] = taskContent.endDate;
-  }
+  
   /* deprecated, only for test purpose */
-  if (!taskContent.date.empty()) {
+  if (!taskContent.date.empty()) 
     task_info.insert(
         std::pair<std::string, std::string>("date", taskContent.date));
     // task_info["date"] = taskContent.date;
-  }
-  if (taskContent.priority != NULL_PRIORITY) {
+  
+  if (taskContent.priority != NULL_PRIORITY) 
     task_info.insert(std::pair<std::string, std::string>(
         "priority", std::to_string((int)taskContent.priority)));
     // task_info["priority"] = std::to_string((int)taskContent.priority);
-  }
-  if (!taskContent.status.empty()) {
+  
+  if (!taskContent.status.empty()) 
     task_info.insert(
         std::pair<std::string, std::string>("status", taskContent.status));
     // task_info["status"] = taskContent.status;
-  }
+  
 }
 
 void TasksWorker::Map2TaskStruct(
@@ -53,23 +53,21 @@ void TasksWorker::Map2TaskStruct(
   if (task_info.count("content"))
     taskContent.content = task_info.at("content");
 
-  /* deprecated, only for test purpose */
-  if (task_info.count("date"))
-    taskContent.date = task_info.at("date");
-
-  if (task_info.count("status"))
-    taskContent.status = task_info.at("status");
-
   if (task_info.count("startDate"))
-    taskContent.startDate = task_info.at("startDate");
+    taskContent.startDate = task_info.find("startDate")->second;
 
   if (task_info.count("endDate"))
-    taskContent.endDate = task_info.at("endDate");
+    taskContent.endDate = task_info.find("endDate")->second;
+
+  /* deprecated, only for test purpose */
+  if (task_info.count("date"))
+    taskContent.date = task_info.find("date")->second;
 
   if (task_info.count("priority"))
-    taskContent.priority = (Priority)stoi(task_info.at("priority"));
+    taskContent.priority = (Priority)stoi(task_info.find("priority")->second);
 
-
+  if (task_info.count("status"))
+    taskContent.status = task_info.find("status")->second;
 }
 
 returnCode TasksWorker::Query(const RequestData &data, TaskContent &out) {
@@ -132,7 +130,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
   // if other_user_key is not empty, "chekcAccess" has already checked the src
   // and dst user checkAccess also ensures that tasklist exists but if
   // other_user_key is empty, we need to check the tasklist exists so we use
-  // "Exists" to check
+  // "Exists" to check "both user and tasklist"
   if (!data.other_user_key.empty()) {
     bool permission = false;
     returnCode ret = db->checkAccess(data.other_user_key, data.user_key,
@@ -167,10 +165,7 @@ returnCode TasksWorker::Create(const RequestData &data, TaskContent &in,
                                                          : data.other_user_key,
                              data.tasklist_key, task_info);
   } while (ret == ERR_DUP_NODE);
-
-  if (ret != SUCCESS) {
-    outTaskName = "";
-  }
+  
   return ret;
 }
 

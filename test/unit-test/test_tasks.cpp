@@ -401,6 +401,18 @@ TEST_F(TasksWorkerTest, Create) {
   EXPECT_EQ(outTaskName, "task0");
   outTaskName = "";
 
+  // other user_key is himself, should be successful
+  data.other_user_key = "user0";
+  in.name = "task1";
+  EXPECT_CALL(*mockedTaskLists, Exists(data)).WillOnce(Return(true));
+  EXPECT_CALL(*mockedDB,
+              createTaskNode(data.user_key, data.tasklist_key, task_info))
+      .WillOnce(Return(SUCCESS));
+  EXPECT_EQ(tasksWorker->Create(data, in, outTaskName), SUCCESS);
+  EXPECT_EQ(outTaskName, "task1");
+  in.name = "";
+  outTaskName = "";
+
   // create others' tasks should be successful
   data.other_user_key = "user1";
   data.tasklist_key = "tasklist1";
