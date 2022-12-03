@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Share</title>
+</head>
+<body>
+
+<style>
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    width: 50%;
+    height: 50%;
+    background-color: rgba(0,0,0,0.4);
+  }
+</style>
+
+<h2 id="share">Share </h2>
+<script>
+document.getElementById("share").innerHTML += window.localStorage.getItem("list");
+</script>
+<p id="err-msg" style="color:red;font-size:80%;"></p>
+
+<button type="button" name="" onclick="showInfo(this, false)">add</button>  
+<button type="button" onclick="getShareLists();document.getElementById('err-msg').innerHTML = ''">refresh</button>
+<br>
+<h3>Shared Task Lists</h3>
+<table id="ShareTable">
+</table>
+<p></p>
+<br><br><br>
+<button type="button" onclick="ret2page('tasklist.html')">return</button> 
+<button type="button" onclick="logOut('err-msg')">Logout</button>
+
+<script type="text/javascript" src="common.js"></script>
+<script>
+async function getShareLists() {
+  var table = document.getElementById("ShareTable");
+  table.innerHTML = "<tr><th>Shared To</th><th>Permission</th><th>Actions</th></tr>";
+  const requestOptions = {
+    method: "GET",
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Basic '+ btoa(window.localStorage.getItem('token')), 
+    }
+  };
+  const response = await fetch("http://173.199.114.233:3001/v1/share/" + window.localStorage.getItem("list"), requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    const arr = data.data;
+    if (arr !== null) {
+      arr.forEach(element => {
+        var row = table.insertRow(-1);
+        var user = row.insertCell(0);
+        var perm = row.insertCell(1);
+        var actions = row.insertCell(2);
+        user.innerHTML = element.user;
+        perm.innerHTML = element.permission;
+        actions.innerHTML = `<button type="button" name=${JSON.stringify(element)} onclick="showInfo(this, true)">revise</button> `
+          + `<button type="button" name=${element.user} onclick="delShare(this)">delete</button>`;
+      });
+    }
+  } else {
+    document.getElementById("err-msg").style.color = "red";
+    document.getElementById("err-msg").innerHTML = "Error: " + JSON.stringify(data);
+  }
+}
+
+getShareLists();
+</script>
+
+<script>
+async function showInfo(button, isMod) {
+  var form = document.getElementById("listform");
+  if (isMod) {
+    var dbutton = JSON.parse(button.name);
+    form.innerHTML = `<input type="hidden" name="uname" value="${dbutton.user}" readonly>`
+      + `<label for="permit">Permission:</label><br>`
+      + `<input type="radio" name="permit" value="false" ${dbutton.permission == "read" ? "checked" : ""}><label for="false">read</label>  `
+      + `<input type="radio" name="permit" value="true" ${dbutton.permission == "write" ? "checked" : ""}><label for="true">write</label>`;
+  } else {
+    form.innerHTML = `<label for="uname">Share to User:</label><br>`
+      + `<input type="text" name="uname" required><br>`
+      + `<label for="permit">Permission:</label><br>`
+      + `<input type="radio" name="permit" value="false"><label for="false" required>read</label>  `
+      + `<input type="radio" name="permit" value="true"><label for="true">write</label>`;
+  }
+  document.getElementById("listinfo").style.display="block";
+}
+
+async function createOrReviseShare(form) {
+  var body = new Object();
+  var one_perm = new Object();
+  one_perm["user"] = form.uname.value;
+  one_perm["permission"] = document.querySelector('input[name="permit"]:checked').value == "true" ? true : false;
+  body["user_permission"] = new Array(one_perm);
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Basic ' + btoa(window.localStorage.getItem('token'))
+    },
+    body: JSON.stringify(body)
+  };
+  const response = await fetch("http://173.199.114.233:3001/v1/share/" + window.localStorage.getItem("list") + "/create", requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    document.getElementById("info-msg").style.color = "black";
+    getShareLists();
+  } else {
+    document.getElementById("info-msg").style.color = "red";
+  }
+  document.getElementById("info-msg").innerHTML = JSON.stringify(data);
+}
+
+async function delShare(button) {
+  const requestOptions = {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem('token'))
+      },
+      body: JSON.stringify({"user_list": []})
+    };
+    const response = await fetch("http://173.199.114.233:3001/v1/share/" + window.localStorage.getItem("list") + "?other=" + button.name, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("err-msg").style.color = "black";
+      getShareLists();
+    } else {
+      document.getElementById("err-msg").style.color = "red";
+    }
+    document.getElementById("err-msg").innerHTML = JSON.stringify(data);
+}
+</script>
+
+<div id="listinfo" class="modal">
+<p id="info-msg" style="background-color:wheat; color:red"></p>
+<form id="listform" style="background-color:wheat;">
+</form>
+<button type="button" form="listform" onclick="createOrReviseShare(this.form)">submit</button>
+<button type="button" onclick="document.getElementById('listinfo').style.display='none';document.getElementById('info-msg').innerHTML = ''">cancel</button>
+</div>
+
+<script>
+var modal = document.getElementById('listinfo');
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+</script>
+
+
+</body>
+</html>

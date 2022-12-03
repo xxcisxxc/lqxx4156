@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Log in</title>
+</head>
+<body>
+
+<p id="err-log-msg" style="color:red;font-size:80%;"></p>
+
+<form>
+  <label for="uname">Email:</label><br>
+  <input type="email" name="uname" required><br>
+  <label for="pwd">Password:</label><br>
+  <input type="password" name="pwd" required><br><br>
+  <button type="button" onclick="checkLogin(this.form)">Login</button> 
+  <button type="button" onclick="register(this.form)">Register</button>
+</form>
+
+<script>
+async function checkLogin(form) {
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      'Accept': '*/*',
+      'Authorization': 'Basic '+ btoa(form.uname.value + ":" + form.pwd.value), 
+    },
+    body: JSON.stringify({}),
+  };
+  const response = await fetch("http://173.199.114.233:3001/v1/users/login", requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    window.localStorage.setItem("user", form.uname.value)
+    window.localStorage.setItem("token", data.token);
+    window.location.href = "tasklist.html";
+  } else{
+    document.getElementById("err-log-msg").style.color = "red";
+    document.getElementById("err-log-msg").innerHTML = JSON.stringify(data);
+  }
+}
+
+async function register(form) {
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      'Accept': '*/*',
+      'Authorization': 'Basic '+ btoa(form.uname.value + ":" + form.pwd.value), 
+    },
+    body: JSON.stringify({}),
+  };
+  const response = await fetch("http://173.199.114.233:3001/v1/users/register", requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    //window.location.href = "index.html";
+    document.getElementById("err-log-msg").style.color = "black";
+  } else{
+    document.getElementById("err-log-msg").style.color = "red";
+  }
+  document.getElementById("err-log-msg").innerHTML = JSON.stringify(data);
+  form.uname.value = "";
+  form.pwd.value = "";
+}
+</script>
+
+</body>
+</html>
