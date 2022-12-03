@@ -54,8 +54,14 @@ getMyListInfo()
 </script>
 <p id="err-msg" style="color:red;font-size:80%;"></p>
 
-<button type="button" name="" onclick="showInfo(this)">create</button>  
+<button type="button" id="createBtn" name="" onclick="showInfo(this)">create</button>  
 <button type="button" onclick="getMyTasks();document.getElementById('err-msg').innerHTML = ''">refresh</button>
+<script>
+	var permission = window.localStorage.getItem("permission");
+	if(permission == "read") {
+		document.getElementById("createBtn").style.display = "none";
+	}
+</script>
 <br>
 <h3>Tasks</h3>
 <table id="MyTasksTable">
@@ -82,12 +88,13 @@ async function getMyTasks() {
     const arr = data.data;
     if (arr !== null) {
       arr.forEach(element => {
+		console.log(element)
         var row = table.insertRow(-1);
         var name = row.insertCell(0);
         var actions = row.insertCell(1);
         name.innerHTML = element;
 		var permission = window.localStorage.getItem('permission')
-		actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this)">look</button> `
+		actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this, 'task_detail.html')">show</button> `
 		if (permission != 'read') {
 			actions.innerHTML += `<button type="button" name=${element} onclick="showInfo(this)">revise</button> `
           + `<button type="button" name=${element} onclick="delMyTask(this)">delete</button> `;
@@ -102,7 +109,8 @@ async function getMyTasks() {
 
 getMyTasks();
 
-function gotoNext(button, page, other) {
+function gotoNext(button, page) {
+  window.localStorage.setItem("task", button.name);
   window.location.href = page;
 }
 </script>
