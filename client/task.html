@@ -54,7 +54,7 @@ getMyListInfo()
 </script>
 <p id="err-msg" style="color:red;font-size:80%;"></p>
 
-<button type="button" name="" onclick="showInfo(this, false)">create</button>  
+<button type="button" name="" onclick="showInfo(this)">create</button>  
 <button type="button" onclick="getMyTasks();document.getElementById('err-msg').innerHTML = ''">refresh</button>
 <br>
 <h3>Tasks</h3>
@@ -86,8 +86,12 @@ async function getMyTasks() {
         var name = row.insertCell(0);
         var actions = row.insertCell(1);
         name.innerHTML = element;
-        actions.innerHTML = `<button type="button" name=${element} onclick="showInfo(this, false)">revise</button> `
+		var permission = window.localStorage.getItem('permission')
+		actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this)">look</button> `
+		if (permission != 'read') {
+			actions.innerHTML += `<button type="button" name=${element} onclick="showInfo(this)">revise</button> `
           + `<button type="button" name=${element} onclick="delMyTask(this)">delete</button> `;
+		}
       });
     }
   } else {
@@ -104,8 +108,9 @@ function gotoNext(button, page, other) {
 </script>
 
 <script>
-async function showInfo(button, other) {
+async function showInfo(button) {
   var form = document.getElementById("taskform");
+  var other = window.localStorage.getItem("other");
   if (button.name != "") { // Modify Button
 	const requestOptions = {
 	method: 'GET',
@@ -115,6 +120,7 @@ async function showInfo(button, other) {
 	}
 	};
 	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
+	console.log(other)
 	if (other != '') url += "?other=" + other
 	const response = await fetch(url, requestOptions);
 	if (response.status != 200) {
