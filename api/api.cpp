@@ -208,7 +208,7 @@ Api::Api(std::shared_ptr<Users> _users,
   }
 
   if (!tasklists_worker) {
-    tasklists_worker = std::make_shared<TaskListsWorker>(db);
+    tasklists_worker = std::make_shared<TaskListsWorker>(db, users);
   }
 
   if (!tasks_worker) {
@@ -348,7 +348,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   tasklist_req.tasklist_key = API_REQ().matches[1];
   if (tasklists_worker->Query(tasklist_req, tasklist_content) !=
       returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+    API_RETURN_HTTP_RESP(500, "msg", "failed get task list info");
   }
   data = {{"name", std::move(tasklist_content.name)},
           {"content", std::move(tasklist_content.content)},
@@ -441,7 +441,7 @@ API_DEFINE_HTTP_HANDLER(TasksAll) {
   /* Get all tasks. */
   if (tasks_worker->GetAllTasksName(task_req, out_names) !=
       returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+    API_RETURN_HTTP_RESP(500, "msg", "failed get all tasks name");
   }
   nlohmann::json data;
   std::for_each(out_names.cbegin(), out_names.cend(),
@@ -467,7 +467,7 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
 
   /* Get one certain task. */
   if (tasks_worker->Query(task_req, task_content) != returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+    API_RETURN_HTTP_RESP(500, "msg", "failed get task info");
   }
   data = {{"name", std::move(task_content.name)},
           {"content", std::move(task_content.content)},
@@ -511,7 +511,7 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
   API_GET_JSON_OPTIONAL(json_body, task_content.status, status);
 
   if (tasks_worker->Revise(task_req, task_content) != returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+    API_RETURN_HTTP_RESP(500, "msg", "failed update task");
   }
 
   API_RETURN_HTTP_RESP(200, "msg", "success");
@@ -532,7 +532,7 @@ API_DEFINE_HTTP_HANDLER(TasksDelete) {
   }
 
   if (tasks_worker->Delete(task_req) != returnCode::SUCCESS) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed internal server error");
+    API_RETURN_HTTP_RESP(500, "msg", "failed delete task");
   }
 
   API_RETURN_HTTP_RESP(200, "msg", "success");
@@ -647,11 +647,14 @@ API_DEFINE_HTTP_HANDLER(ShareDelete) {
 
   share_delete_req.tasklist_key = API_REQ().matches[1];
   json_body = API_PARSE_REQ_BODY();
-  API_GET_JSON_REQUIRED(json_body, user_json_list, user_list);
+  API_GET_JSON_OPTIONAL(json_body, user_json_list, user_list);
   API_GET_PARAM_OPTIONAL(share_delete_req.other_user_key, other);
 
-  std::transform(user_json_list.cbegin(), user_json_list.cend(),
-                 std::back_inserter(user_str_list), [](auto &&x) { return x; });
+  if (!user_json_list.empty()) {
+    std::transform(user_json_list.cbegin(), user_json_list.cend(),
+                   std::back_inserter(user_str_list),
+                   [](auto &&x) { return x; });
+  }
 
   if (!share_delete_req.other_user_key.empty()) {
     if (tasklists_worker->RemoveGrantTaskList(share_delete_req) !=

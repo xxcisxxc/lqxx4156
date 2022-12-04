@@ -22,13 +22,11 @@ struct UserInfo {
 public:
   UserInfo() {}
 
-  template <typename Email>
-  UserInfo(Email &&_email) : email(std::forward<Email>(_email)) {}
+  UserInfo(std::string _email) : email(std::move(_email)) {}
 
-  template <typename Name, typename Email, typename Password>
-  UserInfo(Name &&_name, Email &&_email, Password &&_password)
-      : name(std::forward<Name>(_name)), email(std::forward<Email>(_email)),
-        passwd(std::forward<Password>(_password)) {}
+  UserInfo(std::string _name, std::string _email, std::string _password)
+      : name(std::move(_name)), email(std::move(_email)),
+        passwd(std::move(_password)) {}
 
   bool operator==(const UserInfo &info) const {
     return this->name == info.name && this->email == info.email &&
