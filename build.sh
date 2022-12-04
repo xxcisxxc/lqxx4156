@@ -25,6 +25,7 @@ if [ "$1" == "build" ]; then
 fi
 
 if [ "$1" == "test" ]; then
+    docker kill $(docker ps -q)
     CONT=$(docker run -d -p7474:7474 -p7687:7687 -e NEO4J_AUTH=neo4j/hello4156 neo4j:4.4.9)
     sleep 20
     rm -rf build && mkdir build && cd build && cmake .. -DLQXX_TESTS=ON && make

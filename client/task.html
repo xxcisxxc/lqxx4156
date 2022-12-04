@@ -37,7 +37,7 @@ async function getMyListInfo() {
 		'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
 	}
 	};
-	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list")
+	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list")
 	if (other != '') url += '?other=' + other
 	const response = await fetch(url, requestOptions);
 	if (response.status != 200) {
@@ -66,8 +66,12 @@ getMyListInfo()
 <h3>Tasks</h3>
 <table id="MyTasksTable">
 </table>
-<br><br>
+<p></p>
+<br><br><br>
+<button type="button" onclick="ret2page('tasklist.html')">return</button> 
+<button type="button" onclick="logOut('err-msg')">Logout</button>
 
+<script type="text/javascript" src="common.js"></script>
 
 <script>
 async function getMyTasks() {
@@ -80,7 +84,7 @@ async function getMyTasks() {
       'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
     }
   };
-  var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks"
+  var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks"
   if (other != '') url += '?other=' + other
   const response = await fetch(url, requestOptions);
   const data = await response.json();
@@ -127,7 +131,7 @@ async function showInfo(button) {
 		'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
 	}
 	};
-	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
+	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
 	console.log(other)
 	if (other != '') url += "?other=" + other
 	const response = await fetch(url, requestOptions);
@@ -207,7 +211,7 @@ async function createOrReviseTask(form) {
       },
       body: JSON.stringify(body)
     };
-	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + form.rlname.value
+	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + form.rlname.value
 	if (other != '') url += '?other=' + other
     const response = await fetch(url, requestOptions);
     const data = await response.json();
@@ -228,7 +232,7 @@ async function createOrReviseTask(form) {
       },
       body: JSON.stringify(body)
     };
-	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/create"
+	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/create"
 	if (other != '') url += '?other=' + other
     const response = await fetch(url, requestOptions);
     const data = await response.json();
@@ -250,7 +254,7 @@ async function delMyTask(button) {
         'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
       }
     };
-	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
+	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
 	if (other != '') url += '?other=' + other
     const response = await fetch(url, requestOptions);
     const data = await response.json();

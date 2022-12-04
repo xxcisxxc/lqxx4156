@@ -49,7 +49,7 @@ async function getShareLists() {
       'Authorization': 'Basic '+ btoa(window.localStorage.getItem('token')), 
     }
   };
-  const response = await fetch("http://173.199.114.233:3001/v1/share/" + window.localStorage.getItem("list"), requestOptions);
+  const response = await fetch("https://lqxx4156.tk/v1/share/" + window.localStorage.getItem("list"), requestOptions);
   const data = await response.json();
   if (response.status == 200) {
     const arr = data.data;
@@ -108,7 +108,7 @@ async function createOrReviseShare(form) {
     },
     body: JSON.stringify(body)
   };
-  const response = await fetch("http://173.199.114.233:3001/v1/share/" + window.localStorage.getItem("list") + "/create", requestOptions);
+  const response = await fetch("https://lqxx4156.tk/v1/share/" + window.localStorage.getItem("list") + "/create", requestOptions);
   const data = await response.json();
   if (response.status == 200) {
     document.getElementById("info-msg").style.color = "black";
@@ -128,7 +128,7 @@ async function delShare(button) {
       },
       body: JSON.stringify({"user_list": []})
     };
-    const response = await fetch("http://173.199.114.233:3001/v1/share/" + window.localStorage.getItem("list") + "?other=" + button.name, requestOptions);
+    const response = await fetch("https://lqxx4156.tk/v1/share/" + window.localStorage.getItem("list") + "?other=" + button.name, requestOptions);
     const data = await response.json();
     if (response.status == 200) {
       document.getElementById("err-msg").style.color = "black";

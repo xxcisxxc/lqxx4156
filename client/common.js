@@ -6,7 +6,7 @@ async function logOut(err_out) {
     'Authorization': 'Basic '+ btoa(window.localStorage.getItem('token')), 
     }
   };
-  const response = await fetch("http://173.199.114.233:3001/v1/users/logout", requestOptions);
+  const response = await fetch("https://lqxx4156.tk/v1/users/logout", requestOptions);
   const data = await response.json();
   if (response.status == 200) {
     window.location.href = "index.html";
