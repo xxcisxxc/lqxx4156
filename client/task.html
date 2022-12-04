@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<body>
+<style>
+	table, th, td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+	.modal {
+		display: none;
+		position: fixed;
+		top: 0;
+		width: 50%;
+		height: 50%;
+		background-color: rgba(0,0,0,0.4);
+	}
+</style>
+
+<h2 id="task">Tasklist </h2>
+<label>Name: </label>
+<label id="listname"></label><br>
+<label>Content: </label>
+<label id="content"></label><br>
+<label>Visibility: </label>
+<label id="visibility"></label><br>
+<script>
+document.getElementById("task").innerHTML += window.localStorage.getItem("list");
+var other = window.localStorage.getItem("other");
+if (other != '') {
+	document.getElementById("task").innerHTML += " of Owner " + other;
+}
+async function getMyListInfo() {
+	const requestOptions = {
+	method: 'GET',
+	headers: {
+		'Accept': 'application/json',
+		'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+	}
+	};
+	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list")
+	if (other != '') url += '?other=' + other
+	const response = await fetch(url, requestOptions);
+	if (response.status != 200) {
+		getMyTasks();
+		return;
+	}
+	const data_total = await response.json();
+	const data = data_total.data;
+	document.getElementById("listname").innerHTML = window.localStorage.getItem("list");
+	document.getElementById("content").innerHTML = data.content
+	document.getElementById("visibility").innerHTML = data.visibility
+}
+getMyListInfo()
+</script>
+<p id="err-msg" style="color:red;font-size:80%;"></p>
+
+<button type="button" id="createBtn" name="" onclick="showInfo(this)">create</button>  
+<button type="button" onclick="getMyTasks();document.getElementById('err-msg').innerHTML = ''">refresh</button>
+<script>
+	var permission = window.localStorage.getItem("permission");
+	if(permission == "read") {
+		document.getElementById("createBtn").style.display = "none";
+	}
+</script>
+<br>
+<h3>Tasks</h3>
+<table id="MyTasksTable">
+</table>
+<br><br>
+
+
+<script>
+async function getMyTasks() {
+  var table = document.getElementById("MyTasksTable");
+  table.innerHTML = "<tr><th>Task Name</th><th>Actions</th></tr>";
+  const requestOptions = {
+    method: "GET",
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+    }
+  };
+  var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks"
+  if (other != '') url += '?other=' + other
+  const response = await fetch(url, requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    const arr = data.data;
+    if (arr !== null) {
+      arr.forEach(element => {
+		console.log(element)
+        var row = table.insertRow(-1);
+        var name = row.insertCell(0);
+        var actions = row.insertCell(1);
+        name.innerHTML = element;
+		var permission = window.localStorage.getItem('permission')
+		actions.innerHTML = `<button type="button" name=${element} onclick="gotoNext(this, 'task_detail.html')">show</button> `
+		if (permission != 'read') {
+			actions.innerHTML += `<button type="button" name=${element} onclick="showInfo(this)">revise</button> `
+          + `<button type="button" name=${element} onclick="delMyTask(this)">delete</button> `;
+		}
+      });
+    }
+  } else {
+    document.getElementById("err-msg").style.color = "red";
+    document.getElementById("err-msg").innerHTML = "Error: " + JSON.stringify(data);
+  }
+}
+
+getMyTasks();
+
+function gotoNext(button, page) {
+  window.localStorage.setItem("task", button.name);
+  window.location.href = page;
+}
+</script>
+
+<script>
+async function showInfo(button) {
+  var form = document.getElementById("taskform");
+  var other = window.localStorage.getItem("other");
+  if (button.name != "") { // Modify Button
+	const requestOptions = {
+	method: 'GET',
+	headers: {
+		'Accept': 'application/json',
+		'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+	}
+	};
+	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
+	console.log(other)
+	if (other != '') url += "?other=" + other
+	const response = await fetch(url, requestOptions);
+	if (response.status != 200) {
+		getMyTasks();
+		return;
+	}
+	const data_total = await response.json();
+	const data = data_total.data;
+	form.innerHTML = `<input type="hidden" name="rlname" value="${button.name}" readonly>`
+		+ `<label for="content">Content:</label><br>`
+		+ `<input type="text" name="content" value="${data.content}"><br>`
+		+ `<label for="startDate">StartDate:</label><br>`
+		+ `<input type="text" name="startDate" value="${data.start_date}"><br>`
+		+ `<label for="endDate">EndDate:</label><br>`
+		+ `<input type="text" name="endDate" value="${data.end_date}"><br>`
+		+ `<label for="priority">Priority:</label><br>`
+		+ `<input type="number" name="priority" value="${data.priority}" min="1" max="3"><br>`
+		+ `<label for="status">Status:</label><br>`;
+		if (data.status == "To Do") {
+			form.innerHTML += `<select id="status" name="status">`
+			+ `<option value="To Do" selected="selected">To Do</option>`
+			+ `<option value="Doing">Doing</option>`
+			+ `<option value="Done">Done</option>`
+			+ `</select><br>`;
+		}
+		else if (data.status == "Doing") {
+			form.innerHTML += `<select id="status" name="status">`
+			+ `<option value="To Do">To Do</option>`
+			+ `<option value="Doing" selected="selected">Doing</option>`
+			+ `<option value="Done">Done</option>`
+			+ `</select><br>`;
+		}
+		else {
+			form.innerHTML += `<select id="status" name="status">`
+			+ `<option value="To Do">To Do</option>`
+			+ `<option value="Doing">Doing</option>`
+			+ `<option value="Done" selected="selected">Done</option>`
+			+ `</select><br>`;
+		}
+  } else { // Create Button
+		form.innerHTML = `<label for="lname">Task:</label><br>`
+		+ `<input type="text" name="lname" required><br>`
+		+ `<label for="content">Content:</label><br>`
+		+ `<input type="text" name="content"><br>`
+		+ `<label for="startDate">StartDate:</label><br>`
+		+ `<input type="text" name="startDate"><br>`
+		+ `<label for="endDate">EndDate:</label><br>`
+		+ `<input type="text" name="endDate"><br>`
+		+ `<label for="priority">Priority:</label><br>`
+		+ `<input type="number" name="priority" min="1" max="3"><br>`
+		+ `<label for="status">Status:</label><br>`
+		+ `<select id="status" name="status">`
+		+ `<option value="To Do">To Do</option>`
+		+ `<option value="Doing">Doing</option>`
+		+ `<option value="Done">Done</option>`
+		+ `</select><br>`;
+  }
+  document.getElementById("taskinfo").style.display="block";
+}
+
+async function createOrReviseTask(form) {
+  var body = new Object();
+  body["content"] = form.content.value;
+  body["start_date"] = form.startDate.value;
+  body["end_date"]  = form.endDate.value;
+  body["priority"] = form.priority.value == "" ? 0 : parseInt(form.priority.value)
+  body["status"]  = form.status.value;
+  console.log(body)
+  if (form.lname == undefined) { // Modify 
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      },
+      body: JSON.stringify(body)
+    };
+	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + form.rlname.value
+	if (other != '') url += '?other=' + other
+    const response = await fetch(url, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("info-msg").style.color = "black";
+    } else {
+      document.getElementById("info-msg").style.color = "red";
+    }
+    document.getElementById("info-msg").innerHTML = JSON.stringify(data);
+  } else { // Create
+    body["name"] = form.lname.value;
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      },
+      body: JSON.stringify(body)
+    };
+	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/create"
+	if (other != '') url += '?other=' + other
+    const response = await fetch(url, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("info-msg").style.color = "black";
+      getMyTasks();
+    } else {
+      document.getElementById("info-msg").style.color = "red";
+    }
+    document.getElementById("info-msg").innerHTML = JSON.stringify(data);
+  }
+}
+
+async function delMyTask(button) {
+  const requestOptions = {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+      }
+    };
+	var url = "http://173.199.114.233:3001/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
+	if (other != '') url += '?other=' + other
+    const response = await fetch(url, requestOptions);
+    const data = await response.json();
+    if (response.status == 200) {
+      document.getElementById("err-msg").style.color = "black";
+      getMyTasks();
+    } else {
+      document.getElementById("err-msg").style.color = "red";
+    }
+    document.getElementById("err-msg").innerHTML = JSON.stringify(data);
+}
+</script>
+
+<div id="taskinfo" class="modal">
+<p id="info-msg" style="background-color:wheat; color:red"></p>
+<form id="taskform" style="background-color:wheat;">
+</form>
+<button type="button" form="taskform" onclick="createOrReviseTask(this.form)">submit</button>
+<button type="button" onclick="document.getElementById('taskinfo').style.display='none';document.getElementById('info-msg').innerHTML = ''">cancel</button>
+</div>
+
+<script>
+var modal = document.getElementById('taskinfo');
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+</script>
+
+</body>
+</html>

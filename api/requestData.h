@@ -40,10 +40,14 @@ struct RequestData {
    * @param _tasklist_key task list id
    * @param _task_key task id
    */
-  RequestData(const std::string &_user_key, const std::string &_tasklist_key,
-              const std::string &_task_key, const std::string &_other_user_key)
-      : user_key(_user_key), tasklist_key(_tasklist_key), task_key(_task_key),
-        other_user_key(_other_user_key) {}
+  template <typename UserKey, typename TaskListKey, typename TaskKey,
+            typename OtherUserKey>
+  RequestData(UserKey &&_user_key, TaskListKey &&_tasklist_key,
+              TaskKey &&_task_key, OtherUserKey &&_other_user_key)
+      : user_key(std::forward<UserKey>(_user_key)),
+        tasklist_key(std::forward<TaskListKey>(_tasklist_key)),
+        task_key(std::forward<TaskKey>(_task_key)),
+        other_user_key(std::forward<OtherUserKey>(_other_user_key)) {}
   /*
    * @brief RequestData decomposed constructor
    */
@@ -55,6 +59,7 @@ struct RequestData {
     user_key = data.user_key;
     tasklist_key = data.tasklist_key;
     task_key = data.task_key;
+    other_user_key = data.other_user_key;
   }
   /*
    * @brief operator == overload
@@ -63,7 +68,8 @@ struct RequestData {
   bool operator==(const RequestData &other) const {
     return this->user_key == other.user_key &&
            this->tasklist_key == other.tasklist_key &&
-           this->task_key == other.task_key;
+           this->task_key == other.task_key &&
+           this->other_user_key == other.other_user_key;
   }
   /*
    * @brief Check if the User id is empty, const method

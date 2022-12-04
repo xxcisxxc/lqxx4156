@@ -7,10 +7,10 @@ link_libraries(neo4j-client gtest pthread gcov gmock)
 add_executable(test_DB test_DB.cc ${ROOT_DIR}/db/DB.cc)
 
 add_executable(test_tasklists test_tasklists.cpp ${ROOT_DIR}/tasklists/tasklistsWorker.cpp)
-target_link_libraries(test_tasklists PRIVATE DB)
+target_link_libraries(test_tasklists PRIVATE DB users)
 
 add_executable(test_tasks test_tasks.cpp ${ROOT_DIR}/tasks/tasksWorker.cpp)
-target_link_libraries(test_tasks PRIVATE DB tasklistsWorker)
+target_link_libraries(test_tasks PRIVATE DB tasklistsWorker users)
 
 add_executable(test_users test_users.cpp ${ROOT_DIR}/users/users.cpp)
 target_link_libraries(test_users PRIVATE DB)

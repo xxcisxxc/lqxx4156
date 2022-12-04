@@ -2,7 +2,9 @@
 
 #include "api/requestData.h"
 #include "api/tasklistContent.h"
+#include "common/utils.h"
 #include "db/DB.h"
+#include "users/users.h"
 #include <string>
 #include <vector>
 
@@ -15,22 +17,18 @@ private:
   /* data */
 
   /**
-   * @brief a instance of DB
+   * @brief DB pointer
    *
    */
-  DB &db_instance;
-
-  /* methods */
+  std::shared_ptr<DB> db;
 
   /**
-   * @brief rename the tasklist if the given name existed
+   * @brief user controller pointer
    *
-   * @param [in] tasklist_name given name of tasklists
-   * @param [in] suffix suffix to be added
-   * @return string of revised name
    */
-  std::string Rename(const std::string &tasklist_name, int suffix);
+  std::shared_ptr<Users> users;
 
+  /* methods */
   /**
    * @brief convert tasklist content struct to map
    *
@@ -55,7 +53,8 @@ public:
    *
    * @param _db_instance value for DB
    */
-  TaskListsWorker(DB &_db_instance) : db_instance(_db_instance) {}
+  TaskListsWorker(std::shared_ptr<DB> _db = nullptr,
+                  std::shared_ptr<Users> _users = nullptr);
 
   /**
    * @brief Destroy the Task Lists Worker object
