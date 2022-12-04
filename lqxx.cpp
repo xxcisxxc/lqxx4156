@@ -18,7 +18,8 @@ int main(void) {
 
   const std::string db_host = "neo4j://neo4j:hello4156@localhost:7687";
   auto db_instance = std::make_shared<DB>(db_host);
-  auto svr = std::make_shared<httplib::SSLServer>("/root/cert.pem", "/root/key.pem");
+  auto svr =
+      std::make_shared<httplib::SSLServer>("/root/cert.pem", "/root/key.pem");
 
   Api api(nullptr, nullptr, nullptr, db_instance, svr);
   api.Run(api_host, api_port);
