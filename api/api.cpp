@@ -352,7 +352,6 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   }
   data = {{"name", std::move(tasklist_content.name)},
           {"content", std::move(tasklist_content.content)},
-          {"date", std::move(tasklist_content.date)},
           {"visibility", std::move(tasklist_content.visibility)}};
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
@@ -377,7 +376,6 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   }
 
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date);
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.visibility, visibility);
 
   if (tasklists_worker->Revise(tasklist_req, tasklist_content) !=
@@ -417,7 +415,6 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
   API_GET_JSON_REQUIRED(json_body, tasklist_req.tasklist_key, name);
   API_GET_JSON_REQUIRED(json_body, tasklist_content.name, name);
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date);
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.visibility, visibility);
 
   if (tasklists_worker->Create(tasklist_req, tasklist_content,

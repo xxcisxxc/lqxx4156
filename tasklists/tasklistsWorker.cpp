@@ -14,10 +14,10 @@ void TaskListsWorker ::Content2Map(
     std::map<std::string, std::string> &task_list_info) {
   if (tasklistContent.name != "")
     task_list_info["name"] = tasklistContent.name;
+
   if (tasklistContent.content != "")
     task_list_info["content"] = tasklistContent.content;
-  if (tasklistContent.date != "")
-    task_list_info["date"] = tasklistContent.date;
+
   if (tasklistContent.visibility != "")
     task_list_info["visibility"] = tasklistContent.visibility;
 }
@@ -30,9 +30,6 @@ void TaskListsWorker ::Map2Content(
 
   if (task_list_info.count("content"))
     tasklistContent.content = task_list_info.at("content");
-
-  if (task_list_info.count("date"))
-    tasklistContent.date = task_list_info.at("date");
 
   if (task_list_info.count("visibility"))
     tasklistContent.visibility = task_list_info.at("visibility");
@@ -318,7 +315,14 @@ returnCode TaskListsWorker ::RemoveGrantTaskList(const RequestData &data) {
 
 returnCode TaskListsWorker ::GetAllPublicTaskList(
     std::vector<std::pair<std::string, std::string>> &out_list) {
+
   returnCode ret = db->getAllPublic(out_list);
+
+  // if request failed, clear the out_list
+  if (ret != SUCCESS) {
+    out_list = {};
+  }
+
   return ret;
 }
 
