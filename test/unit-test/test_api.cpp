@@ -257,12 +257,11 @@ public:
 
   returnCode GetAllPublicTaskList(
       std::vector<std::pair<std::string, std::string>> &out_list) override {
-    if (data.RequestUserIsEmpty()) {
-      return returnCode::ERR_RFIELD;
-    }
-    for (const auto &[user_key, tasklist] : mocked_data) {
-      if (tasklist.second.visibility == "public") {
-        out_list.push_back({user_key, tasklist.first});
+    for (auto outr=mocked_data.begin(); outr!=mocked_data.end(); outr++) {
+      for(auto intr=outr->second.begin(); intr!=outr->second.end(); intr++) {
+        if (intr->second.visibility == "public") {
+          out_list.push_back(std::make_pair(outr->first, intr->first));
+        }        
       }
     }
     return returnCode::SUCCESS;
@@ -1393,7 +1392,7 @@ TEST_F(APITest, Share) {
   {
     httplib::Client client(test_host, test_port);
     client.set_basic_auth(token_test_user_1, "");
-    auto result = client.Get("/public/all");
+    auto result = client.Get("/v1/public/all");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
     EXPECT_EQ(result->body.find("tasklists_test_name_1"), std::string::npos);

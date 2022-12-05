@@ -691,9 +691,18 @@ API_DEFINE_HTTP_HANDLER(PublicGet) {
                    return nlohmann::json{{"user", std::move(relation.first)},
                                          {"list", std::move(relation.second)}};
                  });
-
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
+
+API_DEFINE_HTTP_HANDLER(Health) {
+  try {
+    std::string numbers = API_REQ().matches[1];
+    API_RETURN_HTTP_RESP(200, "msg", "success", "data", numbers);
+  } catch (...) {
+    API_RETURN_HTTP_RESP(200, "msg", "success");
+  }
+}
+
 
 void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/users/register", Post, UsersRegister);
