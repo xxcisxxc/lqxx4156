@@ -27,12 +27,6 @@ struct TasklistContent {
   std::string content;
 
   /**
-   * @brief date created
-   *
-   */
-  std::string date;
-
-  /**
    * @brief visibility of the tasklist: true for public, false for private
    * by default, it is private
    */
@@ -54,12 +48,10 @@ struct TasklistContent {
    * @param _date value for tasklist date
    * @param _vis value for tasklist visibility
    */
-  template <typename Name, typename Content, typename Date, typename Visibility>
-  TasklistContent(Name &&_name, Content &&_content, Date &&_date,
-                  Visibility &&_vis)
+  template <typename Name, typename Content, typename Visibility>
+  TasklistContent(Name &&_name, Content &&_content, Visibility &&_vis)
       : name(std::forward<Name>(_name)),
         content(std::forward<Content>(_content)),
-        date(std::forward<Date>(_date)),
         visibility(std::forward<Visibility>(_vis)) {}
 
   /**
@@ -74,7 +66,7 @@ struct TasklistContent {
    *
    * @return true if content is empty
    */
-  bool IsEmpty() { return name == "" && content == "" && date == ""; }
+  bool IsEmpty() { return name == "" && content == "" && visibility == ""; }
 
   /**
    * @brief check if tasklist object is valid
@@ -82,8 +74,6 @@ struct TasklistContent {
    * @return true if it is valid
    */
   bool IsValid() {
-    if (!date.empty() && !Common::IsDate(date))
-      return false;
     if (!visibility.empty() && visibility != "public" &&
         visibility != "shared" && visibility != "private")
       return false;

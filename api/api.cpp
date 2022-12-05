@@ -352,7 +352,6 @@ API_DEFINE_HTTP_HANDLER(TaskListsGet) {
   }
   data = {{"name", std::move(tasklist_content.name)},
           {"content", std::move(tasklist_content.content)},
-          {"date", std::move(tasklist_content.date)},
           {"visibility", std::move(tasklist_content.visibility)}};
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }
@@ -377,7 +376,6 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   }
 
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date);
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.visibility, visibility);
 
   if (tasklists_worker->Revise(tasklist_req, tasklist_content) !=
@@ -417,7 +415,6 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
   API_GET_JSON_REQUIRED(json_body, tasklist_req.tasklist_key, name);
   API_GET_JSON_REQUIRED(json_body, tasklist_content.name, name);
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
-  API_GET_JSON_OPTIONAL(json_body, tasklist_content.date, date);
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.visibility, visibility);
 
   if (tasklists_worker->Create(tasklist_req, tasklist_content,
@@ -674,6 +671,29 @@ API_DEFINE_HTTP_HANDLER(ShareDelete) {
   API_RETURN_HTTP_RESP(200, "msg", "success");
 }
 
+API_DEFINE_HTTP_HANDLER(PublicGet) {
+  std::string token;
+  std::string share;
+  RequestData tasklist_req;
+  std::vector<std::pair<std::string, std::string>> out_list;
+  nlohmann::json data;
+
+  /* Do not need to provide user_key to execute "GetAllPublicTaskList"
+   * but just check for only our users to get "public" */
+  API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
+
+  /* Get all public task lists */
+  if (tasklists_worker->GetAllPublicTaskList(out_list) != returnCode::SUCCESS) {
+    API_RETURN_HTTP_RESP(500, "msg", "failed get public task lists");
+  }
+  std::transform(out_list.begin(), out_list.end(), std::back_inserter(data),
+                 [](std::pair<std::string, std::string> &relation) {
+                   return nlohmann::json{{"user", std::move(relation.first)},
+                                         {"list", std::move(relation.second)}};
+                 });
+  API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
+}
+
 API_DEFINE_HTTP_HANDLER(Health) {
   try {
     std::string numbers = API_REQ().matches[1];
@@ -706,6 +726,7 @@ void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Get, ShareGet);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+)/create)", Post, ShareCreate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Delete, ShareDelete);
+  API_ADD_HTTP_HANDLER(svr, "/v1/public/all", Get, PublicGet);
   API_ADD_HTTP_HANDLER(svr, R"(/health/(\d+))", Get, Health);
 
   API_ADD_HTTP_OPTIONS_HANDLER(svr, R"(/.*)");
