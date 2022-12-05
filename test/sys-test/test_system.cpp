@@ -899,6 +899,18 @@ TEST_F(APITest, Share) {
   //   EXPECT_NE(result->body.find("tasklists_test_name_2"), std::string::npos);
   //   EXPECT_EQ(result->body.find("tasklists_test_name_3"), std::string::npos);
   // }
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth(token_test_user_1, "");
+    auto result = client.Get("/public/all");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_EQ(result->body.find("tasklists_test_name_1"), std::string::npos);
+    EXPECT_NE(result->body.find("tasklists_test_name_2"), std::string::npos);
+    EXPECT_NE(result->body.find("Alice@columbia.edu"), std::string::npos);
+    EXPECT_EQ(result->body.find("tasklists_test_name_3"), std::string::npos);
+  }
 }
 
 int main(int argc, char **argv) {
