@@ -186,7 +186,7 @@ TEST_F(TaskListTest, Create) {
   std::map<std::string, std::string> task_list_info;
   task_list_info["name"] = in.name;
   task_list_info["content"] = in.content;
-  task_list_info["visibility"] = in.vis;
+  task_list_info["visibility"] = in.visibility;
   std::string outName;
 
   // normal create, should be successful
@@ -578,12 +578,14 @@ TEST_F(TaskListTest, ReviseGrantTaskList) {
   EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_NO_NODE);
   EXPECT_EQ(errUser, in_list[3].user_name);
+  errUser = "";
 
-  // call with empty user_key
+  // call with empty tasklist key
   data.tasklist_key = "";
   EXPECT_EQ(tasklistsWorker->ReviseGrantTaskList(data, in_list, errUser),
             ERR_RFIELD);
   EXPECT_EQ(errUser, "");
+  data.tasklist_key = "tasklist";
 
   // failed, because tasklist is not "share"
   new_task_list_info["visibility"] = "public";
@@ -691,14 +693,14 @@ TEST_F(TaskListTest, Exists) {
   EXPECT_CALL(*mockedDB,
               getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
       .WillOnce(DoAll(SetArgReferee<2>(new_task_list_info), Return(SUCCESS)));
-  EXPECT_TRUE(tasklistsWorker->Exists(data, out));
+  EXPECT_TRUE(tasklistsWorker->Exists(data));
 
   // no tasklist key
   data.tasklist_key = "unknown_tasklist";
   EXPECT_CALL(*mockedDB,
               getTaskListNode(data.user_key, data.tasklist_key, task_list_info))
       .WillOnce(Return(ERR_NO_NODE));
-  EXPECT_FALSE(tasklistsWorker->Exists(data, out));
+  EXPECT_FALSE(tasklistsWorker->Exists(data));
 }
 
 int main(int argc, char **argv) {

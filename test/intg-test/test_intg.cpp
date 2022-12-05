@@ -572,7 +572,7 @@ TEST_F(IntgTest, TaskListsReviseOthers) {
   EXPECT_EQ(taskListsWorker->Revise(data, in), SUCCESS);
 
   // revise visibility, should fail
-  in = TasklistContent("", "", "", "public");
+  in = TasklistContent("", "", "public");
   EXPECT_EQ(taskListsWorker->Revise(data, in), ERR_REVISE);
 
   // revise public tasklist, should be successful
