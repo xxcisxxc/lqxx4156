@@ -270,9 +270,7 @@ TEST_F(APITest, TaskLists) {
     EXPECT_NE(result->body.find("success"), std::string::npos);
     EXPECT_NE(result->body.find("tasklists_test_name_1"), std::string::npos);
     EXPECT_NE(result->body.find("some_content_1"), std::string::npos);
-    EXPECT_NE(result->body.find("01/01/2022"), std::string::npos);
     EXPECT_EQ(result->body.find("some_content_2"), std::string::npos);
-    EXPECT_EQ(result->body.find("01/02/2022"), std::string::npos);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
@@ -309,9 +307,7 @@ TEST_F(APITest, TaskLists) {
     EXPECT_NE(result->body.find("success"), std::string::npos);
     EXPECT_NE(result->body.find("tasklists_test_name_1"), std::string::npos);
     EXPECT_NE(result->body.find("some_content_1_new"), std::string::npos);
-    EXPECT_NE(result->body.find("01/03/2022"), std::string::npos);
     EXPECT_EQ(result->body.find("some_content_2"), std::string::npos);
-    EXPECT_EQ(result->body.find("01/02/2022"), std::string::npos);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
