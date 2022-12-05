@@ -22,11 +22,29 @@ protected:
    *
    */
   std::shared_ptr<DB> db;
+
   /**
    * @brief TaskListsWorker pointer
    *
    */
   std::shared_ptr<TaskListsWorker> taskListsWorker;
+
+  /**
+   * @brief Construct a new Tasks Worker object
+   *
+   * @param taskContent
+   * @param task_info
+   */
+  void TaskStruct2Map(const TaskContent &taskContent,
+                      std::map<std::string, std::string> &task_info);
+  /**
+   * @brief Convert map to TaskContent object
+   *
+   * @param task_info
+   * @param taskContent
+   */
+  void Map2TaskStruct(const std::map<std::string, std::string> &task_info,
+                      TaskContent &taskContent);
 
 public:
   /* method */
@@ -38,28 +56,13 @@ public:
    */
   TasksWorker(std::shared_ptr<DB> _db = nullptr,
               std::shared_ptr<TaskListsWorker> _taskListWorker = nullptr);
+
   /**
    * @brief Destroy the Tasks Worker object
    *
    */
   virtual ~TasksWorker();
-  /**
-   * @brief Construct a new Tasks Worker object
-   *
-   * @param taskContent
-   * @param task_info
-   */
-  virtual void TaskStruct2Map(const TaskContent &taskContent,
-                              std::map<std::string, std::string> &task_info);
-  /**
-   * @brief Convert map to TaskContent object
-   *
-   * @param task_info
-   * @param taskContent
-   */
-  virtual void
-  Map2TaskStruct(const std::map<std::string, std::string> &task_info,
-                 TaskContent &taskContent);
+
   /**
    * @brief Query the task and return the task content in out.
    *
@@ -68,6 +71,7 @@ public:
    * @return returnCode
    */
   virtual returnCode Query(const RequestData &data, TaskContent &out);
+
   /**
    * @brief Create a Task object and return the task name in outTaskName.
    *
@@ -78,6 +82,7 @@ public:
    */
   virtual returnCode Create(const RequestData &data, TaskContent &in,
                             std::string &outTaskName);
+
   /**
    * @brief Delete the task.
    *
