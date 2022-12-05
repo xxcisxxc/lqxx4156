@@ -22,7 +22,7 @@ protected:
     users = std::make_shared<Users>(db);
 
     // tasklists controller
-    taskListsWorker = std::make_shared<TaskListsWorker>(db);
+    taskListsWorker = std::make_shared<TaskListsWorker>(db, users);
 
     // tasks controller
     tasksWorker = std::make_shared<TasksWorker>(db, taskListsWorker);
@@ -902,10 +902,15 @@ TEST_F(IntgTest, TaskListsRemoveGrantTaskList) {
   data.other_user_key = name2Email["bob"];
   EXPECT_EQ(taskListsWorker->RemoveGrantTaskList(data), ERR_ACCESS);
 
-  // // alice remove unknown_user's access to tasklist1
-  // data.tasklist_key = "tasklist1";
-  // data.other_user_key = "unknown@columbia.edu";
-  // EXPECT_EQ(taskListsWorker->RemoveGrantTaskList(data), ERR_NO_NODE);
+  // alice remove unknown_user's access to tasklist1
+  data.tasklist_key = "tasklist1";
+  data.other_user_key = "unknown@columbia.edu";
+  EXPECT_EQ(taskListsWorker->RemoveGrantTaskList(data), ERR_NO_NODE);
+
+  // alice remove empty_user's access to tasklist1
+  data.tasklist_key = "tasklist1";
+  data.other_user_key = "";
+  EXPECT_EQ(taskListsWorker->RemoveGrantTaskList(data), ERR_NO_NODE);
 };
 
 TEST_F(IntgTest, TaskListsGetAllPublicTaskList) {
