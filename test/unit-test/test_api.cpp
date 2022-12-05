@@ -257,11 +257,12 @@ public:
 
   returnCode GetAllPublicTaskList(
       std::vector<std::pair<std::string, std::string>> &out_list) override {
-    for (auto outr=mocked_data.begin(); outr!=mocked_data.end(); outr++) {
-      for(auto intr=outr->second.begin(); intr!=outr->second.end(); intr++) {
+    for (auto outr = mocked_data.begin(); outr != mocked_data.end(); outr++) {
+      for (auto intr = outr->second.begin(); intr != outr->second.end();
+           intr++) {
         if (intr->second.visibility == "public") {
           out_list.push_back(std::make_pair(outr->first, intr->first));
-        }        
+        }
       }
     }
     return returnCode::SUCCESS;

@@ -40,7 +40,7 @@ inline void BuildHttpRespBody(nlohmann::json *js) { return; }
 
 template <typename FirstValue, typename... Rest>
 inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
-                              FirstValue &&value, Rest &&...rest) {
+                              FirstValue &&value, Rest &&... rest) {
   (*js)[field] = std::forward<FirstValue>(value);
   BuildHttpRespBody(js, std::forward<Rest>(rest)...);
 }
@@ -702,7 +702,6 @@ API_DEFINE_HTTP_HANDLER(Health) {
     API_RETURN_HTTP_RESP(200, "msg", "success");
   }
 }
-
 
 void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/users/register", Post, UsersRegister);
