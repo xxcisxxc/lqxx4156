@@ -20,6 +20,30 @@ TEST(TestDB, testconnection) {
   EXPECT_NO_THROW(delete db);
 }
 
+TEST(TestDB, testCreateTaskListNode) {
+  DB db(host);
+  std::string user_pkey = "test0@test.com";
+  std::map<std::string, std::string> task_list_info;
+
+  // Create a task list node
+  // There must be a primary key (task list name) in the task_list_info
+  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), ERR_KEY);
+  task_list_info["name"] = "test0-task-list";
+  // User node must exist
+  EXPECT_EQ(db.createTaskListNode("wrong@test.com", task_list_info),
+            ERR_NO_NODE);
+  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), SUCCESS);
+  // Create a task list node with the same primary key
+  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), ERR_DUP_NODE);
+  // Insert node with multiple fields
+  task_list_info.clear();
+  task_list_info["name"] = "test1-task-list";
+  task_list_info["field1"] = "value1";
+  task_list_info["field2"] = "value2";
+  task_list_info["field3"] = "value3";
+  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), SUCCESS);
+}
+
 TEST(TestDB, testCreateUserNode) {
   DB db(host);
   std::map<std::string, std::string> user_info;
@@ -43,30 +67,6 @@ TEST(TestDB, testCreateUserNode) {
   user_info["field2"] = "value2";
   user_info["field3"] = "value3";
   EXPECT_EQ(db.createUserNode(user_info), SUCCESS);
-}
-
-TEST(TestDB, testCreateTaskListNode) {
-  DB db(host);
-  std::string user_pkey = "test0@test.com";
-  std::map<std::string, std::string> task_list_info;
-
-  // Create a task list node
-  // There must be a primary key (task list name) in the task_list_info
-  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), ERR_KEY);
-  task_list_info["name"] = "test0-task-list";
-  // User node must exist
-  EXPECT_EQ(db.createTaskListNode("wrong@test.com", task_list_info),
-            ERR_NO_NODE);
-  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), SUCCESS);
-  // Create a task list node with the same primary key
-  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), ERR_DUP_NODE);
-  // Insert node with multiple fields
-  task_list_info.clear();
-  task_list_info["name"] = "test1-task-list";
-  task_list_info["field1"] = "value1";
-  task_list_info["field2"] = "value2";
-  task_list_info["field3"] = "value3";
-  EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), SUCCESS);
 }
 
 TEST(TestDB, testCreateTaskNode) {
