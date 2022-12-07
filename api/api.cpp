@@ -193,33 +193,11 @@ DecodeTokenFromBasicAuth(const std::string &auth) noexcept {
 /* Default arguments not cool, modify later */
 Api::Api(std::shared_ptr<Users> _users,
          std::shared_ptr<TaskListsWorker> _tasklists_worker,
-         std::shared_ptr<TasksWorker> _tasks_worker, std::shared_ptr<DB> _db,
+         std::shared_ptr<TasksWorker> _tasks_worker,
          std::shared_ptr<httplib::Server> _svr)
     : users(_users), tasklists_worker(_tasklists_worker),
-      tasks_worker(_tasks_worker), db(_db), svr(_svr),
-      token_secret_key(Common::RandomString(128)) {
-
-  if (!db) {
-    db = std::make_shared<DB>();
-  }
-
-  if (!users) {
-    users = std::make_shared<Users>(db);
-  }
-
-  if (!tasklists_worker) {
-    tasklists_worker = std::make_shared<TaskListsWorker>(db, users);
-  }
-
-  if (!tasks_worker) {
-    /* Dangerous, modify later */
-    tasks_worker = std::make_shared<TasksWorker>(db, tasklists_worker);
-  }
-
-  if (!svr) {
-    svr = std::make_shared<httplib::Server>();
-  }
-}
+      tasks_worker(_tasks_worker), svr(_svr),
+      token_secret_key(Common::RandomString(128)) {}
 
 Api::~Api() { Stop(); }
 

@@ -432,9 +432,9 @@ protected:
         std::make_shared<MockedTasklistsWorker>(mocked_db, mocked_users);
     mocked_tasks_worker =
         std::make_shared<MockedTasksWorker>(mocked_db, mocked_tasklists_worker);
-
+    auto svr = std::make_shared<httplib::Server>();
     api = std::make_shared<Api>(mocked_users, mocked_tasklists_worker,
-                                mocked_tasks_worker, mocked_db);
+                                mocked_tasks_worker, svr);
     running_server = std::make_shared<std::thread>(
         [&]() { this->api->Run(this->test_host, this->test_port); });
 

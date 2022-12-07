@@ -18,7 +18,13 @@ protected:
     db = std::make_shared<DB>(db_host);
     db->deleteEverything();
 
-    api = std::make_shared<Api>(nullptr, nullptr, nullptr, db, nullptr);
+    auto users = std::make_shared<Users>(db);
+    auto tasklists_worker =
+        std::make_shared<TaskListsWorker>(db, users);
+    auto tasks_worker =
+        std::make_shared<TasksWorker>(db, tasklists_worker);
+    auto svr = std::make_shared<httplib::Server>();
+    api = std::make_shared<Api>(users, tasklists_worker, tasks_worker, svr);
     running_server = std::make_shared<std::thread>(
         [&]() { this->api->Run(this->test_host, this->test_port); });
 

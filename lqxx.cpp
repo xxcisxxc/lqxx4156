@@ -1,3 +1,4 @@
+#include "tasklists/tasklistsWorker.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "api/api.h"
 #include "common/utils.h"
@@ -20,8 +21,12 @@ int main(void) {
   auto db_instance = std::make_shared<DB>(db_host);
   auto svr =
       std::make_shared<httplib::SSLServer>("/root/cert.pem", "/root/key.pem");
+  auto user = std::make_shared<Users>(db_instance);
+  auto tasklists_worker = std::make_shared<TaskListsWorker>(db_instance, user);
+  auto tasks_worker = std::make_shared<TasksWorker>(db_instance, tasklists_worker);
+  
 
-  Api api(nullptr, nullptr, nullptr, db_instance, svr);
+  Api api(user, tasklists_worker, tasks_worker);
   api.Run(api_host, api_port);
   return 0;
 }

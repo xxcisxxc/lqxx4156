@@ -42,7 +42,6 @@ public:
   Api(std::shared_ptr<Users> _users = nullptr,
       std::shared_ptr<TaskListsWorker> _tasklists_worker = nullptr,
       std::shared_ptr<TasksWorker> _tasks_worker = nullptr,
-      std::shared_ptr<DB> _db = nullptr,
       std::shared_ptr<httplib::Server> _svr = nullptr);
 
   /**
@@ -101,7 +100,6 @@ private:
   std::shared_ptr<Users> users;
   std::shared_ptr<TaskListsWorker> tasklists_worker;
   std::shared_ptr<TasksWorker> tasks_worker;
-  std::shared_ptr<DB> db;
   std::shared_ptr<httplib::Server> svr;
 
   const std::string token_secret_key;
