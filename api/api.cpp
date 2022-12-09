@@ -474,7 +474,7 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
           {"date", std::move(task_content.date)},
           {"start_date", std::move(task_content.startDate)},
           {"end_date", std::move(task_content.endDate)},
-          {"priority", task_content.priority},
+          {"prior", task_content.priority},
           {"status", std::move(task_content.status)}};
   API_RETURN_HTTP_RESP(200, "msg", "success", "data", std::move(data));
 }

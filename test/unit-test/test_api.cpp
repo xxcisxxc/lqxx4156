@@ -913,6 +913,8 @@ TEST_F(APITest, Tasks) {
     EXPECT_NE(result->body.find("some_date_1"), std::string::npos);
     EXPECT_EQ(result->body.find("some_content_2"), std::string::npos);
     EXPECT_EQ(result->body.find("some_date_2"), std::string::npos);
+    EXPECT_NE(result->body.find("\"priority\":0"), std::string::npos);
+    std::cout << result->body;
   }
 
   {
