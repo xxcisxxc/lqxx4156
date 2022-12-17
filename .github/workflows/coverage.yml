@@ -20,10 +20,6 @@ on:
       - tasks/**
       - tasklists/**
       - test/**
-  workflow_run:
-    workflows: [System Testing]
-    type:
-      - completed
 jobs:
   coverage:
     runs-on: ubuntu-latest

@@ -15,7 +15,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install cppcheck
-        run: sudo apt-get install cppcheck
       - name: cppcheck-action
-        run: cppcheck . -iexternal
+        uses: deep5050/cppcheck-action@v3.0
