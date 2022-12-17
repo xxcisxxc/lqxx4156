@@ -22,6 +22,7 @@ int main(void) {
       std::make_shared<httplib::SSLServer>("/root/cert.pem", "/root/key.pem");
 
   Api api(nullptr, nullptr, nullptr, db_instance, svr);
+  api.set_print(true);
   api.Run(api_host, api_port);
   return 0;
 }

@@ -62,6 +62,10 @@ public:
 
   virtual void Stop();
 
+  virtual void set_print(bool _print) {
+    print = _print;
+  }
+
 protected:
   API_DECLARE_HTTP_HANDLER(UsersRegister);
 
@@ -110,6 +114,7 @@ private:
   std::unordered_set<std::string>
       invalid_tokens; /* Not a good method, refactor it later */
   std::mutex invalid_tokens_lock;
+  bool print = false;
 };
 
 #undef API_DECLARE_HTTP_HANDLER
