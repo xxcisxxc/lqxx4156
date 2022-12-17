@@ -13,6 +13,8 @@
 #include "requestData.h"
 #include "tasklistContent.h"
 #include <algorithm>
+#include <chrono>
+#include <ctime>
 #include <iostream>
 #include <iterator>
 #include <jwt/jwt.hpp>
@@ -71,6 +73,12 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
         "Access-Control-Allow-Headers",                                        \
         "X-Requested-With, Content-Type, Accept, Origin, Authorization");      \
     API_RES().set_content(result.dump(), "text/plain");                        \
+    if (print) {                                                               \
+      std::time_t time = std::chrono::system_clock::to_time_t(                 \
+          std::chrono::system_clock::now());                                   \
+      std::cout << "[" << std::ctime(&time) << "] " << API_REQ().method << " " \
+                << API_REQ().path << " " << API_RES().status << std::endl;     \
+    }                                                                          \
     return;                                                                    \
   } while (false)
 
