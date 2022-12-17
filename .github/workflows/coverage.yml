@@ -20,6 +20,10 @@ on:
       - tasks/**
       - tasklists/**
       - test/**
+  workflow_run:
+    workflows: [System Testing]
+    type:
+      - completed
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -40,4 +44,4 @@ jobs:
     - name: Run test
       run: cd ./build/test && ctest
     - name: Generate Report
-      run: cd ../.. && gcovr -r . -e external -e test
+      run: gcovr -r ../.. -e ../../external -e ../../test

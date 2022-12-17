@@ -20,6 +20,10 @@ on:
       - tasks/**
       - tasklists/**
       - test/intg-test/**
+  workflow_run:
+    workflows: [Unit Testing]
+    type:
+      - completed
 jobs:
   integration-test:
     runs-on: ubuntu-latest

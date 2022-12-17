@@ -62,9 +62,7 @@ public:
 
   virtual void Stop();
 
-  virtual void set_print(bool _print) {
-    print = _print;
-  }
+  virtual void set_print(bool _print) { print = _print; }
 
 protected:
   API_DECLARE_HTTP_HANDLER(UsersRegister);

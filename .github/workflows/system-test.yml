@@ -20,6 +20,10 @@ on:
       - tasks/**
       - tasklists/**
       - test/sys-test/**
+  workflow_run:
+    workflows: [Integration Testing]
+    type:
+      - completed
 jobs:
   system-test:
     runs-on: ubuntu-latest

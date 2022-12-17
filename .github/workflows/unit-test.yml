@@ -20,6 +20,10 @@ on:
       - tasks/**
       - tasklists/**
       - test/unit-test/**
+  workflow_run:
+    workflows: [Lint Checkings]
+    type:
+      - completed
 jobs:
   unit-test-db:
     runs-on: ubuntu-latest

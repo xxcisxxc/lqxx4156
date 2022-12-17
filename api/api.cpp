@@ -116,8 +116,7 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     }                                                                          \
   } while (false)
 
-static inline std::string sha256_passwd(std::string passwd)
-{
+static inline std::string sha256_passwd(std::string passwd) {
   std::string result;
   unsigned char hash[SHA256_DIGEST_LENGTH];
   SHA256_CTX sha256;
