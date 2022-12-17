@@ -13,4 +13,4 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         known_hosts: ${{ secrets.SSH_HOST }}
     - name: Git Pull
-      run: ssh root@173.199.114.233 "cd ~/lqxx4156 && git pull"
+      run: ssh root@173.199.114.233 "cd ~/lqxx4156 && git pull && ./build.sh build && ./build.sh run"

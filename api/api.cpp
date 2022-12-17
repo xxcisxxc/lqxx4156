@@ -76,7 +76,9 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     if (print) {                                                               \
       std::time_t time = std::chrono::system_clock::to_time_t(                 \
           std::chrono::system_clock::now());                                   \
-      std::cout << "[" << std::ctime(&time) << "] " << API_REQ().method << " " \
+      std::string time_str = std::ctime(&time);                                \
+      time_str.pop_back();                                                     \
+      std::cout << "[" << time_str << "] " << API_REQ().method << " "          \
                 << API_REQ().path << " " << API_RES().status << std::endl;     \
     }                                                                          \
     return;                                                                    \

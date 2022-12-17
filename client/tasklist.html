@@ -55,7 +55,7 @@ async function getMyLists() {
     method: "GET",
     headers: {
       'Accept': 'application/json',
-      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+      'Authorization': 'Bearer '+ btoa(window.localStorage.getItem("token")), 
     }
   };
   const response = await fetch("https://lqxx4156.tk/v1/task_lists", requestOptions);
@@ -89,7 +89,7 @@ async function getOtherLists() {
     method: "GET",
     headers: {
       'Accept': 'application/json',
-      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+      'Authorization': 'Bearer '+ btoa(window.localStorage.getItem("token")), 
     }
   };
   const response = await fetch("https://lqxx4156.tk/v1/task_lists?share=true", requestOptions);
@@ -128,7 +128,7 @@ async function getAllPublicLists() {
     method: "GET",
     headers: {
       'Accept': 'application/json',
-      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+      'Authorization': 'Bearer '+ btoa(window.localStorage.getItem("token")), 
     }
   };
   const response = await fetch("https://lqxx4156.tk/v1/public/all", requestOptions);
@@ -169,7 +169,7 @@ async function showInfo(button, other) {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       }
     };
     const response = await fetch("https://lqxx4156.tk/v1/task_lists/" + dbutton.list + "?share=true&other=" + dbutton.user, requestOptions);
@@ -189,7 +189,7 @@ async function showInfo(button, other) {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+          'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
         }
       };
       const response = await fetch("https://lqxx4156.tk/v1/task_lists/" + button.name, requestOptions);
@@ -229,7 +229,7 @@ async function createOrReviseList(form) {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       },
       body: JSON.stringify(body)
     };
@@ -253,7 +253,7 @@ async function createOrReviseList(form) {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       },
       body: JSON.stringify(body)
     };
@@ -272,7 +272,7 @@ async function createOrReviseList(form) {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       },
       body: JSON.stringify(body)
     };
@@ -293,7 +293,7 @@ async function delMyList(button) {
       method: 'DELETE',
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       }
     };
     const response = await fetch("https://lqxx4156.tk/v1/task_lists/" + button.name, requestOptions);

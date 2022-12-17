@@ -64,7 +64,7 @@
     method: "GET",
     headers: {
       'Accept': 'application/json',
-      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+      'Authorization': 'Bearer '+ btoa(window.localStorage.getItem("token")), 
     }
     };
     var url = "https://lqxx4156.tk/v1/task_lists/" + list + "/tasks/" + task

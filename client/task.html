@@ -34,7 +34,7 @@ async function getMyListInfo() {
 	method: 'GET',
 	headers: {
 		'Accept': 'application/json',
-		'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+		'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
 	}
 	};
 	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list")
@@ -81,7 +81,7 @@ async function getMyTasks() {
     method: "GET",
     headers: {
       'Accept': 'application/json',
-      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+      'Authorization': 'Bearer '+ btoa(window.localStorage.getItem("token")), 
     }
   };
   var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks"
@@ -128,7 +128,7 @@ async function showInfo(button) {
 	method: 'GET',
 	headers: {
 		'Accept': 'application/json',
-		'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+		'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
 	}
 	};
 	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
@@ -207,7 +207,7 @@ async function createOrReviseTask(form) {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       },
       body: JSON.stringify(body)
     };
@@ -228,7 +228,7 @@ async function createOrReviseTask(form) {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       },
       body: JSON.stringify(body)
     };
@@ -251,7 +251,7 @@ async function delMyTask(button) {
       method: 'DELETE',
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Basic ' + btoa(window.localStorage.getItem("token"))
+        'Authorization': 'Bearer ' + btoa(window.localStorage.getItem("token"))
       }
     };
 	var url = "https://lqxx4156.tk/v1/task_lists/" + window.localStorage.getItem("list") + "/tasks/" + button.name
