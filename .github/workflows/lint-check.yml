@@ -16,6 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install cppcheck
-        uses: sudo apt-get install cppcheck
+        run: sudo apt-get install cppcheck
       - name: cppcheck-action
-        uses: cppcheck . -iexternal
+        run: cppcheck . -iexternal
