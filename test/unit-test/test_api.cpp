@@ -657,6 +657,51 @@ TEST_F(APITest, UsersLogout) {
   mocked_tasklists_worker->Clear();
 }
 
+TEST_F(APITest, BearerToken) {
+  std::string token;
+  mocked_tasklists_worker->Clear();
+
+  {
+    httplib::Client client(test_host, test_port);
+    client.set_basic_auth("Alice", "123456");
+    mocked_users->SetValidateResult(true);
+    auto result = client.Post("/v1/users/login");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+    EXPECT_NE(result->body.find("token"), std::string::npos);
+
+    try {
+      token = nlohmann::json::parse(result->body).at("token");
+    } catch (std::exception &e) {
+      EXPECT_TRUE(false);
+    }
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    // client.set_basic_auth(token, "");
+    client.set_bearer_token_auth(token);
+    nlohmann::json request_body;
+    request_body["name"] = "tasklists_test_name_1";
+    request_body["content"] = "some_content_1";
+    auto result =
+        client.Post("/v1/task_lists/create", request_body.dump(), "text/plain");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  {
+    httplib::Client client(test_host, test_port);
+    // client.set_basic_auth(token, "");
+    client.set_bearer_token_auth(token);
+    auto result = client.Get("/v1/task_lists");
+    EXPECT_EQ(result.error(), httplib::Error::Success);
+    EXPECT_NE(result->body.find("success"), std::string::npos);
+  }
+
+  mocked_tasklists_worker->Clear();
+}
+
 TEST_F(APITest, TaskLists) {
   std::string token;
   mocked_tasklists_worker->Clear();
