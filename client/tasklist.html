@@ -37,6 +37,11 @@ document.getElementById("user").innerHTML += window.localStorage.getItem("user")
 <h3>Other's Task Lists</h3>
 <table id="OtherTaskListTable">
 </table>
+<br><br>
+<button type="button" onclick="getAllPublicLists();document.getElementById('err-msg').innerHTML = ''">refresh</button>
+<h3>Public Task Lists</h3>
+<table id="PublicTaskListTable">
+</table>
 <p></p>
 <br><br><br>
 <button type="button" onclick="logOut('err-msg')">Logout</button>
@@ -115,6 +120,37 @@ async function getOtherLists() {
 }
 
 getOtherLists();
+
+async function getAllPublicLists() {
+  var table = document.getElementById("PublicTaskListTable");
+  table.innerHTML = "<tr><th>TaskList Name</th><th>Owned User</th><th>Actions</th></tr>";
+  const requestOptions = {
+    method: "GET",
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Basic '+ btoa(window.localStorage.getItem("token")), 
+    }
+  };
+  const response = await fetch("https://lqxx4156.tk/v1/public/all", requestOptions);
+  const data = await response.json();
+  if (response.status == 200) {
+    const arr = data.data;
+    if (arr !== null) {
+      arr.forEach(element => {
+        var row = table.insertRow(-1);
+        var name = row.insertCell(0);
+        var user = row.insertCell(1);
+        var actions = row.insertCell(2);
+        name.innerHTML = element.list;
+        user.innerHTML = element.user;
+        actions.innerHTML = `<button type="button" name=${element.list} onclick="gotoNext(this, 'task.html', '${element.user}', '${element.permission}')">show</button> `;
+        actions.innerHTML += `<button type="button" name=${JSON.stringify(element)} onclick="showInfo(this, true)">revise</button>`;
+      });
+    }
+  }
+}
+
+getAllPublicLists()
 
 function gotoNext(button, page, other, permission) {
   window.localStorage.setItem('other', other);

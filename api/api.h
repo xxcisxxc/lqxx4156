@@ -95,6 +95,8 @@ protected:
 
   API_DECLARE_HTTP_HANDLER(ShareDelete);
 
+  API_DECLARE_HTTP_HANDLER(PublicGet);
+
   API_DECLARE_HTTP_HANDLER(Health);
 
 private:
