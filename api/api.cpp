@@ -162,6 +162,11 @@ DecodeEmailFromToken(const std::string &token,
 static inline std::string
 DecodeTokenFromBasicAuth(const std::string &auth) noexcept {
   const auto splited_auth = Common::Split(auth, " ");
+
+  if (splited_auth.size() == 2 && splited_auth[0] == "Bearer") {
+    return splited_auth[1];
+  }
+
   if (splited_auth.size() != 2 || splited_auth[0] != "Basic") {
     return {};
   }
