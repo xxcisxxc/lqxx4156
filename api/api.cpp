@@ -116,6 +116,22 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     }                                                                          \
   } while (false)
 
+static inline std::string sha256_passwd(std::string passwd)
+{
+  std::string result;
+  unsigned char hash[SHA256_DIGEST_LENGTH];
+  SHA256_CTX sha256;
+  SHA256_Init(&sha256);
+  SHA256_Update(&sha256, passwd.c_str(), passwd.size());
+  SHA256_Final(hash, &sha256);
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+    char buf[3];
+    snprintf(buf, 3, "%02x", hash[i]);
+    result += buf;
+  }
+  return result;
+}
+
 static inline bool
 DecodeEmailAndPasswordFromBasicAuth(const std::string &auth, std::string *email,
                                     std::string *password) noexcept {
@@ -134,7 +150,7 @@ DecodeEmailAndPasswordFromBasicAuth(const std::string &auth, std::string *email,
   }
 
   *email = std::move(email_password[0]);
-  *password = std::move(email_password[1]);
+  *password = sha256_passwd(std::move(email_password[1]));
   return true;
 }
 

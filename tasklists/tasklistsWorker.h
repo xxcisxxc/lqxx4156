@@ -2,6 +2,7 @@
 
 #include "api/requestData.h"
 #include "api/tasklistContent.h"
+#include "common/errorCode.h"
 #include "common/utils.h"
 #include "db/DB.h"
 #include "users/users.h"
@@ -160,7 +161,9 @@ public:
   // for compilation before api revise
   virtual returnCode RemoveGrantTaskList(const RequestData &data,
                                          std::vector<std::string> &in_list,
-                                         std::string &errUser) {}
+                                         std::string &errUser) {
+    return SUCCESS;
+  }
   /**
    * @brief Get all public tasklists
    *
