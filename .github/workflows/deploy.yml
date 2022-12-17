@@ -1,11 +1,12 @@
-name: Lint Checkings
+name: Continuous Deployment
 on:
   push:
     branches:
       - main
 jobs:
-  runs-on: ubuntu-latest
-  steps:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2
       with:
