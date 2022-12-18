@@ -760,7 +760,7 @@ void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Delete,
                        TasksDelete);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Get, ShareGet);
-  API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+)/create)", Post, ShareCreate);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Post, ShareCreate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/share/([^\/]+))", Delete, ShareDelete);
   API_ADD_HTTP_HANDLER(svr, "/v1/public/all", Get, PublicGet);
   API_ADD_HTTP_HANDLER(svr, R"(/health/(\d+))", Get, Health);

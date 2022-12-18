@@ -1184,7 +1184,7 @@ TEST_F(APITest, Share) {
     request_body["user_permission"] = {
         {{"user", "test_user_1"}, {"permission", true}},
         {{"user", "test_user_2"}, {"permission", false}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_1/create",
+    auto result = client.Post("/v1/share/tasklists_test_name_1",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
@@ -1197,7 +1197,7 @@ TEST_F(APITest, Share) {
     request_body["user_permission"] = {
         {{"user", "test_user_1"}, {"permission", true}},
         {{"user", "test_user_2"}, {"permission", false}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_2/create",
+    auto result = client.Post("/v1/share/tasklists_test_name_2",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
@@ -1210,7 +1210,7 @@ TEST_F(APITest, Share) {
     request_body["user_permission"] = {
         {{"user", "test_user_1"}, {"permission", true}},
         {{"user", "test_user_2"}, {"permission", false}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_3/create",
+    auto result = client.Post("/v1/share/tasklists_test_name_3",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
@@ -1269,7 +1269,7 @@ TEST_F(APITest, Share) {
     nlohmann::json request_body;
     request_body["user_permission"] = {
         {{"user", "test_user_1"}, {"permission", true}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_1/create",
+    auto result = client.Post("/v1/share/tasklists_test_name_1",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
@@ -1317,7 +1317,7 @@ TEST_F(APITest, Share) {
     request_body["user_permission"] = {
         {{"user", "test_user_1"}, {"permission", true}},
         {{"user", "test_user_2"}, {"permission", false}}};
-    auto result = client.Post("/v1/share/tasklists_test_name_1/create",
+    auto result = client.Post("/v1/share/tasklists_test_name_1",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
