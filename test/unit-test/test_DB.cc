@@ -5,7 +5,14 @@
 
 const std::string host = "neo4j://neo4j:hello4156@localhost:7687";
 
-TEST(TestDB, testconnection) {
+class TestDB : public ::testing::Test {
+protected:
+  void SetUp() override {}
+
+  void TearDown() override {}
+};
+
+TEST_F(TestDB, testconnection) {
   DB *db;
 
   // Create a new DB object
@@ -20,7 +27,7 @@ TEST(TestDB, testconnection) {
   EXPECT_NO_THROW(delete db);
 }
 
-TEST(TestDB, testCreateUserNode) {
+TEST_F(TestDB, testCreateUserNode) {
   DB db(host);
   std::map<std::string, std::string> user_info;
 
@@ -45,7 +52,7 @@ TEST(TestDB, testCreateUserNode) {
   EXPECT_EQ(db.createUserNode(user_info), SUCCESS);
 }
 
-TEST(TestDB, testCreateTaskListNode) {
+TEST_F(TestDB, testCreateTaskListNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::map<std::string, std::string> task_list_info;
@@ -69,7 +76,7 @@ TEST(TestDB, testCreateTaskListNode) {
   EXPECT_EQ(db.createTaskListNode(user_pkey, task_list_info), SUCCESS);
 }
 
-TEST(TestDB, testCreateTaskNode) {
+TEST_F(TestDB, testCreateTaskNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::string task_list_pkey = "test0-task-list";
@@ -99,7 +106,7 @@ TEST(TestDB, testCreateTaskNode) {
             SUCCESS);
 }
 
-TEST(TestDB, testReviseUserNode) {
+TEST_F(TestDB, testReviseUserNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::map<std::string, std::string> user_info;
@@ -123,7 +130,7 @@ TEST(TestDB, testReviseUserNode) {
   EXPECT_EQ(db.reviseUserNode("test1@test.com", user_info), SUCCESS);
 }
 
-TEST(TestDB, testReviseTaskListNode) {
+TEST_F(TestDB, testReviseTaskListNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::string tast_list_pkey = "test0-task-list";
@@ -157,7 +164,7 @@ TEST(TestDB, testReviseTaskListNode) {
             SUCCESS);
 }
 
-TEST(TestDB, testReviseTaskNode) {
+TEST_F(TestDB, testReviseTaskNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::string tast_list_pkey = "test0-task-list";
@@ -196,7 +203,7 @@ TEST(TestDB, testReviseTaskNode) {
       SUCCESS);
 }
 
-TEST(TestDB, testGetUserNode) {
+TEST_F(TestDB, testGetUserNode) {
   DB db(host);
   std::map<std::string, std::string> user_info;
 
@@ -235,7 +242,7 @@ TEST(TestDB, testGetUserNode) {
   EXPECT_EQ(user_info["field3"], "revised3");
 }
 
-TEST(TestDB, testGetTaskListNode) {
+TEST_F(TestDB, testGetTaskListNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::map<std::string, std::string> task_list_info;
@@ -282,7 +289,7 @@ TEST(TestDB, testGetTaskListNode) {
   EXPECT_EQ(task_list_info["visibility"], "shared");
 }
 
-TEST(TestDB, testGetTaskNode) {
+TEST_F(TestDB, testGetTaskNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::string task_list_pkey = "test0-task-list";
@@ -329,7 +336,7 @@ TEST(TestDB, testGetTaskNode) {
   EXPECT_EQ(task_info["field3"], "revised3");
 }
 
-TEST(TestDB, TestGetAllUserNodes) {
+TEST_F(TestDB, TestGetAllUserNodes) {
   DB db(host);
   std::vector<std::string> user_pkeys;
 
@@ -342,7 +349,7 @@ TEST(TestDB, TestGetAllUserNodes) {
                         "test1@test.com") != user_pkeys.end());
 }
 
-TEST(TestDB, TestGetAllTaskListNodes) {
+TEST_F(TestDB, TestGetAllTaskListNodes) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::vector<std::string> task_list_pkeys;
@@ -358,7 +365,7 @@ TEST(TestDB, TestGetAllTaskListNodes) {
                         "test1-task-list") != task_list_pkeys.end());
 }
 
-TEST(TestDB, TestGetAllTaskNodes) {
+TEST_F(TestDB, TestGetAllTaskNodes) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::string task_list_pkey = "test0-task-list";
@@ -377,7 +384,7 @@ TEST(TestDB, TestGetAllTaskNodes) {
               task_pkeys.end());
 }
 
-TEST(TestDB, TestAddAccess) {
+TEST_F(TestDB, TestAddAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
@@ -410,7 +417,7 @@ TEST(TestDB, TestAddAccess) {
             SUCCESS);
 }
 
-TEST(TestDB, TestGetAccess) {
+TEST_F(TestDB, TestGetAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
@@ -461,7 +468,7 @@ TEST(TestDB, TestGetAccess) {
   EXPECT_TRUE(read_write);
 }
 
-TEST(TestDB, TestReviseAccess) {
+TEST_F(TestDB, TestReviseAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
@@ -494,7 +501,7 @@ TEST(TestDB, TestReviseAccess) {
   EXPECT_TRUE(read_write);
 }
 
-TEST(TestDB, TestAllAccess) {
+TEST_F(TestDB, TestAllAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
@@ -525,7 +532,7 @@ TEST(TestDB, TestAllAccess) {
   EXPECT_EQ(list_accesses.size(), 0);
 }
 
-TEST(TestDB, TestAllGrant) {
+TEST_F(TestDB, TestAllGrant) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string task_list_pkey = "test1-task-list";
@@ -547,7 +554,7 @@ TEST(TestDB, TestAllGrant) {
   EXPECT_EQ(list_grants.size(), 0);
 }
 
-TEST(TestDB, TestRemoveAccess) {
+TEST_F(TestDB, TestRemoveAccess) {
   DB db(host);
   std::string src_user_pkey = "test0@test.com";
   std::string dst_user_pkey = "test1@test.com";
@@ -577,7 +584,7 @@ TEST(TestDB, TestRemoveAccess) {
   EXPECT_EQ(list_grants.size(), 0);
 }
 
-TEST(TestDB, TestDeleteTaskNode) {
+TEST_F(TestDB, TestDeleteTaskNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::string task_list_pkey = "test0-task-list";
@@ -593,7 +600,7 @@ TEST(TestDB, TestDeleteTaskNode) {
             ERR_NO_NODE);
 }
 
-TEST(TestDB, TestDeleteTaskListNode) {
+TEST_F(TestDB, TestDeleteTaskListNode) {
   DB db(host);
   std::string user_pkey = "test0@test.com";
   std::map<std::string, std::string> void_info;
@@ -615,7 +622,7 @@ TEST(TestDB, TestDeleteTaskListNode) {
   EXPECT_EQ(list_grants.size(), 0);
 }
 
-TEST(TestDB, TestDeleteUserNode) {
+TEST_F(TestDB, TestDeleteUserNode) {
   DB db(host);
   std::map<std::string, std::string> void_info;
 
@@ -656,7 +663,7 @@ void delete_thread(int id, DB *db) {
   EXPECT_EQ(db->deleteUserNode(user_pkey), SUCCESS);
 }
 
-TEST(TestDB, TestMultiThread) {
+TEST_F(TestDB, TestMultiThread) {
   DB db(host);
   std::map<std::string, std::string> void_info;
   const int thread_num = 100;
