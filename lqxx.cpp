@@ -6,6 +6,7 @@
 #include <string>
 
 int main(void) {
+  std::cout << "Welcome to Task Management Service: LQXX" << std::endl;
   std::string api_host = Common::GetEnv<std::string>("api_host");
   uint32_t api_port = Common::GetEnv<uint32_t>("api_port");
 

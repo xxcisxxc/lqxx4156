@@ -40,4 +40,17 @@ jobs:
     - name: Run test
       run: cd ./build/test && ctest
     - name: Generate Report
-      run: cd ./build/test && gcovr -r ../.. -e ../../external -e ../../test
+      run: cd ./build/test && gcovr -r ../.. -e ../../external -e ../../test | tee ../../output.log | echo "COVERAGE=$(awk '/TOTAL/ {print $4}')" >> $GITHUB_ENV
+    - name: Print Report
+      run: cat output.log
+    - name: Create the Badge
+      uses: schneegans/dynamic-badges-action@v1.6.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: 565ca3bce573af66c61e5e3cb5429264
+        filename: coverage.json
+        label: Coverage
+        message: ${{ env.COVERAGE }}
+        valColorRange: ${{ env.COVERAGE }}
+        maxColorRange: 85
+        minColorRange: 45
