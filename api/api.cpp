@@ -78,8 +78,14 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
           std::chrono::system_clock::now());                                   \
       std::string time_str = std::ctime(&time);                                \
       time_str.pop_back();                                                     \
-      std::cout << "[" << time_str << "] " << API_REQ().method << " "          \
-                << API_REQ().path << " " << API_RES().status << std::endl;     \
+      std::string path = API_REQ().path;                                       \
+      char cont = '?';                                                         \
+      for (auto &it : API_REQ().params) {                                      \
+        path += cont + it.first + "=" + it.second;                             \
+        cont = '&';                                                            \
+      }                                                                        \
+      std::cout << "[" << time_str << "] " << API_REQ().method << " " << path  \
+                << " " << API_RES().status << std::endl;                       \
     }                                                                          \
     return;                                                                    \
   } while (false)
