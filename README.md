@@ -2,7 +2,7 @@
 [![Unit Testing](https://github.com/xxcisxxc/lqxx4156/actions/workflows/unit-test.yml/badge.svg)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/unit-test.yml)
 [![Integration Testing](https://github.com/xxcisxxc/lqxx4156/actions/workflows/integration-test.yml/badge.svg)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/integration-test.yml)
 [![System Testing](https://github.com/xxcisxxc/lqxx4156/actions/workflows/system-test.yml/badge.svg)](https://github.com/xxcisxxc/lqxx4156/actions/workflows/system-test.yml)
-[![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.github.com/xxcisxxc/565ca3bce573af66c61e5e3cb5429264/raw/coverage.json)]
+[![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/xxcisxxc/565ca3bce573af66c61e5e3cb5429264/raw/coverage.json)](https://gist.githubusercontent.com/xxcisxxc/565ca3bce573af66c61e5e3cb5429264)
 
 # lqxx4156
 project for coms w4156
