@@ -746,7 +746,7 @@ void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists", Get, TaskListsAll);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Get, TaskListsGet);
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/create", Post, TaskListsCreate);
-  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Post,
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Put,
                        TaskListsUpdate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Delete,
                        TaskListsDelete);
@@ -755,7 +755,7 @@ void Api::Run(const std::string &host, uint32_t port) {
                        TasksGet);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/create)", Post,
                        TasksCreate);
-  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Post,
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Put,
                        TasksUpdate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks/([^\/]+))", Delete,
                        TasksDelete);

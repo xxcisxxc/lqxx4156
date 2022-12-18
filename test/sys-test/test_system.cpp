@@ -11,7 +11,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
-class APITest : public ::testing::Test {
+class SYSTest : public ::testing::Test {
 protected:
   void SetUp() override {
     const std::string db_host = "neo4j://neo4j:hello4156@localhost:7687";
@@ -40,7 +40,7 @@ protected:
   std::shared_ptr<std::thread> running_server;
 };
 
-TEST_F(APITest, UsersRegister) {
+TEST_F(SYSTest, UsersRegister) {
   {
     httplib::Client client(test_host, test_port);
     nlohmann::json req_body;
@@ -53,7 +53,7 @@ TEST_F(APITest, UsersRegister) {
   }
 }
 
-TEST_F(APITest, UserLogin) {
+TEST_F(SYSTest, UserLogin) {
   {
     httplib::Client client(test_host, test_port);
     nlohmann::json req_body;
@@ -78,7 +78,7 @@ TEST_F(APITest, UserLogin) {
   }
 }
 
-TEST_F(APITest, UsersLogout) {
+TEST_F(SYSTest, UsersLogout) {
   std::string token;
 
   {
@@ -182,7 +182,7 @@ TEST_F(APITest, UsersLogout) {
   }
 }
 
-TEST_F(APITest, TaskLists) {
+TEST_F(SYSTest, TaskLists) {
   std::string token;
   db->deleteEverything();
 
@@ -280,7 +280,7 @@ TEST_F(APITest, TaskLists) {
     nlohmann::json request_body;
     request_body["name"] = "tasklists_test_name_1_new";
     request_body["content"] = "some_content_1_new";
-    auto result = client.Post("/v1/task_lists/tasklists_test_name_1",
+    auto result = client.Put("/v1/task_lists/tasklists_test_name_1",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("failed"), std::string::npos);
@@ -292,7 +292,7 @@ TEST_F(APITest, TaskLists) {
     client.set_basic_auth(token, "");
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_new";
-    auto result = client.Post("/v1/task_lists/tasklists_test_name_1",
+    auto result = client.Put("/v1/task_lists/tasklists_test_name_1",
                               request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
@@ -343,7 +343,7 @@ TEST_F(APITest, TaskLists) {
   db->deleteEverything();
 }
 
-TEST_F(APITest, TaskListsCreate) {
+TEST_F(SYSTest, TaskListsCreate) {
   std::string token;
 
   {
@@ -386,7 +386,7 @@ TEST_F(APITest, TaskListsCreate) {
   }
 }
 
-TEST_F(APITest, Tasks) {
+TEST_F(SYSTest, Tasks) {
   std::string token;
 
   {
@@ -502,7 +502,7 @@ TEST_F(APITest, Tasks) {
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_new";
     request_body["date"] = "01/03/2022";
-    auto result = client.Post(
+    auto result = client.Put(
         "/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1",
         request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -528,7 +528,7 @@ TEST_F(APITest, Tasks) {
     client.set_basic_auth(token, "");
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_another";
-    auto result = client.Post(
+    auto result = client.Put(
         "/v1/task_lists/tasklists_test_name_1/tasks/tasks_test_name_1",
         request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -578,7 +578,7 @@ TEST_F(APITest, Tasks) {
   }
 }
 
-TEST_F(APITest, Share) {
+TEST_F(SYSTest, Share) {
   std::string token;
   std::string token_test_user_1;
   std::string token_test_user_2;
@@ -837,7 +837,7 @@ TEST_F(APITest, Share) {
     client.set_basic_auth(token_test_user_1, "");
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_new";
-    auto result = client.Post(
+    auto result = client.Put(
         "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu",
         request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -859,7 +859,7 @@ TEST_F(APITest, Share) {
     client.set_basic_auth(token_test_user_3, "");
     nlohmann::json request_body;
     request_body["content"] = "some_content_3_new";
-    auto result = client.Post(
+    auto result = client.Put(
         "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu",
         request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
@@ -871,7 +871,7 @@ TEST_F(APITest, Share) {
     client.set_basic_auth(token_test_user_1, "");
     nlohmann::json request_body;
     request_body["visibility"] = "public"; /* Should be ignored */
-    auto result = client.Post(
+    auto result = client.Put(
         "/v1/task_lists/tasklists_test_name_1?other=Alice@columbia.edu",
         request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
