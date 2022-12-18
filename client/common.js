@@ -13,6 +13,9 @@ async function logOut(err_out) {
   } else {
     document.getElementById(err_out).style.color = "red";
     document.getElementById(err_out).innerHTML = "Error: " + JSON.stringify(data);
+    setTimeout(function() {
+      window.location.href = "index.html";
+    }, 1500);
   }
 }
 

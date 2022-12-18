@@ -143,8 +143,8 @@ async function getAllPublicLists() {
         var actions = row.insertCell(2);
         name.innerHTML = element.list;
         user.innerHTML = element.user;
-        actions.innerHTML = `<button type="button" name=${element.list} onclick="gotoNext(this, 'task.html', '${element.user}', '${element.permission}')">show</button> `;
-        actions.innerHTML += `<button type="button" name=${JSON.stringify(element)} onclick="showInfo(this, true)">revise</button>`;
+        actions.innerHTML = `<button type="button" name=${element.list} onclick="gotoNext(this, 'task.html', '${element.user}', 'read')">show</button> `;
+        //actions.innerHTML += `<button type="button" name=${JSON.stringify(element)} onclick="showInfo(this, true)">revise</button>`;
       });
     }
   }
