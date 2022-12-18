@@ -157,7 +157,7 @@ DecodeEmailAndPasswordFromBasicAuth(const std::string &auth, std::string *email,
   }
 
   *email = std::move(email_password[0]);
-  *password = sha256_passwd(std::move(email_password[1]));
+  *password = sha256_passwd(std::move(email_password[0] + email_password[1]));
   return true;
 }
 
