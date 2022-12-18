@@ -783,7 +783,7 @@ TEST_F(APITest, TaskLists) {
     request_body["name"] = "tasklists_test_name_1_new";
     request_body["content"] = "some_content_1_new";
     auto result = client.Put("/v1/task_lists/tasklists_test_name_1",
-                              request_body.dump(), "text/plain");
+                             request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("failed"), std::string::npos);
   }
@@ -794,7 +794,7 @@ TEST_F(APITest, TaskLists) {
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_new";
     auto result = client.Put("/v1/task_lists/tasklists_test_name_1",
-                              request_body.dump(), "text/plain");
+                             request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }
@@ -1530,8 +1530,8 @@ TEST_F(APITest, Share) {
     request_body["content"] = "some_content_1_new";
     request_body["date"] = "some_date_1_new";
     auto result = client.Put("/v1/task_lists/tasklists_test_name_1/tasks/"
-                              "tasks_test_name_1?other=Alice@columbia.edu",
-                              request_body.dump(), "text/plain");
+                             "tasks_test_name_1?other=Alice@columbia.edu",
+                             request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
   }

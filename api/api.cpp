@@ -269,11 +269,11 @@ API_DEFINE_HTTP_HANDLER(UsersRegister) {
   if (auth_header == API_REQ().headers.cend() ||
       !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email,
                                            &user_passwd)) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");
+    API_RETURN_HTTP_RESP(400, "msg", "failed basic auth");
   }
 
   if (user_email.empty() || user_passwd.empty()) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed no email or password");
+    API_RETURN_HTTP_RESP(400, "msg", "failed no email or password");
   }
 
   json_body = API_PARSE_REQ_BODY();
@@ -281,7 +281,7 @@ API_DEFINE_HTTP_HANDLER(UsersRegister) {
 
   // check if user email is duplicated
   if (users->DuplicatedEmail(UserInfo("", user_email, ""))) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed duplicated email");
+    API_RETURN_HTTP_RESP(400, "msg", "failed duplicated email");
   }
 
   // create user
@@ -300,11 +300,11 @@ API_DEFINE_HTTP_HANDLER(UsersLogin) {
   if (auth_header == API_REQ().headers.cend() ||
       !DecodeEmailAndPasswordFromBasicAuth(auth_header->second, &user_email,
                                            &user_passwd)) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed basic auth");
+    API_RETURN_HTTP_RESP(400, "msg", "failed basic auth");
   }
 
   if (user_email.empty() || user_passwd.empty()) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed no email or password");
+    API_RETURN_HTTP_RESP(400, "msg", "failed no email or password");
   }
 
   if (users->Validate(UserInfo("", user_email, user_passwd))) {
@@ -408,7 +408,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   API_GET_PARAM_OPTIONAL(tasklist_req.other_user_key, other);
 
   if (!optional_name.empty() && optional_name != tasklist_req.tasklist_key) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed tasklist name can not be changed");
+    API_RETURN_HTTP_RESP(400, "msg", "failed tasklist name can not be changed");
   }
 
   API_GET_JSON_OPTIONAL(json_body, tasklist_content.content, content);
@@ -495,7 +495,7 @@ API_DEFINE_HTTP_HANDLER(TasksGet) {
   task_req.task_key = API_REQ().matches[2];
 
   if (task_req.tasklist_key.empty()) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
+    API_RETURN_HTTP_RESP(400, "msg", "failed need tasklist name");
   }
 
   /* Get one certain task. */
@@ -526,14 +526,14 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
   task_req.tasklist_key = API_REQ().matches[1];
 
   if (task_req.tasklist_key.empty()) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
+    API_RETURN_HTTP_RESP(400, "msg", "failed need tasklist name");
   }
 
   json_body = API_PARSE_REQ_BODY();
   API_GET_JSON_OPTIONAL(json_body, optional_name, name);
 
   if (!optional_name.empty() && optional_name != task_req.task_key) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed task name can not be changed");
+    API_RETURN_HTTP_RESP(400, "msg", "failed task name can not be changed");
   }
 
   API_GET_JSON_OPTIONAL(json_body, task_content.content, content);
@@ -561,7 +561,7 @@ API_DEFINE_HTTP_HANDLER(TasksDelete) {
   task_req.tasklist_key = API_REQ().matches[1];
 
   if (task_req.tasklist_key.empty()) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed need tasklist name");
+    API_RETURN_HTTP_RESP(400, "msg", "failed need tasklist name");
   }
 
   if (tasks_worker->Delete(task_req) != returnCode::SUCCESS) {
@@ -645,7 +645,7 @@ API_DEFINE_HTTP_HANDLER(ShareCreate) {
   API_GET_JSON_REQUIRED(json_body, user_permission, user_permission);
 
   if (!user_permission.is_array()) {
-    API_RETURN_HTTP_RESP(500, "msg", "failed user_permission must be array");
+    API_RETURN_HTTP_RESP(400, "msg", "failed user_permission must be array");
   }
 
   /* Do not want to use for-loop, but API_GET_JSON_REQUIRED can not be used in
@@ -746,8 +746,7 @@ void Api::Run(const std::string &host, uint32_t port) {
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists", Get, TaskListsAll);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Get, TaskListsGet);
   API_ADD_HTTP_HANDLER(svr, "/v1/task_lists/create", Post, TaskListsCreate);
-  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Put,
-                       TaskListsUpdate);
+  API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Put, TaskListsUpdate);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+))", Delete,
                        TaskListsDelete);
   API_ADD_HTTP_HANDLER(svr, R"(/v1/task_lists/([^\/]+)/tasks)", Get, TasksAll);

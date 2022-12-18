@@ -281,7 +281,7 @@ TEST_F(SYSTest, TaskLists) {
     request_body["name"] = "tasklists_test_name_1_new";
     request_body["content"] = "some_content_1_new";
     auto result = client.Put("/v1/task_lists/tasklists_test_name_1",
-                              request_body.dump(), "text/plain");
+                             request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("failed"), std::string::npos);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -293,7 +293,7 @@ TEST_F(SYSTest, TaskLists) {
     nlohmann::json request_body;
     request_body["content"] = "some_content_1_new";
     auto result = client.Put("/v1/task_lists/tasklists_test_name_1",
-                              request_body.dump(), "text/plain");
+                             request_body.dump(), "text/plain");
     EXPECT_EQ(result.error(), httplib::Error::Success);
     EXPECT_NE(result->body.find("success"), std::string::npos);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
