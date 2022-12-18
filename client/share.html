@@ -108,7 +108,7 @@ async function createOrReviseShare(form) {
     },
     body: JSON.stringify(body)
   };
-  const response = await fetch("https://lqxx4156.tk/v1/share/" + window.localStorage.getItem("list") + "/create", requestOptions);
+  const response = await fetch("https://lqxx4156.tk/v1/share/" + window.localStorage.getItem("list"), requestOptions);
   const data = await response.json();
   if (response.status == 200) {
     document.getElementById("info-msg").style.color = "black";

@@ -225,7 +225,7 @@ async function createOrReviseList(form) {
   body["content"] = form.content.value;
   if (form.runame != undefined) { // revise share
     const requestOptions = {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -249,7 +249,7 @@ async function createOrReviseList(form) {
   }
   if (form.lname == undefined) { // Modify 
     const requestOptions = {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',

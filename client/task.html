@@ -203,7 +203,7 @@ async function createOrReviseTask(form) {
   console.log(body)
   if (form.lname == undefined) { // Modify 
     const requestOptions = {
-      method: 'POST',
+      method: 'PUT',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',

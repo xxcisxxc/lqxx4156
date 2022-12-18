@@ -37,5 +37,5 @@ if [ "$1" == "run" ]; then
     docker kill $(docker ps -q)
     docker run -d -p7474:7474 -p7687:7687 -e NEO4J_AUTH=neo4j/hello4156 neo4j:4.4.9
     sleep 30
-    cd build && ./lqxx
+    cd build && (./lqxx > output.log &)
 fi
