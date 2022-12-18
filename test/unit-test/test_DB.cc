@@ -24,6 +24,7 @@ TEST_F(TestDB, testconnection) {
   EXPECT_NO_THROW(db = new DB(host));
 
   // Delete the DB object
+  db->deleteEverything();
   EXPECT_NO_THROW(delete db);
 }
 

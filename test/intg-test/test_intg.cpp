@@ -30,6 +30,7 @@ protected:
 
   void TearDown() override {
     // no need to delete pointer
+    db->deleteEverything();
   }
 
   bool SetUpAlice();
