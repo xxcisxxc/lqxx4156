@@ -90,13 +90,16 @@ inline void BuildHttpRespBody(nlohmann::json *js, const std::string &field,
     return;                                                                    \
   } while (false)
 
-#define API_PARSE_REQ_BODY()                                                   \
+#define API_PARSE_REQ_BODY(ret)                                                \
   ({                                                                           \
     nlohmann::json json_body;                                                  \
     try {                                                                      \
       json_body = nlohmann::json::parse((API_REQ()).body);                     \
     } catch (...) {                                                            \
-      API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");    \
+      if ((ret))                                                               \
+        API_RETURN_HTTP_RESP(500, "msg", "failed request body format error");  \
+      else                                                                     \
+        json_body = nlohmann::json::parse("{}");                               \
     }                                                                          \
     std::move(json_body);                                                      \
   })
@@ -276,7 +279,7 @@ API_DEFINE_HTTP_HANDLER(UsersRegister) {
     API_RETURN_HTTP_RESP(400, "msg", "failed no email or password");
   }
 
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(false);
   API_GET_JSON_OPTIONAL(json_body, user_name, name);
 
   // check if user email is duplicated
@@ -402,7 +405,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsUpdate) {
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
   tasklist_req.tasklist_key = API_REQ().matches[1];
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(true);
 
   API_GET_JSON_OPTIONAL(json_body, optional_name, name);
   API_GET_PARAM_OPTIONAL(tasklist_req.other_user_key, other);
@@ -446,7 +449,7 @@ API_DEFINE_HTTP_HANDLER(TaskListsCreate) {
 
   API_CHECK_REQUEST_TOKEN(tasklist_req.user_key, token);
 
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(true);
 
   API_GET_JSON_REQUIRED(json_body, tasklist_req.tasklist_key, name);
   API_GET_JSON_REQUIRED(json_body, tasklist_content.name, name);
@@ -529,7 +532,7 @@ API_DEFINE_HTTP_HANDLER(TasksUpdate) {
     API_RETURN_HTTP_RESP(400, "msg", "failed need tasklist name");
   }
 
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(true);
   API_GET_JSON_OPTIONAL(json_body, optional_name, name);
 
   if (!optional_name.empty() && optional_name != task_req.task_key) {
@@ -582,7 +585,7 @@ API_DEFINE_HTTP_HANDLER(TasksCreate) {
   API_GET_PARAM_OPTIONAL(task_req.other_user_key, other);
 
   task_req.tasklist_key = API_REQ().matches[1];
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(true);
 
   API_GET_JSON_REQUIRED(json_body, task_req.task_key, name);
   API_GET_JSON_REQUIRED(json_body, task_content.name, name);
@@ -639,7 +642,7 @@ API_DEFINE_HTTP_HANDLER(ShareCreate) {
   nlohmann::json user_permission;
 
   API_CHECK_REQUEST_TOKEN(share_create_req.user_key, token);
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(true);
   share_create_req.tasklist_key = API_REQ().matches[1];
 
   API_GET_JSON_REQUIRED(json_body, user_permission, user_permission);
@@ -679,7 +682,7 @@ API_DEFINE_HTTP_HANDLER(ShareDelete) {
   API_CHECK_REQUEST_TOKEN(share_delete_req.user_key, token);
 
   share_delete_req.tasklist_key = API_REQ().matches[1];
-  json_body = API_PARSE_REQ_BODY();
+  json_body = API_PARSE_REQ_BODY(false);
   API_GET_JSON_OPTIONAL(json_body, user_json_list, user_list);
   API_GET_PARAM_OPTIONAL(share_delete_req.other_user_key, other);
 
